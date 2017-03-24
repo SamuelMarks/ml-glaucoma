@@ -1,29 +1,38 @@
+import gzip
 import json
 from random import sample
 from functools import partial
 from itertools import *
 from collections import namedtuple
-from os import path, remove, walk, getcwd
+from os import path, remove, walk, getcwd, environ
 from fnmatch import filter as fnmatch_filter
+from socket import getfqdn
+
+from PIL import Image
 
 from openpyxl import load_workbook
 from sas7bdat import SAS7BDAT
 
 import numpy as np
 from tensorflow.contrib.learn.python.learn.datasets.base import Datasets
+from tensorflow.contrib.learn.python.learn.datasets.mnist import _read32
 
 from ml_glaucoma import logger
-from ml_glaucoma.utils import run_once, it_consumes, pp, json_serial
+from ml_glaucoma.utils import run_once, it_consumes, pp, json_serial, redis_cursor
 from ml_glaucoma.utils.cache import Cache
 
 pickled_cache = {}
 base_dir = None
 just = 50
-RecImg = namedtuple('RecImg', ('rec', 'imgs'))
-rand_cache = Cache.load(path.join(path.dirname(__file__), '.cache', 'rand_cache.pkl'))
+RecImg = namedtuple('RecImg', ('rec', 'imgs'))  # type: (generated_types.T0, [str])
+
+cache = Cache(fname=environ.get('CACHE_FNAME') if 'NO_REDIS' in environ else redis_cursor)
+rand_cache = Cache(fname=path.join(path.dirname(path.dirname(__file__)), '_data', '.cache', 'rand_cache.pkl')).load()
+fqdn = getfqdn()
 
 
 def _update_generated_types_py(args=None, replace=False):
+    print "path.isfile('generated_types.py') =", path.isfile('generated_types.py')
     if path.isfile('generated_types.py'):
         if not replace:
             return
@@ -62,7 +71,7 @@ def _get_tbl(xlsx='glaucoma_20161205plus_Age23.xlsx'):
 
     tbl = dict(imap(lambda row: (row[0].value,
                                  RecImg(globals()['generated_types'].T0(*get_vals(row)), None)), rows_gen))
-    pickled_cache['tbl'] = tbl
+    pickled_cache['tbl'] = tbl  # type: (str, get_data.RecImg)
     pickled_cache['tbl_ids'] = frozenset(tbl.keys())
     return tbl
 
@@ -76,7 +85,7 @@ def _get_sas_tbl(sas7bdat='glaucoma_20161205plus_age23.sas7bdat', skip_save=True
     with SAS7BDAT(sas7bdat, skip_header=True) as f:
         sas_tbl = dict(imap(lambda row: (row[0], RecImg(globals()['generated_types'].T0(*row), None)), f.readlines()))
         pickled_cache['sas_tbl'] = sas_tbl
-        skip_save or Cache.save(pickled_cache)
+        skip_save or cache.save(pickled_cache)
 
     return sas_tbl
 
@@ -85,12 +94,15 @@ def _imgs_of(idnum, img_directory):
     assert idnum.isdigit()
     return (path.join(root, filename)
             for root, dirnames, filenames in walk(img_directory)
-            for filename in fnmatch_filter(filenames, '*{idnum}*'.format(idnum=idnum)))
+            for filename in fnmatch_filter(filenames,
+                                           '*{idnum}*'.format(idnum=idnum) if fqdn == 'kudu'
+                                           else '*{idnum}*10pc*'.format(idnum=idnum))
+            if '10pc' not in filename or fqdn != 'kudu')
 
 
 def _populate_imgs(img_directory, skip_save=True):
     global pickled_cache
-    Cache.update_locals(pickled_cache, locals())
+    cache.update_locals(pickled_cache, locals())
 
     tbl = pickled_cache['tbl']
 
@@ -118,7 +130,7 @@ def _populate_imgs(img_directory, skip_save=True):
     # Arghh, where are my views/slices?
     if not skip_save:
         print 'saving in _populate_imgs'
-        Cache.save(pickled_cache)
+        cache.save(pickled_cache)
 
     logger.info('total_imgs == total_imgs_assoc_to_id:'.ljust(just) + '{}'.format(
         pickled_cache['total_imgs'] == pickled_cache['total_imgs_assoc_to_id']))
@@ -128,14 +140,15 @@ def _populate_imgs(img_directory, skip_save=True):
 
 def _vanilla_stats(skip_save=True):
     global pickled_cache
-    Cache.update_locals(pickled_cache, locals())
-    oags1 = pickled_cache['oags1']  # Weird, this doesn't get into locals() from ^
+    cache.update_locals(pickled_cache, locals())
 
     tbl = pickled_cache['tbl']
     sas_tbl = pickled_cache['sas_tbl']
 
     if 'oags1' not in pickled_cache:
         pickled_cache['oags1'] = oags1 = tuple(v.rec.IDNUM for v in tbl.itervalues() if v.rec.oag1)
+    else:
+        oags1 = pickled_cache['oags1']  # Weird, this doesn't get into locals() from `update_locals`
 
     if 'no_oags1' not in pickled_cache:
         pickled_cache['no_oags1'] = no_oags1 = tuple(v.rec.IDNUM for v in tbl.itervalues() if not v.rec.oag1)
@@ -153,7 +166,7 @@ def _vanilla_stats(skip_save=True):
                                           ('# len(sas_tbl) == len(tbl):'.ljust(just),
                                            len(sas_tbl) == len(tbl)))
         )
-        skip_save or Cache.save(pickled_cache)
+        skip_save or cache.save(pickled_cache)
 
     it_consumes(imap(logger.info, pickled_cache['_vanilla_stats'].split('\n')))
     logger.info('oags1:'.ljust(just) + '{}'.format(oags1))
@@ -189,7 +202,7 @@ def _log_set_stats():
     logger.info('# shared between sets:'.ljust(just) + str(sum((len(datasets.validation & datasets.test),
                                                                 len(datasets.test & datasets.train),
                                                                 len(datasets.validation & datasets.train)))))
-    # print '# shared between sets:'.ljust(just), sum(len(s0&s1) for s0, s1 in combinations((validation, test, train), 2))
+    # '# shared between sets:'.ljust(just), sum(len(s0&s1) for s0, s1 in combinations((validation, test, train), 2))
     logger.info(
         '# len(all sets):'.ljust(just) + str(sum(imap(len, (datasets.train, datasets.test, datasets.validation)))))
     logger.info('# len(total):'.ljust(just) + str(len(tbl)))
@@ -214,9 +227,16 @@ def get_features(feature_names, skip_save=True):
 
 
 @run_once
-def get_data(skip_save=True):  # still saves once
+def get_data(skip_save=True, cache_fname=None):  # still saves once
     global pickled_cache
-    pickled_cache = Cache.update_locals(Cache.load(), locals()) if path.getsize('generated_types.py') > 50 else {}
+    global cache
+    if cache_fname is not None:
+        cache = Cache(fname=cache_fname)
+    print "path.getsize('generated_types.py') =", path.getsize('generated_types.py')
+    pickled_cache = cache.update_locals(cache.load(), locals()) if path.getsize('generated_types.py') > 50 else {}
+    print 'pickled_cache =', pickled_cache
+    #from sys import exit
+    #exit(1)
 
     if pickled_cache:
         logger.info('imported T0 has:'.ljust(just) + '{}'.format(
@@ -238,17 +258,75 @@ def get_data(skip_save=True):  # still saves once
 
     logger.info('feature_names:'.ljust(just) + '{}'.format(feature_names))
     logger.info('features:'.ljust(just) + '{}'.format(features))
-    Cache.save(pickled_cache)
+    cache.save(pickled_cache)
 
     tbl = pickled_cache['tbl']
-    pp(random_sample(tbl, datasets.train))
+    sample = random_sample(tbl, datasets.train)
+    pp(sample)
+    # print 'datasets.train =', datasets.train
+    # print 'tbl =', tbl
+    # oags1 = pickled_cache['oags1']
+    # for pid in oags1:
+    if 'id_to_img_dims' not in pickled_cache:
+        id_to_img_dims = {}
+        img_dims_to_recimg = {10077696: set(), 48769206: set(), 487350: set(), 100751: set()}
+        for IDNUM, u in tbl.iteritems():
+            id_to_img_dims[u.rec.IDNUM] = set()
+            for img_fname in u.imgs:
+                with Image.open(img_fname) as img:
+                    width, height = img.size
+
+                dim = width * height
+                id_to_img_dims[u.rec.IDNUM].add(dim)
+                img_dims_to_recimg[dim].add(u)
+                # print '{} * {} = {} is {}'.format(width, height, img.size, img_fname)
+        pickled_cache['id_to_img_dims'] = id_to_img_dims
+        pickled_cache['img_dims_to_recimg'] = img_dims_to_recimg
+        cache.save(pickled_cache)
+    else:
+        id_to_img_dims = pickled_cache['id_to_img_dims']
+        img_dims_to_recimg = pickled_cache['img_dims_to_recimg']
+
+    logger.info('len(id_to_img_dims):'.ljust(just) + '{:d}'.format(len(id_to_img_dims)))
+    logger.info('len(img_dims_to_recimg):'.ljust(just) + '{:d}'.format(len(img_dims_to_recimg)))
+    logger.info('# without oags1 but with loag1 etc.:'.ljust(just) + '{:d}'.format(
+        sum(1 for IDNUM, u in tbl.iteritems() if not u.rec.oag1 and (u.rec.roag1 or u.rec.loag1))))
+    for dim in img_dims_to_recimg:
+        logger.info(
+            'len(img_dims_to_recimg[{:d}]):'.format(dim).ljust(just) + '{:d}'.format(len(img_dims_to_recimg[dim])))
+        logger.info('{:d} with oags1:'.format(dim).ljust(just) + '{:d}'.format(
+            sum(1 for recimg in img_dims_to_recimg[dim] if recimg.rec.oag1)))
+        logger.info('{:d} with oags1:'.format(dim).ljust(just) + '{:d}'.format(
+            sum(1 for recimg in img_dims_to_recimg[dim] if recimg.rec.oag1)))
 
     return namedtuple('Data', ('tbl', 'datasets', 'features', 'feature_names', 'pickled_cache'))(
         tbl, datasets, features, feature_names, pickled_cache)
+
+
+def prepare_data(data_obj):
+    def extract_images(filename):
+        """Extract the images into a 4D uint8 numpy array [index, y, x, depth]."""
+        print 'Extracting', filename
+        with gzip.open(filename) as bytestream:
+            magic = _read32(bytestream)
+            if magic != 2051:
+                raise ValueError('Invalid magic number %d in glaucoma image file: %s' % (magic, filename))
+            num_images = _read32(bytestream)
+            rows = _read32(bytestream)
+            cols = _read32(bytestream)
+            buf = bytestream.read(rows * cols * num_images)
+            data = np.frombuffer(buf, dtype=np.uint8)
+            data = data.reshape(num_images, rows, cols, 1)
+            return data
+
+    print random_sample(data_obj.tbl, data_obj.datasets.train)
+    print 'data_obj.datasets.train =', data_obj.datasets.train
+    return it_consumes(imap(lambda recimg: it_consumes(imap(extract_images, recimg.imgs)), data_obj.tbl.itervalues()))
 
 
 _update_generated_types_py()
 import generated_types
 
 if __name__ == '__main__':
-    get_data()
+    _data = get_data()
+    prepare_data(_data)

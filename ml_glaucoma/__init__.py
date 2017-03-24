@@ -6,7 +6,7 @@ import logging
 from logging.config import dictConfig as _dictConfig
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 def _get_logger():
     with open(path.join(path.dirname(__file__), '_data', 'logging.yml'), 'rt') as f:
