@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-from os import makedirs, mkdir, path
+from os import makedirs, mkdir, path, remove
 from redis import StrictRedis
 import cPickle as pickle
 
@@ -33,8 +33,6 @@ class Cache(object):
             open(self.fname, 'a').close()
 
     def load(self, fname=None, key=None, marshall=pickle):
-        print '_cache_load called'
-
         self.fname = fname or self.fname
         if isinstance(self.fname, StrictRedis):
             res = self.fname.get('.pycache/{key}'.format(key=key if key is not None else 'caches.pkl'))
@@ -49,8 +47,6 @@ class Cache(object):
 
     @staticmethod
     def update_locals(_pickled_cache, locls):
-        print '_update_locals called'
-        print '+len(_pickled_cache) =', len(_pickled_cache)
         if type(_pickled_cache) is dict:
             it_consumes(locls.__setitem__(k, v)
                         for k, v in _pickled_cache.iteritems())
@@ -58,7 +54,6 @@ class Cache(object):
             raise TypeError('_pickled cache isn\'t dict')
         # elif key is not None: locls[key] = _pickled_cache
 
-        print ':len(_pickled_cache) =', len(_pickled_cache)
         return _pickled_cache
 
     def save(self, cache, fname=None, key=None, marshall=pickle):
@@ -72,6 +67,18 @@ class Cache(object):
             print 'saving cache to file://{}'.format(self.fname)
             with open(self.fname, 'wb') as f:
                 marshall.dump(cache, f)
+
+    def invalidate(self, fname=None, key=None):
+        self.fname = fname or self.fname
+
+        if isinstance(self.fname, StrictRedis):
+            redis_cursor.delete()
+            key = key if key is not None else 'caches.pkl'
+            print 'rm redis://{}'.format('.pycache/{key}'.format(key=key))
+            self.fname.delete('.pycache/{key}'.format(key=key))
+        else:
+            print 'rm {}'.format(self.fname)
+            remove(self.fname)
 
 
 # TODO: Make another function which calls this to decorate

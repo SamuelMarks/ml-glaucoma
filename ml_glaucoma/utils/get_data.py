@@ -32,7 +32,6 @@ fqdn = getfqdn()
 
 
 def _update_generated_types_py(args=None, replace=False):
-    print "path.isfile('generated_types.py') =", path.isfile('generated_types.py')
     if path.isfile('generated_types.py'):
         if not replace:
             return
@@ -95,9 +94,11 @@ def _imgs_of(idnum, img_directory):
     return (path.join(root, filename)
             for root, dirnames, filenames in walk(img_directory)
             for filename in fnmatch_filter(filenames,
-                                           '*{idnum}*'.format(idnum=idnum) if fqdn == 'kudu'
-                                           else '*{idnum}*10pc*'.format(idnum=idnum))
-            if '10pc' not in filename or fqdn != 'kudu')
+                                           '*{idnum}*'.format(idnum=idnum)
+                                           # if fqdn == 'kudu' else '*{idnum}*10pc*'.format(idnum=idnum)
+                                           )
+            if '10pc' not in filename  # or fqdn != 'kudu'
+            )
 
 
 def _populate_imgs(img_directory, skip_save=True):
@@ -226,17 +227,30 @@ def get_features(feature_names, skip_save=True):
     return np.bmat(np.fromiter((idx for idx, _ in enumerate(feature_names)), np.float32))
 
 
+Data = namedtuple('Data', ('tbl', 'datasets', 'features', 'feature_names', 'pickled_cache'))
+
+
 @run_once
-def get_data(skip_save=True, cache_fname=None):  # still saves once
+def get_data(skip_save=True, cache_fname=None, invalidate=False):  # still saves once
+    """
+    Gets and optionally caches data, using SAS | XLSX files as index, and BMES root as files
+
+    :keyword skip_save: Skips saving
+    :type skip_save: ``bool``
+
+    :keyword cache_fname: Cache filename. Defaults to $CACHE_FNAME
+    :type cache_fname: ``str``
+
+    :return: data
+    :rtype: ``Data``
+    """
     global pickled_cache
     global cache
     if cache_fname is not None:
         cache = Cache(fname=cache_fname)
-    print "path.getsize('generated_types.py') =", path.getsize('generated_types.py')
+    if invalidate:
+        cache.invalidate()
     pickled_cache = cache.update_locals(cache.load(), locals()) if path.getsize('generated_types.py') > 50 else {}
-    print 'pickled_cache =', pickled_cache
-    #from sys import exit
-    #exit(1)
 
     if pickled_cache:
         logger.info('imported T0 has:'.ljust(just) + '{}'.format(
@@ -299,8 +313,7 @@ def get_data(skip_save=True, cache_fname=None):  # still saves once
         logger.info('{:d} with oags1:'.format(dim).ljust(just) + '{:d}'.format(
             sum(1 for recimg in img_dims_to_recimg[dim] if recimg.rec.oag1)))
 
-    return namedtuple('Data', ('tbl', 'datasets', 'features', 'feature_names', 'pickled_cache'))(
-        tbl, datasets, features, feature_names, pickled_cache)
+    return Data(tbl, datasets, features, feature_names, pickled_cache)
 
 
 def prepare_data(data_obj):

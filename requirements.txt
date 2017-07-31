@@ -1,0 +1,6 @@
+pyyaml
+pillow
+openpyxl
+sas7bdat
+redis
+matplotlib
