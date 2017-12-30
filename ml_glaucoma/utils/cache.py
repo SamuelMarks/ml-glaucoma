@@ -21,15 +21,13 @@ class Cache(object):
     """Example:
     import random
 
-    pickled_cache = Cache.update_locals(cache.acquire(), locals())
+    pickled_cache = Cache.update_locals(cache.load(), locals())
 
     if 'r' not in pickled_cache:
         pickled_cache['r'] = r = random.random()
 
     Cache.save(pickled_cache)
     print 'r =', r"""
-
-    __slots__ = ('acquire', 'save', 'update_locals', 'fname')
 
     def __init__(self, fname=redis_cursor):
         if isinstance(fname, StrictRedis):

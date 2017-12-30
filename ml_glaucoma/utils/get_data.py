@@ -40,7 +40,7 @@ RecImg = namedtuple('RecImg', ('rec', 'imgs'))  # type: (generated_types.T0, [st
 globals()[RecImg.__name__] = RecImg
 
 cache = Cache(fname=environ.get('CACHE_FNAME') if 'NO_REDIS' in environ else redis_cursor)
-rand_cache = Cache(fname=path.join(path.dirname(path.dirname(__file__)), '_data', '.cache', 'rand_cache.pkl')).acquire()
+rand_cache = Cache(fname=path.join(path.dirname(path.dirname(__file__)), '_data', '.cache', 'rand_cache.pkl')).load()
 fqdn = getfqdn()
 
 
@@ -264,7 +264,7 @@ def get_data(new_base_dir=None, skip_save=True, cache_fname=None, invalidate=Fal
         cache = Cache(fname=cache_fname)
     if invalidate:
         cache.invalidate()
-    pickled_cache = cache.update_locals(cache.acquire(), locals()) if path.getsize('generated_types.py') > 50 else {}
+    pickled_cache = cache.update_locals(cache.load(), locals()) if path.getsize('generated_types.py') > 50 else {}
 
     if pickled_cache:
         logger.info('imported T0 has:'.ljust(just) + '{}'.format(
