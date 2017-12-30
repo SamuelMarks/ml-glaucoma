@@ -4,3 +4,8 @@ openpyxl
 sas7bdat
 redis
 matplotlib
+tqdm
+tflearn
+h5py
+scipy
+keras

@@ -72,7 +72,6 @@ class Cache(object):
         self.fname = fname or self.fname
 
         if isinstance(self.fname, StrictRedis):
-            redis_cursor.delete()
             key = key if key is not None else 'caches.pkl'
             print 'rm redis://{}'.format('.pycache/{key}'.format(key=key))
             self.fname.delete('.pycache/{key}'.format(key=key))

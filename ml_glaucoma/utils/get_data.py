@@ -25,6 +25,7 @@ pickled_cache = {}
 base_dir = None
 just = 50
 RecImg = namedtuple('RecImg', ('rec', 'imgs'))  # type: (generated_types.T0, [str])
+globals()[RecImg.__name__] = RecImg
 
 cache = Cache(fname=environ.get('CACHE_FNAME') if 'NO_REDIS' in environ else redis_cursor)
 rand_cache = Cache(fname=path.join(path.dirname(path.dirname(__file__)), '_data', '.cache', 'rand_cache.pkl')).load()
@@ -42,10 +43,11 @@ def _update_generated_types_py(args=None, replace=False):
     with open('generated_types.py', 'wt') as f:
         f.write('from collections import namedtuple')
         f.write('\n\n')
+        # f.write("RecImg = namedtuple('RecImg', ('rec', 'imgs'))\n")
         if args is None:
             f.write('T0 = None')
         else:
-            f.write('T0 = namedtuple({T0_args[0]!r}, {T0_args[1]})'.format(T0_args=args))
+            f.write('T0 = namedtuple({T0_args[0]!r}, {T0_args[1]})\n'.format(T0_args=args))
         f.write('\n\n')
 
 
@@ -341,5 +343,5 @@ _update_generated_types_py()
 import generated_types
 
 if __name__ == '__main__':
-    _data = get_data()
-    prepare_data(_data)
+    _data = get_data(invalidate=True)
+    # prepare_data(_data)
