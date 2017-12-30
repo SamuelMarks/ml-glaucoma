@@ -40,7 +40,7 @@ RecImg = namedtuple('RecImg', ('rec', 'imgs'))  # type: (generated_types.T0, [st
 globals()[RecImg.__name__] = RecImg
 
 cache = Cache(fname=environ.get('CACHE_FNAME') if 'NO_REDIS' in environ else redis_cursor)
-rand_cache = Cache(fname=path.join(path.dirname(path.dirname(__file__)), '_data', '.cache', 'rand_cache.pkl')).load()
+rand_cache = Cache(fname=path.join(path.dirname(path.dirname(__file__)), '_data', '.cache', 'rand_cache.pkl')).acquire()
 fqdn = getfqdn()
 
 
@@ -245,7 +245,7 @@ Data = namedtuple('Data', ('tbl', 'datasets', 'features', 'feature_names', 'pick
 
 
 @run_once
-def get_data(skip_save=True, cache_fname=None, invalidate=False):  # still saves once
+def get_data(new_base_dir=None, skip_save=True, cache_fname=None, invalidate=False):  # still saves once
     """
     Gets and optionally caches data, using SAS | XLSX files as index, and BMES root as files
 
@@ -264,14 +264,14 @@ def get_data(skip_save=True, cache_fname=None, invalidate=False):  # still saves
         cache = Cache(fname=cache_fname)
     if invalidate:
         cache.invalidate()
-    pickled_cache = cache.update_locals(cache.load(), locals()) if path.getsize('generated_types.py') > 50 else {}
+    pickled_cache = cache.update_locals(cache.acquire(), locals()) if path.getsize('generated_types.py') > 50 else {}
 
     if pickled_cache:
         logger.info('imported T0 has:'.ljust(just) + '{}'.format(
             generated_types.T0._fields if generated_types.T0 is not None else generated_types.T0))
 
     global base_dir
-    base_dir = base_dir or path.join(path.expanduser('~'), 'repos', 'thesis', 'BMES')
+    base_dir = new_base_dir or base_dir or path.join(path.expanduser('~'), 'repos', 'thesis', 'BMES')
     _get_tbl(path.join(base_dir, 'glaucoma_20161205plus_Age23.xlsx'))
     _get_sas_tbl(path.join(base_dir, 'glaucoma_20161205plus_age23.sas7bdat'))
 
