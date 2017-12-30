@@ -9,3 +9,4 @@ tflearn
 h5py
 scipy
 keras
+tensorflow

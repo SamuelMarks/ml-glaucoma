@@ -1,18 +1,20 @@
 #!/usr/bin/env python
 
-from os import path
-import yaml
 import logging
 from logging.config import dictConfig as _dictConfig
+from os import path
+
+import yaml
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
-def _get_logger():
+
+def get_logger(name=None):
     with open(path.join(path.dirname(__file__), '_data', 'logging.yml'), 'rt') as f:
         data = yaml.load(f)
     _dictConfig(data)
-    return logging.getLogger()
+    return logging.getLogger(name=name)
 
 
-logger = _get_logger()
+logger = get_logger('root')

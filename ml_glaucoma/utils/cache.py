@@ -1,10 +1,20 @@
-from collections import namedtuple
+from os import makedirs, path, remove
+from platform import python_version_tuple
+from sys import modules
 
-from os import makedirs, mkdir, path, remove
 from redis import StrictRedis
-import cPickle as pickle
+from six import iteritems
+
+from ml_glaucoma import get_logger
+
+if python_version_tuple()[0] == '2':
+    import cPickle as pickle
+else:
+    import pickle
 
 from ml_glaucoma.utils import redis_cursor, it_consumes
+
+logger = get_logger(modules[__name__].__name__)
 
 
 class Cache(object):
@@ -49,7 +59,7 @@ class Cache(object):
     def update_locals(_pickled_cache, locls):
         if type(_pickled_cache) is dict:
             it_consumes(locls.__setitem__(k, v)
-                        for k, v in _pickled_cache.iteritems())
+                        for k, v in iteritems(_pickled_cache))
         else:
             raise TypeError('_pickled cache isn\'t dict')
         # elif key is not None: locls[key] = _pickled_cache
@@ -60,11 +70,11 @@ class Cache(object):
         self.fname = fname or self.fname
 
         if isinstance(self.fname, StrictRedis):
-            print 'saving cache to redis://{}'.format(
-                '.pycache/{key}'.format(key=key if key is not None else 'caches.pkl'))
+            logger.info('saving cache to redis://{}'.format(
+                '.pycache/{key}'.format(key=key if key is not None else 'caches.pkl')))
             self.fname.set('.pycache/{key}'.format(key=key if key is not None else 'caches.pkl'), marshall.dumps(cache))
         else:
-            print 'saving cache to file://{}'.format(self.fname)
+            logger.info('saving cache to file://{}'.format(self.fname))
             with open(self.fname, 'wb') as f:
                 marshall.dump(cache, f)
 
@@ -73,10 +83,10 @@ class Cache(object):
 
         if isinstance(self.fname, StrictRedis):
             key = key if key is not None else 'caches.pkl'
-            print 'rm redis://{}'.format('.pycache/{key}'.format(key=key))
+            logger.info('rm redis://{}'.format('.pycache/{key}'.format(key=key)))
             self.fname.delete('.pycache/{key}'.format(key=key))
         else:
-            print 'rm {}'.format(self.fname)
+            logger.info('rm {}'.format(self.fname))
             remove(self.fname)
 
 

@@ -1,4 +1,5 @@
 """Converts MNIST data to TFRecords file format with Example protos."""
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -8,7 +9,6 @@ import os
 import sys
 
 import tensorflow as tf
-
 from tensorflow.contrib.learn.python.learn.datasets import mnist
 
 FLAGS = None
