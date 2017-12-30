@@ -45,12 +45,15 @@ fqdn = getfqdn()
 
 
 def _update_generated_types_py(args=None, replace=False):
-    if path.isfile('generated_types.py'):
+    gen_py = 'generated_types.py'
+    if path.isfile(gen_py):
         if not replace:
             return
         else:
-            remove('generated_types.py')
-            remove('generated_types.pyc')
+            remove(gen_py)
+            gen_pyc = '{}c'.format(gen_py)
+            if path.isfile(gen_pyc):
+                remove(gen_pyc)
 
     with open('generated_types.py', 'wt') as f:
         f.write('from collections import namedtuple')
