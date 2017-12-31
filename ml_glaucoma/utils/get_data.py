@@ -24,6 +24,7 @@ from openpyxl import load_workbook
 from sas7bdat import SAS7BDAT
 
 import numpy as np
+import tensorflow as tf
 from tensorflow.contrib.learn.python.learn.datasets.base import Datasets
 from tensorflow.contrib.learn.python.learn.datasets.mnist import _read32
 
@@ -334,29 +335,49 @@ def get_data(new_base_dir=None, skip_save=True, cache_fname=None, invalidate=Fal
 
 
 def prepare_data(data_obj):
-    def extract_images(filename):
-        """Extract the images into a 4D uint8 numpy array [index, y, x, depth]."""
-        logger.info('Extracting', filename)
-        with gzip.open(filename) as bytestream:
-            magic = _read32(bytestream)
-            if magic != 2051:
-                raise ValueError('Invalid magic number %d in glaucoma image file: %s' % (magic, filename))
-            num_images = _read32(bytestream)
-            rows = _read32(bytestream)
-            cols = _read32(bytestream)
-            buf = bytestream.read(rows * cols * num_images)
-            data = np.frombuffer(buf, dtype=np.uint8)
-            data = data.reshape(num_images, rows, cols, 1)
-            return data
+    def _parse_function(filename, label):
+        image = tf.image.decode_image(tf.read_file(filename))
+        image_resized = tf.image.resize_images(image, [200,200])
+        return image_resized, label
+    def _get_filenames(dataset,pos_ids,id_to_imgs):
+        #returns filenames list and labels list
+        labels = []
+        filenames = []
+        for id in dataset:
+            for filename in id_to_imgs['id']:
+                if id in pos_ids:
+                    labels += [1]
+                else:
+                    labels += [-1]
+                filenames += [filename]
+        labels = tf.constant(labels)
+        filenames = tf.constant(filenames)
+        return filenames, labels
 
-    logger.info(random_sample(data_obj.tbl, data_obj.datasets.train))
-    logger.info('data_obj.datasets.train =', data_obj.datasets.train)
-    return it_consumes(map(lambda recimg: it_consumes(map(extract_images, recimg.imgs)), itervalues(data_obj.tbl)))
+    def _create_dataset(data_obj, dataset):
+        pos_ids = data_obj.pickled_cache['oags1']
+        id_to_imgs = data_obj.pickled_cache['id_to_imgs']
+
+        train_img_names, train_labels = _get_filenames(data_obj.datasets.train,pos_ids,id_to_imgs)
+        train = tf.data.Dataset.from_tensor_slices((train_img_names,train_labels))
+        train = train.map(_parse_function)
+
+    train = _create_dataset(data_obj, data_obj.datasets.train)
+    validation = _create_dataset(data_obj, data_obj.datasets.validation)
+    test = _create_dataset(data_obj, data_obj.datasets.test)
+    return train, validation, test
+
+    
+
+
 
 
 _update_generated_types_py()
 import generated_types
 
 if __name__ == '__main__':
-    _data = get_data(invalidate=True)
-    # prepare_data(_data)
+    _data = get_data(new_base_dir='/mnt')
+    train, val, test = prepare_data(_data)
+    print(train.shape)
+    print(val.shape)
+    print(test.shape)
