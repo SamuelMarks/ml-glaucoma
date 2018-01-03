@@ -1,8 +1,8 @@
-import gzip
 from collections import namedtuple
 from fnmatch import filter as fnmatch_filter
 from functools import partial
 from itertools import chain
+from logging import INFO
 from os import path, remove, walk, environ
 from platform import python_version_tuple
 from random import sample
@@ -26,7 +26,6 @@ from sas7bdat import SAS7BDAT
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.learn.python.learn.datasets.base import Datasets
-from tensorflow.contrib.learn.python.learn.datasets.mnist import _read32
 
 from ml_glaucoma import get_logger
 from ml_glaucoma.utils import run_once, it_consumes, pp, redis_cursor
@@ -43,6 +42,7 @@ globals()[RecImg.__name__] = RecImg
 cache = Cache(fname=environ.get('CACHE_FNAME') if 'NO_REDIS' in environ else redis_cursor)
 rand_cache = Cache(fname=path.join(path.dirname(path.dirname(__file__)), '_data', '.cache', 'rand_cache.pkl')).load()
 fqdn = getfqdn()
+logger.setLevel(INFO)
 
 
 def _update_generated_types_py(args=None, replace=False):
@@ -148,10 +148,10 @@ def _populate_imgs(img_directory, skip_save=True):
 
     # Arghh, where are my views/slices?
     if not skip_save:
-        logger.info('saving in _populate_imgs')
+        logger.debug('saving in _populate_imgs')
         cache.save(pickled_cache)
 
-    logger.info('total_imgs == total_imgs_assoc_to_id:'.ljust(just) + '{}'.format(
+    logger.debug('total_imgs == total_imgs_assoc_to_id:'.ljust(just) + '{}'.format(
         pickled_cache['total_imgs'] == pickled_cache['total_imgs_assoc_to_id']))
 
     return pickled_cache
@@ -187,9 +187,9 @@ def _vanilla_stats(skip_save=True):
         )
         skip_save or cache.save(pickled_cache)
 
-    it_consumes(map(logger.info, pickled_cache['_vanilla_stats'].split('\n')))
-    logger.info('oags1:'.ljust(just) + '{}'.format(oags1))
-    logger.info('generated_types.T0._fields:'.ljust(just) + '{}'.format(generated_types.T0._fields))
+    it_consumes(map(logger.debug, pickled_cache['_vanilla_stats'].split('\n')))
+    logger.debug('oags1:'.ljust(just) + '{}'.format(oags1))
+    logger.debug('generated_types.T0._fields:'.ljust(just) + '{}'.format(generated_types.T0._fields))
     return pickled_cache
 
 
@@ -215,17 +215,17 @@ def _log_set_stats():
     tbl = pickled_cache['tbl']
     datasets = pickled_cache['datasets']
 
-    logger.info('# in train set:'.ljust(just) + str(len(datasets.train)))
-    logger.info('# in test set:'.ljust(just) + str(len(datasets.test)))
-    logger.info('# in validation set:'.ljust(just) + str(len(datasets.validation)))
-    logger.info('# shared between sets:'.ljust(just) + str(sum((len(datasets.validation & datasets.test),
+    logger.debug('# in train set:'.ljust(just) + str(len(datasets.train)))
+    logger.debug('# in test set:'.ljust(just) + str(len(datasets.test)))
+    logger.debug('# in validation set:'.ljust(just) + str(len(datasets.validation)))
+    logger.debug('# shared between sets:'.ljust(just) + str(sum((len(datasets.validation & datasets.test),
                                                                 len(datasets.test & datasets.train),
                                                                 len(datasets.validation & datasets.train)))))
     # '# shared between sets:'.ljust(just), sum(len(s0&s1) for s0, s1 in combinations((validation, test, train), 2))
-    logger.info(
+    logger.debug(
         '# len(all sets):'.ljust(just) + str(sum(map(len, (datasets.train, datasets.test, datasets.validation)))))
-    logger.info('# len(total):'.ljust(just) + str(len(tbl)))
-    logger.info(
+    logger.debug('# len(total):'.ljust(just) + str(len(tbl)))
+    logger.debug(
         '# len(all sets) == len(total):'.ljust(just) + str(
             sum(map(len, (datasets.train, datasets.test, datasets.validation))) == len(tbl)))
 
@@ -271,7 +271,7 @@ def get_data(new_base_dir=None, skip_save=True, cache_fname=None, invalidate=Fal
     pickled_cache = cache.update_locals(cache.load(), locals()) if path.getsize('generated_types.py') > 50 else {}
 
     if pickled_cache:
-        logger.info('imported T0 has:'.ljust(just) + '{}'.format(
+        logger.debug('imported T0 has:'.ljust(just) + '{}'.format(
             generated_types.T0._fields if generated_types.T0 is not None else generated_types.T0))
 
     global base_dir
@@ -288,8 +288,8 @@ def get_data(new_base_dir=None, skip_save=True, cache_fname=None, invalidate=Fal
     feature_names = get_feature_names()
     features = get_features(feature_names, skip_save=skip_save)
 
-    logger.info('feature_names:'.ljust(just) + '{}'.format(feature_names))
-    logger.info('features:'.ljust(just) + '{}'.format(features))
+    logger.debug('feature_names:'.ljust(just) + '{}'.format(feature_names))
+    logger.debug('features:'.ljust(just) + '{}'.format(features))
     cache.save(pickled_cache)
 
     tbl = pickled_cache['tbl']
@@ -319,16 +319,16 @@ def get_data(new_base_dir=None, skip_save=True, cache_fname=None, invalidate=Fal
         id_to_img_dims = pickled_cache['id_to_img_dims']
         img_dims_to_recimg = pickled_cache['img_dims_to_recimg']
 
-    logger.info('len(id_to_img_dims):'.ljust(just) + '{:d}'.format(len(id_to_img_dims)))
-    logger.info('len(img_dims_to_recimg):'.ljust(just) + '{:d}'.format(len(img_dims_to_recimg)))
-    logger.info('# without oags1 but with loag1 etc.:'.ljust(just) + '{:d}'.format(
+    logger.debug('len(id_to_img_dims):'.ljust(just) + '{:d}'.format(len(id_to_img_dims)))
+    logger.debug('len(img_dims_to_recimg):'.ljust(just) + '{:d}'.format(len(img_dims_to_recimg)))
+    logger.debug('# without oags1 but with loag1 etc.:'.ljust(just) + '{:d}'.format(
         sum(1 for IDNUM, u in iteritems(tbl) if not u.rec.oag1 and (u.rec.roag1 or u.rec.loag1))))
     for dim in img_dims_to_recimg:
-        logger.info(
+        logger.debug(
             'len(img_dims_to_recimg[{:d}]):'.format(dim).ljust(just) + '{:d}'.format(len(img_dims_to_recimg[dim])))
-        logger.info('{:d} with oags1:'.format(dim).ljust(just) + '{:d}'.format(
+        logger.debug('{:d} with oags1:'.format(dim).ljust(just) + '{:d}'.format(
             sum(1 for recimg in img_dims_to_recimg[dim] if recimg.rec.oag1)))
-        logger.info('{:d} with oags1:'.format(dim).ljust(just) + '{:d}'.format(
+        logger.debug('{:d} with oags1:'.format(dim).ljust(just) + '{:d}'.format(
             sum(1 for recimg in img_dims_to_recimg[dim] if recimg.rec.oag1)))
 
     return Data(tbl, datasets, features, feature_names, pickled_cache)
@@ -344,7 +344,7 @@ def prepare_data(data_obj):
         labels = []
         filenames = []
         for id in dataset:
-            for filename in id_to_imgs['id']:
+            for filename in id_to_imgs[id]:
                 if id in pos_ids:
                     labels += [1]
                 else:
