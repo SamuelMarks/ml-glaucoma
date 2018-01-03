@@ -35,7 +35,7 @@ from ml_glaucoma.utils.cache import Cache
 logger = get_logger(modules[__name__].__name__)
 
 pickled_cache = {}
-base_dir = None
+base_dir = '/mnt'
 just = 50
 RecImg = namedtuple('RecImg', ('rec', 'imgs'))  # type: (generated_types.T0, [str])
 globals()[RecImg.__name__] = RecImg
@@ -200,6 +200,7 @@ def get_datasets(skip_save=True):
     no_oags1 = pickled_cache['no_oags1']
     oags1 = pickled_cache['oags1']
     tbl_ids = pickled_cache['tbl_ids']
+    #rand_cache = pickled_cache['rand_cache']
     train, test = (frozenset(chain(
         (no_oags1[k] for k in rand_cache['2000 in 0-3547'][i * 970:970 + i * 970]),
         (oags1[k] for k in rand_cache['0-108'][i * 30:30 + i * 30])
@@ -245,6 +246,11 @@ def get_features(feature_names, skip_save=True):
     return np.bmat(np.fromiter((idx for idx, _ in enumerate(feature_names)), np.float32))
 
 
+    train = _create_dataset(data_obj, data_obj.datasets.train)
+    validation = _create_dataset(data_obj, data_obj.datasets.validation)
+    test = _create_dataset(data_obj, data_obj.datasets.test)
+    return train, validation, test
+
 Data = namedtuple('Data', ('tbl', 'datasets', 'features', 'feature_names', 'pickled_cache'))
 
 
@@ -275,7 +281,8 @@ def get_data(new_base_dir=None, skip_save=True, cache_fname=None, invalidate=Fal
             generated_types.T0._fields if generated_types.T0 is not None else generated_types.T0))
 
     global base_dir
-    base_dir = new_base_dir or base_dir or path.join(path.expanduser('~'), 'repos', 'thesis', 'BMES')
+    assert new_base_dir or base_dir, "No database directory provided"
+    base_dir = new_base_dir or base_dir #or path.join(path.expanduser('~'), 'repos', 'thesis', 'BMES')
     _get_tbl(path.join(base_dir, 'glaucoma_20161205plus_Age23.xlsx'))
     _get_sas_tbl(path.join(base_dir, 'glaucoma_20161205plus_age23.sas7bdat'))
 
@@ -331,41 +338,11 @@ def get_data(new_base_dir=None, skip_save=True, cache_fname=None, invalidate=Fal
         logger.info('{:d} with oags1:'.format(dim).ljust(just) + '{:d}'.format(
             sum(1 for recimg in img_dims_to_recimg[dim] if recimg.rec.oag1)))
 
-    return Data(tbl, datasets, features, feature_names, pickled_cache)
+    data = Data(tbl, datasets, features, feature_names, pickled_cache)
+    #train, val, test = prepare_data(data)
+    return data
 
 
-def prepare_data(data_obj):
-    def _parse_function(filename, label):
-        image = tf.image.decode_image(tf.read_file(filename))
-        image_resized = tf.image.resize_images(image, [200,200])
-        return image_resized, label
-    def _get_filenames(dataset,pos_ids,id_to_imgs):
-        #returns filenames list and labels list
-        labels = []
-        filenames = []
-        for id in dataset:
-            for filename in id_to_imgs['id']:
-                if id in pos_ids:
-                    labels += [1]
-                else:
-                    labels += [-1]
-                filenames += [filename]
-        labels = tf.constant(labels)
-        filenames = tf.constant(filenames)
-        return filenames, labels
-
-    def _create_dataset(data_obj, dataset):
-        pos_ids = data_obj.pickled_cache['oags1']
-        id_to_imgs = data_obj.pickled_cache['id_to_imgs']
-
-        train_img_names, train_labels = _get_filenames(data_obj.datasets.train,pos_ids,id_to_imgs)
-        train = tf.data.Dataset.from_tensor_slices((train_img_names,train_labels))
-        train = train.map(_parse_function)
-
-    train = _create_dataset(data_obj, data_obj.datasets.train)
-    validation = _create_dataset(data_obj, data_obj.datasets.validation)
-    test = _create_dataset(data_obj, data_obj.datasets.test)
-    return train, validation, test
 
     
 
@@ -376,8 +353,7 @@ _update_generated_types_py()
 import generated_types
 
 if __name__ == '__main__':
-    _data = get_data(new_base_dir='/mnt')
+    _data = get_data()
     train, val, test = prepare_data(_data)
-    print(train.shape)
-    print(val.shape)
-    print(test.shape)
+    print(train)
+

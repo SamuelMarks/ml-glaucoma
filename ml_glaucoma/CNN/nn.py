@@ -16,12 +16,15 @@ from keras.layers import Conv2D, MaxPooling2D
 import keras.backend as K
 import os
 import numpy as np
+import cv2 
 
-#change to output numpy arrays
 def prepare_data(data_obj):
     def _parse_function(filename):
-        image = tf.image.decode_jpeg(tf.read_file(filename),channels=3)
-        image_resized = tf.image.resize_images(image,[200,200])
+        image = cv2.imread(filename)
+        image_resized = cv2.resize(image, (400,400))
+        global i
+        print("Imported image: ", i, end='\r')
+        i += 1
         return image_resized
     def _get_filenames(dataset,pos_ids,id_to_imgs):
         #returns filenames list and labels list
@@ -36,31 +39,40 @@ def prepare_data(data_obj):
                 filenames += [filename]
         return filenames, labels
 
-    def _create_dataset(data_obj, dataset):
+    def _create_dataset(data_obj, dataset,size=None):
         pos_ids = data_obj.pickled_cache['oags1']
         id_to_imgs = data_obj.pickled_cache['id_to_imgs']
 
         img_names, data_labels = _get_filenames(dataset,pos_ids,id_to_imgs)
-        dataset_tensor = tf.stack(list(map(_parse_function,img_names)))
-        #labels_tensor = tf.constant(data_labels)
+        if size:
+            img_names, data_labels = img_names[:size], data_labels[:size]
 
-        # dataset = tf.data.Dataset.from_tensor_slices((img_names,data_labels))
-        # dataset = dataset.map(_parse_function)
+        global i
+        i = 0
+        dataset_tensor = np.stack(list(map(_parse_function,img_names)))
+        print()
 
         return dataset_tensor, data_labels
 
-    train = _create_dataset(data_obj, data_obj.datasets.train)
-    validation = _create_dataset(data_obj, data_obj.datasets.validation)
-    test = _create_dataset(data_obj, data_obj.datasets.test)
+    x_train, y_train = train = _create_dataset(data_obj, data_obj.datasets.train)
+    x_val, y_val = validation = _create_dataset(data_obj, data_obj.datasets.validation,size=1000)
+    x_test, y_test = test = _create_dataset(data_obj, data_obj.datasets.test,size=1000)
+
+    f = h5py.File('dataset.hdf5','w')
+    dset = f.create_dataset("x_train", data=x_train)
+    dset = f.create_dataset("y_train", data=y_train)
+    dset = f.create_dataset("x_val", data=x_val)
+    dset = f.create_dataset("y_val", data=y_val)
+    dset = f.create_dataset("x_test", data=x_test)
+    dset = f.create_dataset("y_test", data=y_test)
     return train, validation, test
 
-batch_size = 32
+batch_size = 128
 num_classes = 2
-epochs = 100
+epochs = 10
 data_augmentation = False 
-num_predictions = 20
 save_dir = os.path.join(os.getcwd(), 'saved_models')
-model_name = 'keras_cifar10_trained_model.h5'
+model_name = 'keras_glaucoma_trained_model.h5'
 
 # The data, shuffled and split between train and test sets:
 data_obj = get_data()
@@ -69,16 +81,17 @@ print('x_train shape:', x_train.shape)
 print(x_train.shape[0], 'train samples')
 print(x_test.shape[0], 'test samples')
 
+print("Num positive training examples: ", np.sum(y_train))
+
 # Convert class vectors to binary class matrices.
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_val = keras.utils.to_categorical(y_val, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
 model = Sequential()
-model.add(InputLayer(input_tensor=x_train, input_shape=(None,200,200,3)))
+#model.add(InputLayer(input_tensor=x_train, input_shape=(None,200,200,3)))
 model.add(Conv2D(32, (3, 3), padding='same',
-        input_shape=x_train.get_shape().as_list()[1:]))
-                 #input_shape=(x_train.shape[1],x_train.shape[2],x_train.shape[3])))
+                input_shape=x_train.shape[1:]))
 model.add(Activation('relu'))
 # model.add(Conv2D(32, (3, 3)))
 # model.add(Activation('relu'))
@@ -100,33 +113,40 @@ model.add(Dense(2))
 model.add(Activation('softmax'))
 
 #custom metrics
-def fraction_correct(y_true, y_pred):
-    return K.mean(K.equal(K.greater(y_true,1.5),K.greater(y_pred,1.5)))
+#def fraction_correct(y_true, y_pred):
+#    return K.mean(K.equal(K.greater(y_true,1.5),K.greater(y_pred,1.5)))
 def specificity(y_true,y_pred):
-    return K.mean(K.all(K.equal(y_true , 1),K.greater(y_pred, 0)))
+    return K.cast(K.all(
+        (K.equal(K.argmax(y_true, axis=-1) , 1), K.equal(K.argmax(y_pred,axis=-1), 1))
+        ), K.floatx())
 def sensitivity(y_true,y_pred):
-    return K.mean(K.all(K.equal(y_true , -1),K.less(y_pred, 0)))
+    return K.cast(K.all(
+        (K.equal(K.argmax(y_true, axis=-1) , 0), K.equal(K.argmax(y_pred,axis=-1), 0))
+        ), K.floatx())
+    #return K.mean(K.all(K.equal(y_true , -1),K.less(y_pred, 0)))
 
 # Let's train the model using RMSprop
 opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
-model.compile(loss='mean_squared_error',
+model.compile(loss='categorical_crossentropy',
               optimizer=opt,
-              metrics=[fraction_correct])
+              metrics=['categorical_accuracy', specificity, sensitivity])
 
 print("Shape is: ",x_train.shape)
 print("Label shape: ", y_train.shape) 
-#x_train = x_train.astype('float32')
-#x_test = x_test.astype('float32')
-#x_train /= 255
-#x_test /= 255
+x_train = x_train.astype('float32')
+x_test = x_test.astype('float32')
+x_train /= 255
+x_test /= 255
 
 if not data_augmentation:
     print('Not using data augmentation.')
-    model.fit(None, y_train,
+    model.fit(x_train, y_train,
               batch_size=batch_size,
               epochs=epochs,
-              validation_data=(x_test, y_test),
-              shuffle=True)
+              validation_data=(x_val, y_val),
+              shuffle=True,
+              class_weight={0:1,1:24},
+              )
 else:
     print('Using real-time data augmentation.')
     # This will do preprocessing and realtime data augmentation:
@@ -150,8 +170,10 @@ else:
     model.fit_generator(datagen.flow(x_train, y_train,
                                      batch_size=batch_size),
                         epochs=epochs,
-                        validation_data=(x_test, y_test),
-                        workers=4)
+                        validation_data=(x_val, y_val),
+                        workers=4,
+                        class_weight={0:1,1:24},
+                        )
 
 # Save model and weights
 if not os.path.isdir(save_dir):
@@ -162,5 +184,7 @@ print('Saved trained model at %s ' % model_path)
 
 # Score trained model.
 scores = model.evaluate(x_test, y_test, verbose=1)
-print('Test loss:', scores[0])
-print('Test accuracy:', scores[1])
+print("\nTest results\n")
+for metric, score in (mode.metrics_names, scores):
+    print(metric, ':', score)
+exit()
