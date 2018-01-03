@@ -44,6 +44,7 @@ def prepare_data(data_obj):
         id_to_imgs = data_obj.pickled_cache['id_to_imgs']
 
         img_names, data_labels = _get_filenames(dataset,pos_ids,id_to_imgs)
+
         if size:
             img_names, data_labels = img_names[:size], data_labels[:size]
 
