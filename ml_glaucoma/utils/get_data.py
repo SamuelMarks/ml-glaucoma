@@ -32,6 +32,7 @@ from ml_glaucoma.utils import run_once, it_consumes, pp, redis_cursor
 from ml_glaucoma.utils.cache import Cache
 
 logger = get_logger(modules[__name__].__name__)
+logger.setLevel(INFO)
 
 pickled_cache = {}
 base_dir = None
@@ -42,7 +43,7 @@ globals()[RecImg.__name__] = RecImg
 cache = Cache(fname=environ.get('CACHE_FNAME') if 'NO_REDIS' in environ else redis_cursor)
 rand_cache = Cache(fname=path.join(path.dirname(path.dirname(__file__)), '_data', '.cache', 'rand_cache.pkl')).load()
 fqdn = getfqdn()
-logger.setLevel(INFO)
+
 
 
 def _update_generated_types_py(args=None, replace=False):
@@ -193,7 +194,24 @@ def _vanilla_stats(skip_save=True):
     return pickled_cache
 
 
-def get_datasets(skip_save=True):
+def get_datasets(no_oags, oags, skip_save=True):
+    """
+    Partitions datasets into train, test, and validation
+
+    :keyword no_oags: Number of Open Angle Glaucoma negative to include in test [#no_oags] and train [#no_oags].
+    Everything leftover goes into validation.
+    :type no_oags: ``int``
+
+    :keyword oags: Number of Open Angle Glaucoma positive to include in test [#no_oags] and train [#no_oags].
+    Everything leftover goes into validation.
+    :type oags: ``int``
+
+    :keyword skip_save: Skips saving
+    :type skip_save: ``bool``
+
+    :return: Partitioned dataset (a namedtuple)
+    :rtype ``Datasets``
+    """
     global pickled_cache
     get_data(skip_save=skip_save)
 
@@ -201,8 +219,8 @@ def get_datasets(skip_save=True):
     oags1 = pickled_cache['oags1']
     tbl_ids = pickled_cache['tbl_ids']
     train, test = (frozenset(chain(
-        (no_oags1[k] for k in rand_cache['2000 in 0-3547'][i * 970:970 + i * 970]),
-        (oags1[k] for k in rand_cache['0-108'][i * 30:30 + i * 30])
+        (no_oags1[k] for k in rand_cache['2000 in 0-3547'][i * no_oags:no_oags + i * no_oags]),
+        (oags1[k] for k in rand_cache['0-108'][i * oags:oags + i * oags])
     )) for i in xrange(2))
 
     pickled_cache['datasets'] = Datasets(train=train, test=test, validation=(train | test) ^ tbl_ids)
@@ -249,15 +267,29 @@ Data = namedtuple('Data', ('tbl', 'datasets', 'features', 'feature_names', 'pick
 
 
 @run_once
-def get_data(new_base_dir=None, skip_save=True, cache_fname=None, invalidate=False):  # still saves once
+def get_data(no_oags, oags, new_base_dir=None, skip_save=True, cache_fname=None, invalidate=False):  # still saves once
     """
     Gets and optionally caches data, using SAS | XLSX files as index, and BMES root as files
+
+    :keyword no_oags: Number of Open Angle Glaucoma negative to include in test [#no_oags] and train [#no_oags].
+    Everything leftover goes into validation.
+    :type no_oags: ``int``
+
+    :keyword oags: Number of Open Angle Glaucoma positive to include in test [#no_oags] and train [#no_oags].
+    Everything leftover goes into validation.
+    :type oags: ``int``
+
+    :keyword new_base_dir: Replacement base dir. Default is `path.join(path.expanduser('~'), 'repos', 'thesis', 'BMES')`
+    :type new_base_dir: ``str``
 
     :keyword skip_save: Skips saving
     :type skip_save: ``bool``
 
     :keyword cache_fname: Cache filename. Defaults to $CACHE_FNAME
     :type cache_fname: ``str``
+
+    :keyword invalidate: Invalidate cache first
+    :type invalidate: ``bool``
 
     :return: data
     :rtype: ``Data``
@@ -282,7 +314,7 @@ def get_data(new_base_dir=None, skip_save=True, cache_fname=None, invalidate=Fal
     _populate_imgs(img_directory=path.join(base_dir, 'BMES123', 'BMES1Images'), skip_save=skip_save)
     _vanilla_stats(skip_save=skip_save)
 
-    datasets = get_datasets(skip_save=skip_save)
+    datasets = get_datasets(no_oags=no_oags, oags=oags, skip_save=skip_save)
     _log_set_stats()
 
     feature_names = get_feature_names()
@@ -376,7 +408,7 @@ _update_generated_types_py()
 import generated_types
 
 if __name__ == '__main__':
-    _data = get_data(new_base_dir='/mnt')
+    _data = get_data(no_oags=970, oags=30, new_base_dir='/mnt')
     train, val, test = prepare_data(_data)
     print(train.shape)
     print(val.shape)
