@@ -74,6 +74,7 @@ def prepare_data():
     x, y = _create_dataset(data_obj)
 
     x, y = shuffle(x,y,random_state=0)
+    x /= 255.
 
     train_fraction = 0.9
     train_amount = int(x.shape[0]*0.9)
@@ -81,14 +82,14 @@ def prepare_data():
     x_test, y_test = x[train_amount:],y[train_amount:]
 
     f = h5py.File(DATA_SAVE_LOCATION,'w')
-    x_train = f.create_dataset("x_train", data=x_train)
-    y_train = f.create_dataset("y_train", data=y_train)
-    x_test = f.create_dataset("x_test", data=x_test)
-    y_test = f.create_dataset("y_test", data=y_test)
+    x_train = f.create_dataset("x_train", data=x_train, compression='lzf')
+    y_train = f.create_dataset("y_train", data=y_train, compression='lzf')
+    x_test = f.create_dataset("x_test", data=x_test, compression='lzf')
+    y_test = f.create_dataset("y_test", data=y_test, compression='lzf')
 
     return (x_train, y_train),(x_test, y_test)
 
-batch_size = 128
+batch_size = 256
 num_classes = 2
 epochs = 10
 data_augmentation = False 
@@ -111,22 +112,22 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 
 model = Sequential()
 #model.add(InputLayer(input_tensor=x_train, input_shape=(None,200,200,3)))
-model.add(Conv2D(32, (3, 3), padding='same',
-                input_shape=x_train.shape[1:]))
-model.add(Activation('relu'))
+#model.add(Conv2D(32, (3, 3), padding='same',
+#                input_shape=x_train.shape[1:]))
+#model.add(Activation('relu'))
 # model.add(Conv2D(32, (3, 3)))
 # model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
+#model.add(MaxPooling2D(pool_size=(2, 2)))
+#model.add(Dropout(0.25))
 
-model.add(Conv2D(64, (3, 3), padding='same'))
-model.add(Activation('relu'))
+#model.add(Conv2D(64, (3, 3), padding='same'))
+#model.add(Activation('relu'))
 # model.add(Conv2D(64, (3, 3)))
 # model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
+#model.add(MaxPooling2D(pool_size=(2, 2)))
+#model.add(Dropout(0.25))
 
-model.add(Flatten())
+model.add(Flatten(input_shape=x_train.shape[1:]))
 model.add(Dense(512))
 model.add(Activation('relu'))
 model.add(Dropout(0.5))
@@ -151,10 +152,6 @@ model.compile(loss='categorical_crossentropy',
 
 print("Shape is: ",x_train.shape)
 print("Label shape: ", y_train.shape) 
-#x_train = x_train.astype('float32')
-#x_test = x_test.astype('float32')
-#x_train /= 255
-#x_test /= 255
 
 if not data_augmentation:
     print('Not using data augmentation.')
@@ -163,7 +160,7 @@ if not data_augmentation:
               epochs=epochs,
               validation_split=0.09,
               shuffle='batch',
-              class_weight={0:1,1:24},
+              class_weight={0:1.,1:1000.},
               )
 else:
     print('Using real-time data augmentation.')
