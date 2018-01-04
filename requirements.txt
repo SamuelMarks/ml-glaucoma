@@ -11,3 +11,4 @@ scipy
 keras
 tensorflow
 opencv-python
+scikit-learn
