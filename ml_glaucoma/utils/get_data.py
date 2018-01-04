@@ -2,7 +2,7 @@ from collections import namedtuple
 from fnmatch import filter as fnmatch_filter
 from functools import partial
 from itertools import chain
-from logging import INFO
+from logging import INFO,NOTSET
 from os import path, remove, walk, environ
 from platform import python_version_tuple
 from random import sample
@@ -32,7 +32,7 @@ from ml_glaucoma.utils import run_once, it_consumes, pp, redis_cursor
 from ml_glaucoma.utils.cache import Cache
 
 logger = get_logger(modules[__name__].__name__)
-logger.setLevel(INFO)
+logger.setLevel(NOTSET)
 
 pickled_cache = {}
 base_dir = '/mnt'
@@ -194,7 +194,7 @@ def _vanilla_stats(skip_save=True):
     return pickled_cache
 
 
-def get_datasets(no_oags, oags, skip_save=True):
+def get_datasets(no_oags=970, oags=30, skip_save=True):
     """
     Partitions datasets into train, test, and validation
 
@@ -273,7 +273,7 @@ Data = namedtuple('Data', ('tbl', 'datasets', 'features', 'feature_names', 'pick
 
 
 @run_once
-def get_data(no_oags, oags, new_base_dir=None, skip_save=True, cache_fname=None, invalidate=False):  # still saves once
+def get_data(no_oags=970, oags=30, new_base_dir=None, skip_save=True, cache_fname=None, invalidate=False):  # still saves once
     """
     Gets and optionally caches data, using SAS | XLSX files as index, and BMES root as files
 
