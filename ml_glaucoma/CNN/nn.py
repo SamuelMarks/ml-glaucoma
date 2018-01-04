@@ -17,20 +17,26 @@ import keras.backend as K
 import os
 import numpy as np
 import cv2 
+import h5py
+from sklearn.utils import shuffle
+from sklearn.metrics import confusion_matrix
 
-def prepare_data(data_obj):
+
+DATA_SAVE_LOCATION = '400x400dataset.hdf5'
+
+def prepare_data():
     def _parse_function(filename):
         image = cv2.imread(filename)
         image_resized = cv2.resize(image, (400,400))
         global i
-        print("Imported image: ", i, end='\r')
+        print("Importing image ", i, end='\r')
         i += 1
         return image_resized
-    def _get_filenames(dataset,pos_ids,id_to_imgs):
+    def _get_filenames(neg_ids,pos_ids,id_to_imgs):
         #returns filenames list and labels list
         labels = []
         filenames = []
-        for id in dataset:
+        for id in list(pos_ids)+list(neg_ids):
             for filename in id_to_imgs[id]:
                 if id in pos_ids:
                     labels += [1]
@@ -39,34 +45,48 @@ def prepare_data(data_obj):
                 filenames += [filename]
         return filenames, labels
 
-    def _create_dataset(data_obj, dataset,size=None):
+    def _create_dataset(data_obj):
         pos_ids = data_obj.pickled_cache['oags1']
+        neg_ids = data_obj.pickled_cache['no_oags1']
         id_to_imgs = data_obj.pickled_cache['id_to_imgs']
 
-        img_names, data_labels = _get_filenames(dataset,pos_ids,id_to_imgs)
+        img_names, data_labels = _get_filenames(neg_ids,pos_ids,id_to_imgs)
 
-        if size:
-            img_names, data_labels = img_names[:size], data_labels[:size]
+        print("Total images: ", len(img_names))
 
         global i
-        i = 0
+        i = 1
         dataset_tensor = np.stack(list(map(_parse_function,img_names)))
         print()
 
         return dataset_tensor, data_labels
 
-    x_train, y_train = train = _create_dataset(data_obj, data_obj.datasets.train)
-    x_val, y_val = validation = _create_dataset(data_obj, data_obj.datasets.validation,size=1000)
-    x_test, y_test = test = _create_dataset(data_obj, data_obj.datasets.test,size=1000)
+    if(os.path.isfile(DATA_SAVE_LOCATION)):
+        f = h5py.File(DATA_SAVE_LOCATION)
+        x_train_dset = f.get('x_train')
+        y_train_dset = f.get('y_train')
+        x_test_dset = f.get('x_test')
+        y_test_dset = f.get('y_test')
+        # X = numpy.array(Xdset)
+        return (x_train_dset,y_train_dset),(x_test_dset,y_test_dset)
 
-    f = h5py.File('dataset.hdf5','w')
-    dset = f.create_dataset("x_train", data=x_train)
-    dset = f.create_dataset("y_train", data=y_train)
-    dset = f.create_dataset("x_val", data=x_val)
-    dset = f.create_dataset("y_val", data=y_val)
-    dset = f.create_dataset("x_test", data=x_test)
-    dset = f.create_dataset("y_test", data=y_test)
-    return train, validation, test
+    data_obj = get_data()
+    x, y = _create_dataset(data_obj)
+
+    x, y = shuffle(x,y,random_state=0)
+
+    train_fraction = 0.9
+    train_amount = int(x.shape[0]*0.9)
+    x_train, y_train = x[:train_amount],y[:train_amount]
+    x_test, y_test = x[train_amount:],y[train_amount:]
+
+    f = h5py.File(DATA_SAVE_LOCATION,'w')
+    x_train = f.create_dataset("x_train", data=x_train)
+    y_train = f.create_dataset("y_train", data=y_train)
+    x_test = f.create_dataset("x_test", data=x_test)
+    y_test = f.create_dataset("y_test", data=y_test)
+
+    return (x_train, y_train),(x_test, y_test)
 
 batch_size = 128
 num_classes = 2
@@ -76,17 +96,17 @@ save_dir = os.path.join(os.getcwd(), 'saved_models')
 model_name = 'keras_glaucoma_trained_model.h5'
 
 # The data, shuffled and split between train and test sets:
-data_obj = get_data()
-(x_train, y_train), (x_val, y_val), (x_test, y_test) = prepare_data(data_obj)
+(x_train, y_train), (x_test, y_test) = prepare_data()
+
 print('x_train shape:', x_train.shape)
 print(x_train.shape[0], 'train samples')
 print(x_test.shape[0], 'test samples')
 
 print("Num positive training examples: ", np.sum(y_train))
+print("Fraction negative training examples: ", (len(y_train) - np.sum(y_train))/len(y_train))
 
 # Convert class vectors to binary class matrices.
 y_train = keras.utils.to_categorical(y_train, num_classes)
-y_val = keras.utils.to_categorical(y_val, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
 model = Sequential()
@@ -114,38 +134,35 @@ model.add(Dense(2))
 model.add(Activation('softmax'))
 
 #custom metrics
-#def fraction_correct(y_true, y_pred):
-#    return K.mean(K.equal(K.greater(y_true,1.5),K.greater(y_pred,1.5)))
 def specificity(y_true,y_pred):
     return K.cast(K.all(
         (K.equal(K.argmax(y_true, axis=-1) , 1), K.equal(K.argmax(y_pred,axis=-1), 1))
-        ), K.floatx())
+        ,axis=0), K.floatx())
 def sensitivity(y_true,y_pred):
     return K.cast(K.all(
         (K.equal(K.argmax(y_true, axis=-1) , 0), K.equal(K.argmax(y_pred,axis=-1), 0))
-        ), K.floatx())
-    #return K.mean(K.all(K.equal(y_true , -1),K.less(y_pred, 0)))
+        ,axis=0), K.floatx())
 
-# Let's train the model using RMSprop
-opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
+#opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
+opt = keras.optimizers.adam()
 model.compile(loss='categorical_crossentropy',
               optimizer=opt,
-              metrics=['categorical_accuracy', specificity, sensitivity])
+              metrics=['categorical_accuracy',specificity, sensitivity])
 
 print("Shape is: ",x_train.shape)
 print("Label shape: ", y_train.shape) 
-x_train = x_train.astype('float32')
-x_test = x_test.astype('float32')
-x_train /= 255
-x_test /= 255
+#x_train = x_train.astype('float32')
+#x_test = x_test.astype('float32')
+#x_train /= 255
+#x_test /= 255
 
 if not data_augmentation:
     print('Not using data augmentation.')
     model.fit(x_train, y_train,
               batch_size=batch_size,
               epochs=epochs,
-              validation_data=(x_val, y_val),
-              shuffle=True,
+              validation_split=0.09,
+              shuffle='batch',
               class_weight={0:1,1:24},
               )
 else:
@@ -171,7 +188,7 @@ else:
     model.fit_generator(datagen.flow(x_train, y_train,
                                      batch_size=batch_size),
                         epochs=epochs,
-                        validation_data=(x_val, y_val),
+                        validation_split=0.09,
                         workers=4,
                         class_weight={0:1,1:24},
                         )
