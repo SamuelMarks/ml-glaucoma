@@ -157,8 +157,17 @@ model.fit(x_train, y_train,
           shuffle='batch',
           validation_data=(x_test, y_test))
 score = model.evaluate(x_test, y_test, verbose=0)
+
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
+
+# Save model and weights
+if not os.path.isdir(save_dir):
+    os.makedirs(save_dir)
+model_path = os.path.join(save_dir, model_name)
+model.save(model_path)
+print('Saved trained model at %s ' % model_path)
+
 predictions = model.predict(x_test)
 confusion = sklearn.metrics.confusion_matrix(y_test, predictions)
 print("Confusion matrix:")
