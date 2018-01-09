@@ -17,11 +17,14 @@ import os
 import cv2 
 import h5py
 from sklearn.utils import shuffle
+from sklearn.metrics import confusion_matrix
 
 batch_size = 128
 num_classes = 2
-epochs = 12
+epochs = 20
 DATA_SAVE_LOCATION = '/mnt/datasets/400x400balanced_dataset.hdf5'
+save_dir = os.path.join(os.getcwd(), 'saved_models')
+model_name = 'keras_glaucoma_trained_model.h5'
 
 def prepare_data():
     def _parse_function(filename):
@@ -169,7 +172,11 @@ model.save(model_path)
 print('Saved trained model at %s ' % model_path)
 
 predictions = model.predict(x_test)
-confusion = sklearn.metrics.confusion_matrix(y_test, predictions)
+y_test = np.argmax(y_test,axis=-1)
+predictions = np.argmax(predictions,axis=-1)
+confusion = confusion_matrix(y_test, predictions)
 print("Confusion matrix:")
 print(confusion)
-
+c = confusion
+print("sensitivity = ", c[0,0]/(c[0,1] + c[0,0]))
+print("specificity = ", c[1,1]/(c[1,1] + c[1,0]))
