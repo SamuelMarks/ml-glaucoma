@@ -12,7 +12,7 @@ from ml_glaucoma.utils.get_data import get_data
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import InputLayer, Dense, Dropout, Activation, Flatten
-from keras.layers import Conv2D, MaxPooling2D
+from keras.layers import Conv2D, MaxPooling2D, BatchNormalization
 import keras.backend as K
 import os
 import numpy as np
@@ -95,7 +95,7 @@ epochs = 10
 data_augmentation = False
 save_dir = os.path.join(os.getcwd(), 'saved_models')
 model_name = 'keras_glaucoma_trained_model.h5'
-CIFAR = True
+CIFAR = False
 categorical =True 
 
 if not CIFAR:
@@ -143,13 +143,15 @@ if categorical:
 
 model = Sequential()
 #model.add(InputLayer(input_tensor=x_train, input_shape=(None,200,200,3)))
-model.add(Conv2D(32, (3, 3), padding='same',
-                input_shape=x_train.shape[1:]))
+model.add(BatchNormalization(
+                input_shape=x_train.shape[1:],
+                ))
+model.add(Conv2D(32, (3, 3), padding='same'))
 model.add(Activation('relu'))
-#model.add(Conv2D(32, (3, 3)))
-#model.add(Activation('relu'))
-#model.add(MaxPooling2D(pool_size=(2, 2)))
-#model.add(Dropout(0.5))
+model.add(Conv2D(32, (3, 3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.5))
 
 #model.add(Conv2D(64, (3, 3), padding='same'))
 #model.add(Activation('relu'))
@@ -158,8 +160,8 @@ model.add(Activation('relu'))
 #model.add(MaxPooling2D(pool_size=(2, 2)))
 #model.add(Dropout(0.5))
 
-#model.add(Flatten(input_shape=x_train.shape[1:]))
 model.add(Flatten())
+model.add(BatchNormalization())
 model.add(Dense(512))
 model.add(Activation('relu'))
 model.add(Dropout(0.8))
@@ -190,16 +192,11 @@ def sens(y_true, y_pred):
         ,axis=0), K.floatx())
 
 #opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
-#opt = keras.optimizers.RMSprop()
-opt = keras.optimizers.SGD(lr=0.0001, decay = 1e-6, momentum=0.9)
-if categorical:
-    model.compile(loss='categorical_crossentropy',
-              optimizer=opt,
-              metrics=[specificity, sensitivity])
-else:
-    model.compile(loss='mse',
-              optimizer=opt,
-              metrics=[spec, sens])
+opt = keras.optimizers.RMSprop()
+#opt = keras.optimizers.SGD(lr=0.0001, decay = 1e-6, momentum=0.9)
+model.compile(loss='categorical_crossentropy',
+          optimizer=opt,
+          metrics=['categorical_accuracy'])
 
 print("Shape is: ",x_train.shape)
 print("Label shape: ", y_train.shape) 
@@ -210,7 +207,7 @@ if not data_augmentation:
               batch_size=batch_size,
               epochs=epochs,
               validation_split=0.09,
-              #shuffle='batch',
+              shuffle='batch',
               #class_weight={0:1.,1:1000.},
               )
 else:
@@ -260,7 +257,8 @@ with open('log.txt', 'a') as f:
         print(metric, ':', score, file=f)
     
 results = model.predict(x_test)
-print(results)
-print(np.mean(results,axis=0))
 
-exit()    
+tn,fp,fn,tp = confusion_matrix(np.argmax(y_test,axis=1), np.argmax(results,axis=1)).ravel()
+print("sensitivity:", tp/(tp+fp))
+print("specificity:", tn/(tn+fn))
+print("accuracy:", (tn+tp)/(tn+tp+fn+fp))
