@@ -73,7 +73,7 @@ def prepare_data():
             compression='lzf')
     y_train = f.create_dataset("y_train", (train_amount,),compression='lzf')
     x_test = f.create_dataset("x_test", (test_amount,shape[1],shape[2],shape[3]), compression='lzf')
-    y_test = f.create_dataset("y_test", (train_amount,), compression='lzf')
+    y_test = f.create_dataset("y_test", (test_amount,), compression='lzf')
     
     i = 0
     for image, label in _create_dataset(data_obj):
@@ -86,30 +86,13 @@ def prepare_data():
         print("\rLoaded image %d of %d "%(i,shape[0]), end='')
         i += 1
 
-    #x, y = _create_dataset(data_obj)
-
-    #x_train, y_train = x[:train_amount],y[:train_amount]
-    #x_test, y_test = x[train_amount:],y[train_amount:]
-
-    #x_train = f.create_dataset("x_train", data=x_train, )#compression='lzf')
-    #y_train = f.create_dataset("y_train", data=y_train,)# compression='lzf')
-    #x_test = f.create_dataset("x_test", data=x_test, )#compression='lzf')
-    #y_test = f.create_dataset("y_test", data=y_test, )#compression='lzf')
 
     return (x_train, y_train),(x_test, y_test)
 
-batch_size = 256
-num_classes = 2
-epochs = 10
-data_augmentation = False
-save_dir = os.path.join(os.getcwd(), 'saved_models')
-model_name = 'keras_glaucoma_trained_model.h5'
-CIFAR = False
-categorical = True 
 
-    # The data, shuffled and split between train and test sets:
-    #(x_train, y_train), (x_test, y_test) = prepare_data()
-x_train, y_train = prepare_data()
+# The data, shuffled and split between train and test sets:
+#(x_train, y_train), (x_test, y_test) = prepare_data()
+(x_train, y_train),(x_test, y_test) = prepare_data()
 
 print("Length of both train arrays")
 print(len(y_train))

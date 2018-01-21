@@ -21,73 +21,20 @@ import h5py
 from sklearn.utils import shuffle
 from sklearn.metrics import confusion_matrix
 
-DATA_SAVE_LOCATION = '/mnt/datasets/400x400balanced_dataset.hdf5'
+DATA_SAVE_LOCATION = '/mnt/datasets/100x100_dataset.hdf5'
 
 def prepare_data():
-    def _parse_function(filename):
-        image = cv2.imread(filename)
-        image_resized = cv2.resize(image, (400,400))
-        global i
-        print("Importing image ", i, end='\r')
-        i += 1
-        return image_resized
-    def _get_filenames(neg_ids,pos_ids,id_to_imgs):
-        #returns filenames list and labels list
-        labels = []
-        filenames = []
-        for id in list(pos_ids)+list(neg_ids[:120]):
-            for filename in id_to_imgs[id]:
-                if id in pos_ids:
-                    labels += [1]
-                else:
-                    labels += [0]
-                filenames += [filename]
-        return filenames, labels
-
-    def _create_dataset(data_obj):
-        pos_ids = data_obj.pickled_cache['oags1']
-        neg_ids = data_obj.pickled_cache['no_oags1']
-        id_to_imgs = data_obj.pickled_cache['id_to_imgs']
-
-        img_names, data_labels = _get_filenames(neg_ids,pos_ids,id_to_imgs)
-
-        print("Total images: ", len(img_names))
-
-        global i
-        i = 1
-        dataset_tensor = np.stack(list(map(_parse_function,img_names)))
-        print()
-
-        return dataset_tensor, data_labels
-
     if(os.path.isfile(DATA_SAVE_LOCATION)):
         f = h5py.File(DATA_SAVE_LOCATION,'r')
         x_train_dset = f.get('x_train')
         y_train_dset = f.get('y_train')
         x_test_dset = f.get('x_test')
         y_test_dset = f.get('y_test')
-        # X = numpy.array(Xdset)
         return (x_train_dset,y_train_dset),(x_test_dset,y_test_dset)
+    else:
+        print("Data file isn't there")
+        exit()
 
-    data_obj = get_data()
-    x, y = _create_dataset(data_obj)
-
-    x, y = shuffle(x,y,random_state=0)
-    x = x.astype('float32')
-    x /= 255.
-
-    train_fraction = 0.9
-    train_amount = int(x.shape[0]*0.9)
-    x_train, y_train = x[:train_amount],y[:train_amount]
-    x_test, y_test = x[train_amount:],y[train_amount:]
-
-    f = h5py.File(DATA_SAVE_LOCATION,'w')
-    x_train = f.create_dataset("x_train", data=x_train, )#compression='lzf')
-    y_train = f.create_dataset("y_train", data=y_train,)# compression='lzf')
-    x_test = f.create_dataset("x_test", data=x_test, )#compression='lzf')
-    y_test = f.create_dataset("y_test", data=y_test, )#compression='lzf')
-
-    return (x_train, y_train),(x_test, y_test)
 
 batch_size = 256
 num_classes = 2
@@ -148,6 +95,7 @@ model.add(BatchNormalization(
                 ))
 model.add(Conv2D(32, (3, 3), padding='same'))
 model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Conv2D(32, (3, 3)))
 model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
@@ -161,38 +109,20 @@ model.add(Dropout(0.5))
 #model.add(Dropout(0.5))
 
 model.add(Flatten())
+model.add(Dense(256))
 model.add(BatchNormalization())
-model.add(Dense(512))
 model.add(Activation('relu'))
-model.add(Dropout(0.8))
+#model.add(Dropout(0.8))
 if categorical:
     model.add(Dense(2))
     model.add(Activation('softmax'))
 else:
     model.add(Dense(1))
 
-#custom metrics for categorical
-def specificity(y_true,y_pred):
-    return K.cast(K.all(
-        (K.equal(K.argmax(y_true, axis=-1) , 1), K.equal(K.argmax(y_pred,axis=-1), 1))
-        ,axis=0), K.floatx())
-def sensitivity(y_true,y_pred):
-    return K.cast(K.all(
-        (K.equal(K.argmax(y_true, axis=-1) , 2), K.equal(K.argmax(y_pred,axis=-1), 2))
-        ,axis=0), K.floatx())
-
-#custom metrics for single output
-def spec(y_true, y_pred):
-    return K.cast(K.all(
-        (K.greater(y_true, 0), K.greater(y_pred, 0))
-        ,axis=0), K.floatx())
-def sens(y_true, y_pred):
-    return K.cast(K.all(
-        (K.less(y_true, 0), K.less(y_pred, 0))
-        ,axis=0), K.floatx())
 
 #opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
-opt = keras.optimizers.RMSprop()
+#opt = keras.optimizers.RMSprop()
+opt = keras.optimizers.Adam()
 #opt = keras.optimizers.SGD(lr=0.0001, decay = 1e-6, momentum=0.9)
 model.compile(loss='categorical_crossentropy',
           optimizer=opt,
