@@ -21,7 +21,7 @@ import h5py
 from sklearn.utils import shuffle
 from sklearn.metrics import confusion_matrix
 
-DATA_SAVE_LOCATION = '/mnt/datasets/100x100_dataset.hdf5'
+DATA_SAVE_LOCATION = '/mnt/datasets/balancedsplit100x100.hdf5'
 
 def prepare_data():
     if(os.path.isfile(DATA_SAVE_LOCATION)):
@@ -95,29 +95,29 @@ model = Sequential()
 model.add(BatchNormalization(
                 input_shape=x_train.shape[1:],
                 ))
-#model.add(Conv2D(32, (10, 10), padding='same'))
-#model.add(Activation('relu'))
-#model.add(MaxPooling2D(pool_size=(2, 2)))
-#model.add(Conv2D(32, (3, 3)))
-#model.add(Activation('relu'))
-#model.add(MaxPooling2D(pool_size=(2, 2)))
-#model.add(Dropout(0.5))
+model.add(Conv2D(32, (10, 10), padding='same'))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(32, (3, 3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.5))
 
-#model.add(Conv2D(64, (3, 3), padding='same'))
-#model.add(Activation('relu'))
-#model.add(Conv2D(64, (3, 3)))
-#model.add(Activation('relu'))
-#model.add(MaxPooling2D(pool_size=(2, 2)))
-#model.add(Dropout(0.5))
+model.add(Conv2D(64, (3, 3), padding='same'))
+model.add(Activation('relu'))
+model.add(Conv2D(64, (3, 3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.5))
 
 model.add(Flatten())
-model.add(Dense(156))
+model.add(Dense(256))
 model.add(Activation('relu'))
 model.add(BatchNormalization())
-model.add(Dense(56))
-model.add(Activation('relu'))
-model.add(BatchNormalization())
-model.add(Dropout(0.5))
+#model.add(Dense(76))
+#model.add(Activation('relu'))
+#model.add(BatchNormalization())
+#model.add(Dropout(0.5))
 if categorical:
     model.add(Dense(2))
     model.add(Activation('softmax'))
@@ -170,7 +170,7 @@ else:
                         epochs=epochs,
 #                        validation_split=0.09,
                         workers=4,
-                        class_weight={0:2,1:1},
+                        #class_weight={0:1,1:1},
                         )
 
 # Save model and weights
@@ -193,8 +193,11 @@ with open('log.txt', 'a') as f:
     
 results = model.predict(x_test)
 
-tn,fp,fn,tp = confusion_matrix(np.argmax(y_test,axis=1), np.argmax(results,axis=1)).ravel()
-print("sensitivity:", tp/(tp+fp+0.00001))
-print("specificity:", tn/(tn+fn+0.00001))
-print("accuracy:", (tn+tp)/(tn+tp+fn+fp))
+for alpha in range(1,10,1):
+    alpha /= 10
+    print(alpha)
+    tn,fp,fn,tp = confusion_matrix(np.argmax(y_test,axis=1), [int(x[0] < alpha) for x in results]).ravel()
+    print("sensitivity:", tp/(tp+fp+0.00001))
+    print("specificity:", tn/(tn+fn+0.00001))
+    print("accuracy:", (tn+tp)/(tn+tp+fn+fp))
 
