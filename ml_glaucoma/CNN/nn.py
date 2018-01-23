@@ -170,7 +170,7 @@ else:
                         epochs=epochs,
 #                        validation_split=0.09,
                         workers=4,
-                        #class_weight={0:1,1:1},
+                        class_weight={0:10,1:1},
                         )
 
 # Save model and weights
