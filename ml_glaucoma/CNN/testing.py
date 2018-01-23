@@ -90,6 +90,23 @@ if categorical:
     y_train = keras.utils.to_categorical(y_train, num_classes)
     y_test = keras.utils.to_categorical(y_test, num_classes)
 
+model = keras.models.load_model("keras_glaucoma_trained_model.h5")
+
+results = model.predict(x_test)
+
+for alpha in range(1,10,1):
+    alpha /= 10
+    print(alpha)
+    tn,fp,fn,tp = confusion_matrix(np.argmax(y_test,axis=1), [int(x[0] < alpha) for x in results]).ravel()
+    print("sensitivity:", tp/(tp+fn))
+    print("specificity:", tn/(tn+fp))
+    print("accuracy:", (tn+tp)/(tn+tp+fn+fp))
+    print("tn: ",tn)
+    print("fp: ",fp)
+    print("fn: ",fn)
+    print("tp: ",tp)
+exit()
+
 model = Sequential()
 #model.add(InputLayer(input_tensor=x_train, input_shape=(None,200,200,3)))
 model.add(BatchNormalization(
@@ -170,7 +187,7 @@ else:
                         epochs=epochs,
 #                        validation_split=0.09,
                         workers=4,
-                        class_weight={0:1,1:2},
+                        class_weight={0:10,1:1},
                         )
 
 # Save model and weights
@@ -197,7 +214,7 @@ for alpha in range(1,10,1):
     alpha /= 10
     print(alpha)
     tn,fp,fn,tp = confusion_matrix(np.argmax(y_test,axis=1), [int(x[0] < alpha) for x in results]).ravel()
-    print("sensitivity:", tp/(tp+fn))
-    print("specificity:", tn/(tn+fp))
+    print("sensitivity:", tp/(tp+fp+0.00001))
+    print("specificity:", tn/(tn+fn+0.00001))
     print("accuracy:", (tn+tp)/(tn+tp+fn+fp))
-    print("tn: ",tn," fp: ",fp, " fn: ",fn, " tp: ",tp)
+
