@@ -21,7 +21,16 @@ import h5py
 from sklearn.utils import shuffle
 from sklearn.metrics import confusion_matrix
 
-DATA_SAVE_LOCATION = '/mnt/datasets/balancedsplit100x100.hdf5'
+DATA_SAVE_LOCATION = '/mnt/datasets/bs300.hdf5'
+batch_size = 256
+num_classes = 2
+epochs = 25
+data_augmentation = True
+save_dir = os.path.join(os.getcwd(), 'saved_models')
+model_name = 'keras_glaucoma_trained_model.h5'
+CIFAR = False
+categorical = True 
+custom_net = True
 
 def prepare_data():
     if(os.path.isfile(DATA_SAVE_LOCATION)):
@@ -36,14 +45,6 @@ def prepare_data():
         exit()
 
 
-batch_size = 256
-num_classes = 2
-epochs = 150
-data_augmentation = True
-save_dir = os.path.join(os.getcwd(), 'saved_models')
-model_name = 'keras_glaucoma_trained_model.h5'
-CIFAR = False
-categorical =True 
 
 if not CIFAR:
     # The data, shuffled and split between train and test sets:
@@ -89,40 +90,51 @@ print("Fraction negative test examples: ", (len(y_test) - np.sum(y_test))/len(y_
 if categorical:
     y_train = keras.utils.to_categorical(y_train, num_classes)
     y_test = keras.utils.to_categorical(y_test, num_classes)
+if custom_net:
+    model = Sequential()
+    #model.add(InputLayer(input_tensor=x_train, input_shape=(None,200,200,3)))
+    model.add(BatchNormalization(
+                    input_shape=x_train.shape[1:],
+                    ))
+    #model.add(Conv2D(32, (4, 4), padding='same'))
+    #model.add(Activation('relu'))
+    #model.add(MaxPooling2D(pool_size=(2, 2)))
+    #model.add(Conv2D(32, (4, 4)))
+    #model.add(Activation('relu'))
+    #model.add(MaxPooling2D(pool_size=(2, 2)))
+    #model.add(Dropout(0.5))
 
-model = Sequential()
-#model.add(InputLayer(input_tensor=x_train, input_shape=(None,200,200,3)))
-model.add(BatchNormalization(
-                input_shape=x_train.shape[1:],
-                ))
-model.add(Conv2D(32, (10, 10), padding='same'))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Conv2D(32, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.5))
+    #model.add(Conv2D(64, (3, 3), padding='same'))
+    #model.add(Activation('relu'))
+    #model.add(Conv2D(64, (3, 3)))
+    #model.add(Activation('relu'))
+    #model.add(MaxPooling2D(pool_size=(2, 2)))
+    #model.add(Dropout(0.5))
 
-model.add(Conv2D(64, (3, 3), padding='same'))
-model.add(Activation('relu'))
-model.add(Conv2D(64, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.5))
-
-model.add(Flatten())
-model.add(Dense(256))
-model.add(Activation('relu'))
-model.add(BatchNormalization())
-#model.add(Dense(76))
-#model.add(Activation('relu'))
-#model.add(BatchNormalization())
-#model.add(Dropout(0.5))
-if categorical:
-    model.add(Dense(2))
-    model.add(Activation('softmax'))
+    model.add(Flatten())
+    model.add(Dense(256))
+    model.add(Activation('relu'))
+    #model.add(BatchNormalization())
+    #model.add(Dense(76))
+    #model.add(Activation('relu'))
+    model.add(BatchNormalization())
+    if categorical:
+        model.add(Dense(2))
+        model.add(Activation('softmax'))
+    else:
+        model.add(Dense(1))
 else:
-    model.add(Dense(1))
+    base_model = keras.applications.vgg19.VGG19(include_top=False, 
+            weights='imagenet', 
+            input_shape=x_train.shape[1:],
+            )
+    x = base_model.output
+    x = Flatten()(x)
+#    x = Dense(50, activation='relu')(x)
+    predictions = Dense(2, activation='softmax')(x)
+    model = keras.models.Model(inputs=base_model.input, outputs=predictions)
+    for layer in base_model.layers:
+        layer.trainable = False
 
 
 #opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
@@ -143,7 +155,7 @@ if not data_augmentation:
               epochs=epochs,
               validation_split=0.09,
               shuffle='batch',
-              #class_weight={0:1.,1:1000.},
+              class_weight={0:1.,1:2.},
               )
 else:
     print('Using real-time data augmentation.')
@@ -170,7 +182,7 @@ else:
                         epochs=epochs,
 #                        validation_split=0.09,
                         workers=4,
-                        class_weight={0:1,1:2},
+                        class_weight={0:1.,1:2.},
                         )
 
 # Save model and weights

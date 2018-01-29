@@ -21,15 +21,17 @@ import h5py
 from sklearn.utils import shuffle
 from sklearn.metrics import confusion_matrix
 
-DATA_SAVE_LOCATION = '/mnt/datasets/balancedsplit100x100.hdf5'
+DATA_SAVE_LOCATION = '/mnt/datasets/bs300.hdf5'
 
 def prepare_data():
     def _parse_function(filename):
         image = cv2.imread(filename)
         #if(image.shape != (2592,3888,3)):
         #    image = cv2.resize(image, (2592,3888))
-        image = cv2.resize(image, (100,150))
-        image = image[25:125,:]
+        final_size = (300,300)
+        image = cv2.resize(image, (final_size[0],int(final_size[1]*1.5)))
+        cutoff = int(final_size[1]*0.25)
+        image = image[cutoff:-cutoff,:]
         return image
     def _get_filenames(neg_ids,pos_ids,id_to_imgs):
         #returns filenames list and labels list
