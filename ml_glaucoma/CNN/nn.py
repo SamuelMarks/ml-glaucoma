@@ -24,7 +24,7 @@ from sklearn.metrics import confusion_matrix
 DATA_SAVE_LOCATION = '/mnt/datasets/bs300.hdf5'
 batch_size = 256
 num_classes = 2
-epochs = 25
+epochs = 200
 data_augmentation = True
 save_dir = os.path.join(os.getcwd(), 'saved_models')
 model_name = 'keras_glaucoma_trained_model.h5'
@@ -96,8 +96,8 @@ if custom_net:
     model.add(BatchNormalization(
                     input_shape=x_train.shape[1:],
                     ))
-    #model.add(Conv2D(32, (4, 4), padding='same'))
-    #model.add(Activation('relu'))
+    model.add(Conv2D(32, (4, 4), padding='same'))
+    model.add(Activation('relu'))
     #model.add(MaxPooling2D(pool_size=(2, 2)))
     #model.add(Conv2D(32, (4, 4)))
     #model.add(Activation('relu'))

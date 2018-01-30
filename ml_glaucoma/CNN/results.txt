@@ -1,0 +1,154 @@
+Num positive test examples:  67.0
+Fraction negative test examples:  0.920238095238
+0.905
+sensitivity: 0.402985074627
+specificity: 0.802069857697
+accuracy: 0.770238095238
+tn:  620
+fp:  153
+fn:  40
+tp:  27
+0.91
+sensitivity: 0.417910447761
+specificity: 0.783958602846
+accuracy: 0.754761904762
+tn:  606
+fp:  167
+fn:  39
+tp:  28
+0.915
+sensitivity: 0.44776119403
+specificity: 0.756791720569
+accuracy: 0.732142857143
+tn:  585
+fp:  188
+fn:  37
+tp:  30
+0.92
+sensitivity: 0.462686567164
+specificity: 0.732212160414
+accuracy: 0.710714285714
+tn:  566
+fp:  207
+fn:  36
+tp:  31
+0.925
+sensitivity: 0.507462686567
+specificity: 0.702457956016
+accuracy: 0.686904761905
+tn:  543
+fp:  230
+fn:  33
+tp:  34
+0.93
+sensitivity: 0.537313432836
+specificity: 0.658473479948
+accuracy: 0.64880952381
+tn:  509
+fp:  264
+fn:  31
+tp:  36
+0.935
+sensitivity: 0.611940298507
+specificity: 0.61319534282
+accuracy: 0.613095238095
+tn:  474
+fp:  299
+fn:  26
+tp:  41
+0.9400000000000001
+sensitivity: 0.641791044776
+specificity: 0.567917205692
+accuracy: 0.57380952381
+tn:  439
+fp:  334
+fn:  24
+tp:  43
+0.9450000000000001
+sensitivity: 0.716417910448
+specificity: 0.512289780078
+accuracy: 0.528571428571
+tn:  396
+fp:  377
+fn:  19
+tp:  48
+0.9500000000000001
+sensitivity: 0.731343283582
+specificity: 0.446313065977
+accuracy: 0.469047619048
+tn:  345
+fp:  428
+fn:  18
+tp:  49
+0.9550000000000001
+sensitivity: 0.791044776119
+specificity: 0.379042690815
+accuracy: 0.411904761905
+tn:  293
+fp:  480
+fn:  14
+tp:  53
+0.96
+sensitivity: 0.850746268657
+specificity: 0.327296248383
+accuracy: 0.369047619048
+tn:  253
+fp:  520
+fn:  10
+tp:  57
+0.9650000000000001
+sensitivity: 0.880597014925
+specificity: 0.261319534282
+accuracy: 0.310714285714
+tn:  202
+fp:  571
+fn:  8
+tp:  59
+0.97
+sensitivity: 0.940298507463
+specificity: 0.191461836999
+accuracy: 0.25119047619
+tn:  148
+fp:  625
+fn:  4
+tp:  63
+0.975
+sensitivity: 0.970149253731
+specificity: 0.130659767141
+accuracy: 0.197619047619
+tn:  101
+fp:  672
+fn:  2
+tp:  65
+0.98
+sensitivity: 0.985074626866
+specificity: 0.0776196636481
+accuracy: 0.15
+tn:  60
+fp:  713
+fn:  1
+tp:  66
+0.985
+sensitivity: 1.0
+specificity: 0.0336351875809
+accuracy: 0.110714285714
+tn:  26
+fp:  747
+fn:  0
+tp:  67
+0.99
+sensitivity: 1.0
+specificity: 0.0116429495472
+accuracy: 0.0904761904762
+tn:  9
+fp:  764
+fn:  0
+tp:  67
+0.995
+sensitivity: 1.0
+specificity: 0.00388098318241
+accuracy: 0.0833333333333
+tn:  3
+fp:  770
+fn:  0
+tp:  67

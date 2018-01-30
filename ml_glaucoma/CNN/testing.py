@@ -21,7 +21,7 @@ import h5py
 from sklearn.utils import shuffle
 from sklearn.metrics import confusion_matrix
 
-DATA_SAVE_LOCATION = '/mnt/datasets/balancedsplit100x100.hdf5'
+DATA_SAVE_LOCATION = '/mnt/datasets/bs300.hdf5'
 
 def prepare_data():
     if(os.path.isfile(DATA_SAVE_LOCATION)):
@@ -90,12 +90,13 @@ if categorical:
     y_train = keras.utils.to_categorical(y_train, num_classes)
     y_test = keras.utils.to_categorical(y_test, num_classes)
 
-model = keras.models.load_model("keras_glaucoma_trained_model.h5")
+model = keras.models.load_model(os.path.join(save_dir,model_name))
 
 results = model.predict(x_test)
 
-for alpha in range(1,10,1):
-    alpha /= 10
+for alpha in range(1,20,1):
+    alpha /= 200
+    alpha += 0.9
     print(alpha)
     tn,fp,fn,tp = confusion_matrix(np.argmax(y_test,axis=1), [int(x[0] < alpha) for x in results]).ravel()
     print("sensitivity:", tp/(tp+fn))
