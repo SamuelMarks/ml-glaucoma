@@ -16,9 +16,9 @@ model_name = 'keras_glaucoma_trained_model.h5'
 
 def _build_parser():
     parser = ArgumentParser(description='CLI for a Glaucoma diagnosing CNN')
-    parser.add_argument('-b', '--batch-size', help='Batch size', default=128)
-    parser.add_argument('-n', '--num-classes', help='Number of classes', default=2)
-    parser.add_argument('-e', '--epochs', help='Number of epochs', default=20)
+    parser.add_argument('-b', '--batch-size', help='Batch size', default=128, type=int)
+    parser.add_argument('-n', '--num-classes', help='Number of classes', default=2, type=int)
+    parser.add_argument('-e', '--epochs', help='Number of epochs', default=20, type=int)
     parser.add_argument('-m', '--model', help='Filename for h5 trained model file', dest='model_name', required=True)
     parser.add_argument('-o', '--output', help='Output in hdf5 format to this filename', required=True)
     parser.add_argument('--version', action='version',
