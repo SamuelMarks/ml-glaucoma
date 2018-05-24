@@ -24,6 +24,8 @@ from ml_glaucoma.utils.get_data import get_data
 
 logger = get_logger(__file__.partition('.')[0])
 
+K.set_image_data_format('channels_last')
+
 
 def download(download_dir):
     http = PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
@@ -36,14 +38,16 @@ def download(download_dir):
 
     # TODO: Concurrency
     for fname in paths:
-        r = http.request('GET', '{base}{file}'.format(base=base, file=fname),
+        basename = fname[fname.rfind('/') + 1:]
+        logger.info('Downloading: "{basename}" to: "{download_dir}"'.format(
+            basename=basename, download_dir=download_dir
+        ))
+
+        r = http.request('GET', '{base}{fname}'.format(base=base, fname=fname),
                          preload_content=False)
-        fname = fname[fname.rfind('/') + 1:]
-        with open(path.join(download_dir, fname), 'wb') as f:
+        with open(path.join(download_dir, basename), 'wb') as f:
             for chunk in r.stream(32):
                 f.write(chunk)
-
-        logger.info('Downloaded: "{fname}" to: "{download_dir}"'.format(fname=fname, download_dir=download_dir))
 
 
 def prepare_data(save_to):
