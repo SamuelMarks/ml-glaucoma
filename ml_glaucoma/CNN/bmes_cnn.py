@@ -127,7 +127,11 @@ def run(output, batch_size, num_classes, epochs, model_name):
     y_train = keras.utils.to_categorical(y_train, num_classes)
     y_test = keras.utils.to_categorical(y_test, num_classes)
 
+    vgg_model = keras.applications.vgg16.VGG16(weights='imagenet')
+    vgg_model.summary()
     model = Sequential()
+    for layer in vgg_model.layers:
+        model.add(layer)
     model.add(Conv2D(32,
                      kernel_size=(7, 7),  # as suggested
                      activation='relu',
