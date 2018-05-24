@@ -21,6 +21,7 @@ def _build_parser():
     parser.add_argument('-e', '--epochs', help='Number of epochs', default=20, type=int)
     parser.add_argument('-m', '--model', help='Filename for h5 trained model file', dest='model_name', required=True)
     parser.add_argument('-o', '--output', help='Output in hdf5 format to this filename', required=True)
+    parser.add_argument('-d', '--download-dir', help='Directory to store precompiled CNN nets', required=True)
     parser.add_argument('--version', action='version',
                         version='{} {}'.format(modules[__name__].__package__, __version__))
     return parser

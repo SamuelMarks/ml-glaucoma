@@ -5,18 +5,45 @@ from __future__ import print_function
 
 from os import path, makedirs
 
+import certifi
 import cv2
 import h5py
 import keras
 import numpy as np
 from keras import backend as K
+from keras.applications import ResNet50
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten
 from keras.models import Sequential
 from sklearn.metrics import confusion_matrix
 from sklearn.utils import shuffle
+from urllib3 import PoolManager
 
+from ml_glaucoma import get_logger
 from ml_glaucoma.utils.get_data import get_data
+
+logger = get_logger(__file__.partition('.')[0])
+
+
+def download(download_dir):
+    http = PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
+
+    if not path.exists(download_dir):
+        makedirs(download_dir)
+
+    base = 'https://github.com/fchollet/deep-learning-models/releases/download'
+    paths = '/v0.1/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5',
+
+    # TODO: Concurrency
+    for fname in paths:
+        r = http.request('GET', '{base}{file}'.format(base=base, file=fname),
+                         preload_content=False)
+        fname = fname[fname.rfind('/') + 1:]
+        with open(path.join(download_dir, fname), 'wb') as f:
+            for chunk in r.stream(32):
+                f.write(chunk)
+
+        logger.info('Downloaded: "{fname}" to: "{download_dir}"'.format(fname=fname, download_dir=download_dir))
 
 
 def prepare_data(save_to):
@@ -93,7 +120,9 @@ def prepare_data(save_to):
 # the data, shuffled and split between train and test sets
 
 
-def run(output, batch_size, num_classes, epochs, model_name):
+def run(download_dir, output, batch_size, num_classes, epochs, model_name):
+    download(download_dir)
+
     (x_train, y_train), (x_test, y_test) = prepare_data(output)  # cifar10.load_data()
     print("Fraction negative training examples: ", (len(y_train) - np.sum(y_train)) / len(y_train))
 
@@ -127,11 +156,20 @@ def run(output, batch_size, num_classes, epochs, model_name):
     y_train = keras.utils.to_categorical(y_train, num_classes)
     y_test = keras.utils.to_categorical(y_test, num_classes)
 
-    vgg_model = keras.applications.vgg16.VGG16(weights='imagenet')
-    vgg_model.summary()
+    resnet_weights_path = path.join(download_dir, 'resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5')
+
+    # vgg_model = keras.applications.vgg16.VGG16(weights='imagenet')
+    # vgg_model.summary()
     model = Sequential()
-    for layer in vgg_model.layers:
-        model.add(layer)
+    # for layer in vgg_model.layers:
+    #    model.add(layer)
+
+    model.add(ResNet50(include_top=False, pooling='avg', weights=resnet_weights_path))
+    model.add(Dense(num_classes, activation='softmax'))
+
+    # Say not to train first layer (ResNet) model. It is already trained
+    model.layers[0].trainable = False
+
     model.add(Conv2D(32,
                      kernel_size=(7, 7),  # as suggested
                      activation='relu',
