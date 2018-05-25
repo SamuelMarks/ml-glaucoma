@@ -26,6 +26,8 @@ def _build_parser():
     data_parser.add_argument('-s', '--save', dest='save_to', help='Save h5 file of dataset', required=True)
     data_parser.add_argument('-f', '--force', dest='force_new', help='Force new h5 file of dataset being created',
                              action='store_true')
+    data_parser.add_argument('-p', '--pixels', help='Pixels. E.g.: 400 for 400px * 400px',
+                             type=int, default=400)
 
     download_parser = subparsers.add_parser('download', help='Download required data')
     download_parser.add_argument('-d', '--download-dir', help='Directory to store precompiled CNN nets', required=True)
@@ -43,6 +45,8 @@ def _build_parser():
     cnn_parser.add_argument('-d', '--download-dir', help='Directory to store precompiled CNN nets', required=True)
     cnn_parser.add_argument('-t', '--transfer-model', help='Transfer model. Currently one of: "vgg16"; "resnet50"')
     cnn_parser.add_argument('--dropout', help='Dropout (0,1,2,3 or 4)', default=4)
+    cnn_parser.add_argument('-p', '--pixels', help='Pixels. E.g.: 400 for 400px * 400px',
+                             type=int, default=400)
 
     return parser
 

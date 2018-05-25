@@ -56,10 +56,10 @@ def download(download_dir, force_new=False):
                 f.write(chunk)
 
 
-def prepare_data(save_to, force_new=False):
+def prepare_data(save_to, pixels, force_new=False):
     def _parse_function(filename):
         image = cv2.imread(filename)
-        image_resized = cv2.resize(image, (400, 400))
+        image_resized = cv2.resize(image, (pixels, pixels))
         print("Importing image ", prepare_data.i, end='\r')
         prepare_data.i += 1
         return image_resized
@@ -132,10 +132,10 @@ prepare_data.i = 1
 
 
 def run(download_dir, save_to, batch_size, num_classes, epochs,
-        transfer_model, model_name, dropout):
+        transfer_model, model_name, dropout, pixels):
     download(download_dir)
 
-    (x_train, y_train), (x_test, y_test) = prepare_data(save_to)  # cifar10.load_data()
+    (x_train, y_train), (x_test, y_test) = prepare_data(save_to, pixels)  # cifar10.load_data()
     print("Fraction negative training examples: ", (len(y_train) - np.sum(y_train)) / len(y_train))
 
     # indices = [i for i,label in enumerate(y_train) if label > 1]
