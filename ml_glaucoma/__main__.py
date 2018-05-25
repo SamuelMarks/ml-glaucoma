@@ -42,6 +42,7 @@ def _build_parser():
                             required=True)
     cnn_parser.add_argument('-d', '--download-dir', help='Directory to store precompiled CNN nets', required=True)
     cnn_parser.add_argument('-t', '--transfer-model', help='Transfer model. Currently one of: "vgg16"; "resnet50"')
+    cnn_parser.add_argument('--dropout', help='Dropout (0,1,2,3 or 4)', default=4)
 
     return parser
 

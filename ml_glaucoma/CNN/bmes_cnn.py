@@ -131,7 +131,8 @@ prepare_data.i = 1
 # the data, shuffled and split between train and test sets
 
 
-def run(download_dir, save_to, batch_size, num_classes, epochs, transfer_model, model_name):
+def run(download_dir, save_to, batch_size, num_classes, epochs,
+        transfer_model, model_name, dropout):
     download(download_dir)
 
     (x_train, y_train), (x_test, y_test) = prepare_data(save_to)  # cifar10.load_data()
@@ -171,35 +172,42 @@ def run(download_dir, save_to, batch_size, num_classes, epochs, transfer_model, 
 
     model = Sequential()
 
+    # TODO: Optic-disc segmentation at this point, or run optic-disc segmentation at this point
+
     if transfer_model == 'vgg16':
         vgg_model = keras.applications.vgg16.VGG16(weights='imagenet')
         vgg_model.summary()
         for layer in vgg_model.layers:
             model.add(layer)
     elif transfer_model == 'resnet50':
-        model.add(ResNet50(include_top=False, pooling='avg', weights=resnet_weights_path))
+        model.add(ResNet50(include_top=False, pooling='avg'  # , weights=resnet_weights_path
+                           ))
         model.add(Dense(num_classes, activation='softmax'))
 
         # Say not to train first layer (ResNet) model. It is already trained
         model.layers[0].trainable = False
-
-    model.add(Conv2D(32,
-                     kernel_size=(7, 7),  # as suggested
-                     activation='relu',
-                     padding='same',  # as suggested
-                     input_shape=input_shape))
-    model.add(MaxPooling2D(pool_size=(2, 2)))  # as suggested
-    model.add(Dropout(.5))  # as suggested
-    model.add(Conv2D(64, (5, 5), activation='relu'))  # as suggested
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(.5))
-    model.add(Conv2D(32, (3, 3), activation='relu'))  # as suggested
-    model.add(MaxPooling2D(pool_size=(2, 2)))  # as suggested
-    model.add(Dropout(.5))  # as suggested
-    model.add(Flatten())
-    model.add(Dense(128, activation='relu'))
-    model.add(Dropout(.5))
-    model.add(Dense(num_classes, activation='softmax'))
+    else:
+        model.add(Conv2D(32,
+                         kernel_size=(7, 7),  # as suggested
+                         activation='relu',
+                         padding='same',  # as suggested
+                         input_shape=input_shape))
+        model.add(MaxPooling2D(pool_size=(2, 2)))  # as suggested
+        if dropout > 3:
+            model.add(Dropout(.5))  # as suggested
+        model.add(Conv2D(64, (5, 5), activation='relu', padding='same'))  # as suggested
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        if dropout > 2:
+            model.add(Dropout(.5))
+        model.add(Conv2D(32, (3, 3), activation='relu', padding='same'))  # as suggested
+        model.add(MaxPooling2D(pool_size=(2, 2)))  # as suggested
+        if dropout > 1:
+            model.add(Dropout(.5))  # as suggested
+        model.add(Flatten())
+        model.add(Dense(128, activation='relu'))
+        if dropout > 0:
+            model.add(Dropout(.5))
+        model.add(Dense(num_classes, activation='softmax'))
 
     # custom metrics for categorical
     def specificity(y_true, y_pred):
