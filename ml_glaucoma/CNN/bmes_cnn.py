@@ -27,7 +27,7 @@ logger = get_logger(__file__.partition('.')[0])
 K.set_image_data_format('channels_last')
 
 
-def download(download_dir):
+def download(download_dir, force_new=False):
     http = PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
 
     if not path.exists(download_dir):
@@ -39,24 +39,29 @@ def download(download_dir):
     # TODO: Concurrency
     for fname in paths:
         basename = fname[fname.rfind('/') + 1:]
+        to_file = path.join(download_dir, basename)
+
+        if not force_new and path.isfile(to_file):
+            logger.info('File exists: {to_file}'.format(to_file=to_file))
+            continue
+
         logger.info('Downloading: "{basename}" to: "{download_dir}"'.format(
             basename=basename, download_dir=download_dir
         ))
 
         r = http.request('GET', '{base}{fname}'.format(base=base, fname=fname),
                          preload_content=False)
-        with open(path.join(download_dir, basename), 'wb') as f:
+        with open(to_file, 'wb') as f:
             for chunk in r.stream(32):
                 f.write(chunk)
 
 
-def prepare_data(save_to):
+def prepare_data(save_to, force_new=False):
     def _parse_function(filename):
         image = cv2.imread(filename)
         image_resized = cv2.resize(image, (400, 400))
-        global i
-        print("Importing image ", i, end='\r')
-        i += 1
+        print("Importing image ", prepare_data.i, end='\r')
+        prepare_data.i += 1
         return image_resized
 
     def _get_filenames(neg_ids, pos_ids, id_to_imgs):
@@ -81,14 +86,13 @@ def prepare_data(save_to):
 
         print("Total images: ", len(img_names))
 
-        global i
-        i = 1
+        prepare_data.i = 1
         dataset_tensor = np.stack(list(map(_parse_function, img_names)))
         print()
 
         return dataset_tensor, data_labels
 
-    if path.isfile(save_to):
+    if not force_new and path.isfile(save_to):
         f = h5py.File(save_to, 'r')
         x_train_dset = f.get('x_train')
         y_train_dset = f.get('y_train')
@@ -104,7 +108,7 @@ def prepare_data(save_to):
     x = x.astype('float32')
     x /= 255.
 
-    train_fraction = 0.9
+    # train_fraction = 0.9
     train_amount = int(x.shape[0] * 0.9)
     x_train, y_train = x[:train_amount], y[:train_amount]
     x_test, y_test = x[train_amount:], y[train_amount:]
@@ -118,16 +122,19 @@ def prepare_data(save_to):
     return (x_train, y_train), (x_test, y_test)
 
 
+prepare_data.i = 1
+
+
 # input image dimensions
 # img_rows, img_cols = 28, 28
 
 # the data, shuffled and split between train and test sets
 
 
-def run(download_dir, output, batch_size, num_classes, epochs, model_name):
+def run(download_dir, save_to, batch_size, num_classes, epochs, model_name):
     download(download_dir)
 
-    (x_train, y_train), (x_test, y_test) = prepare_data(output)  # cifar10.load_data()
+    (x_train, y_train), (x_test, y_test) = prepare_data(save_to)  # cifar10.load_data()
     print("Fraction negative training examples: ", (len(y_train) - np.sum(y_train)) / len(y_train))
 
     # indices = [i for i,label in enumerate(y_train) if label > 1]
@@ -219,7 +226,7 @@ def run(download_dir, output, batch_size, num_classes, epochs, model_name):
     print('Test accuracy:', score[1])
 
     # Save model and weights
-    save_dir = path.dirname(output)
+    save_dir = path.dirname(save_to)
     if not path.isdir(save_dir):
         makedirs(save_dir)
     model_path = path.join(save_dir, model_name)
