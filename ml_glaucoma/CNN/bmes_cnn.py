@@ -11,7 +11,7 @@ import h5py
 import keras
 import numpy as np
 from keras import backend as K
-from keras.applications import ResNet50
+from keras.applications import ResNet50, VGG16
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten
 from keras.models import Sequential
@@ -175,13 +175,17 @@ def run(download_dir, save_to, batch_size, num_classes, epochs,
     # TODO: Optic-disc segmentation at this point, or run optic-disc segmentation at this point
 
     if transfer_model == 'vgg16':
-        vgg_model = keras.applications.vgg16.VGG16(weights='imagenet')
-        vgg_model.summary()
+        model.add(VGG16(include_top=False, weights='imagenet', pooling='avg'))
+        '''
         for layer in vgg_model.layers:
+            layer.trainable = True
             model.add(layer)
+        '''
     elif transfer_model == 'resnet50':
         model.add(ResNet50(include_top=False, pooling='avg'  # , weights=resnet_weights_path
                            ))
+
+    if transfer_model is not None:
         model.add(Dense(num_classes, activation='softmax'))
 
         # Say not to train first layer (ResNet) model. It is already trained
