@@ -131,7 +131,7 @@ prepare_data.i = 1
 # the data, shuffled and split between train and test sets
 
 
-def run(download_dir, save_to, batch_size, num_classes, epochs, model_name):
+def run(download_dir, save_to, batch_size, num_classes, epochs, transfer_model, model_name):
     download(download_dir)
 
     (x_train, y_train), (x_test, y_test) = prepare_data(save_to)  # cifar10.load_data()
@@ -169,17 +169,19 @@ def run(download_dir, save_to, batch_size, num_classes, epochs, model_name):
 
     resnet_weights_path = path.join(download_dir, 'resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5')
 
-    # vgg_model = keras.applications.vgg16.VGG16(weights='imagenet')
-    # vgg_model.summary()
     model = Sequential()
-    # for layer in vgg_model.layers:
-    #    model.add(layer)
 
-    model.add(ResNet50(include_top=False, pooling='avg', weights=resnet_weights_path))
-    model.add(Dense(num_classes, activation='softmax'))
+    if transfer_model == 'vgg16':
+        vgg_model = keras.applications.vgg16.VGG16(weights='imagenet')
+        vgg_model.summary()
+        for layer in vgg_model.layers:
+            model.add(layer)
+    elif transfer_model == 'resnet50':
+        model.add(ResNet50(include_top=False, pooling='avg', weights=resnet_weights_path))
+        model.add(Dense(num_classes, activation='softmax'))
 
-    # Say not to train first layer (ResNet) model. It is already trained
-    model.layers[0].trainable = False
+        # Say not to train first layer (ResNet) model. It is already trained
+        model.layers[0].trainable = False
 
     model.add(Conv2D(32,
                      kernel_size=(7, 7),  # as suggested

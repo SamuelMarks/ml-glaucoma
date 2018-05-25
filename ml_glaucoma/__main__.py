@@ -41,6 +41,7 @@ def _build_parser():
     cnn_parser.add_argument('-s', '--save', help='Save h5 file of dataset', dest='save_to',
                             required=True)
     cnn_parser.add_argument('-d', '--download-dir', help='Directory to store precompiled CNN nets', required=True)
+    cnn_parser.add_argument('-t', '--transfer-model', help='Transfer model. Currently one of: "vgg16"; "resnet50"')
 
     return parser
 
