@@ -47,6 +47,7 @@ def _build_parser():
     cnn_parser.add_argument('--dropout', help='Dropout (0,1,2,3 or 4)', default=4)
     cnn_parser.add_argument('-p', '--pixels', help='Pixels. E.g.: 400 for 400px * 400px',
                              type=int, default=400)
+    cnn_parser.add_argument('--tensorboard-log-dir', help='Enabled Tensorboard integration and sets its log dir')
 
     return parser
 

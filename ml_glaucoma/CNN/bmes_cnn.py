@@ -12,11 +12,13 @@ import keras
 import numpy as np
 from keras import backend as K
 from keras.applications import ResNet50, VGG16
+from keras.callbacks import TensorBoard
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten
 from keras.models import Sequential
 from sklearn.metrics import confusion_matrix
 from sklearn.utils import shuffle
+from tensorflow.python.ops.metrics_impl import specificity_at_sensitivity
 from urllib3 import PoolManager
 
 from ml_glaucoma import get_logger
@@ -132,7 +134,7 @@ prepare_data.i = 1
 
 
 def run(download_dir, save_to, batch_size, num_classes, epochs,
-        transfer_model, model_name, dropout, pixels):
+        transfer_model, model_name, dropout, pixels, tensorboard_log_dir):
     download(download_dir)
 
     (x_train, y_train), (x_test, y_test) = prepare_data(save_to, pixels)  # cifar10.load_data()
@@ -226,14 +228,24 @@ def run(download_dir, save_to, batch_size, num_classes, epochs,
 
     model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer=keras.optimizers.Adadelta(),
-                  metrics=['accuracy'])
+                  metrics=['accuracy', specificity_at_sensitivity])
+
+    if tensorboard_log_dir:
+        if not path.isdir(tensorboard_log_dir):
+            makedirs(tensorboard_log_dir)
+        callbacks = [
+            TensorBoard(log_dir=tensorboard_log_dir, histogram_freq=0, write_graph=True, write_images=True)
+        ]
+    else:
+        callbacks = []
 
     model.fit(x_train, y_train,
               batch_size=batch_size,
               epochs=epochs,
               verbose=1,
               shuffle='batch',
-              validation_data=(x_test, y_test))
+              validation_data=(x_test, y_test),
+              callbacks=callbacks)
     score = model.evaluate(x_test, y_test, verbose=0)
 
     print('Test loss:', score[0])
