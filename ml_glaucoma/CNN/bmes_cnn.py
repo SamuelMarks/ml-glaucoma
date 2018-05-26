@@ -18,7 +18,6 @@ from keras.layers import Dense, Dropout, Flatten
 from keras.models import Sequential
 from sklearn.metrics import confusion_matrix
 from sklearn.utils import shuffle
-from tensorflow.python.ops.metrics_impl import specificity_at_sensitivity
 from urllib3 import PoolManager
 
 from ml_glaucoma import get_logger
@@ -228,7 +227,7 @@ def run(download_dir, save_to, batch_size, num_classes, epochs,
 
     model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer=keras.optimizers.Adadelta(),
-                  metrics=['accuracy', specificity_at_sensitivity])
+                  metrics=['accuracy'])
 
     if tensorboard_log_dir:
         if not path.isdir(tensorboard_log_dir):
