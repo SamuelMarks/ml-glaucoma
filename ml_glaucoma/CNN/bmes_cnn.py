@@ -10,6 +10,7 @@ import cv2
 import h5py
 import keras
 import numpy as np
+import tensorflow as tf
 from keras import backend as K
 from keras.applications import ResNet50, VGG16
 from keras.callbacks import TensorBoard
@@ -134,6 +135,16 @@ prepare_data.i = 1
 
 def run(download_dir, save_to, batch_size, num_classes, epochs,
         transfer_model, model_name, dropout, pixels, tensorboard_log_dir):
+    if tensorboard_log_dir:
+        if not path.isdir(tensorboard_log_dir):
+            makedirs(tensorboard_log_dir)
+        callbacks = [
+            TensorBoard(log_dir=tensorboard_log_dir, histogram_freq=0,
+                        write_graph=True, write_images=True)
+        ]
+    else:
+        callbacks = []
+
     download(download_dir)
 
     (x_train, y_train), (x_test, y_test) = prepare_data(save_to, pixels)  # cifar10.load_data()
@@ -225,18 +236,29 @@ def run(download_dir, save_to, batch_size, num_classes, epochs,
             (K.equal(K.argmax(y_true, axis=-1), 2), K.equal(K.argmax(y_pred, axis=-1), 2))
             , axis=1), K.floatx())
 
+    def specificity_at_sensitivity(sensitivity, **kwargs):
+        def metric(labels, predictions):
+            # any tensorflow metric
+            value, update_op = tf.metrics.specificity_at_sensitivity(labels, predictions, sensitivity, **kwargs)
+
+            # find all variables created for this metric
+            metric_vars = (i for i in tf.local_variables() if 'specificity_at_sensitivity' in i.name.split('/')[2])
+
+            # Add metric variables to GLOBAL_VARIABLES collection.
+            # They will be initialized for new session.
+            for v in metric_vars:
+                tf.add_to_collection(tf.GraphKeys.GLOBAL_VARIABLES, v)
+
+            # force to update metric values
+            with tf.control_dependencies([update_op]):
+                value = tf.identity(value)
+                return value
+
+        return metric
+
     model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer=keras.optimizers.Adadelta(),
-                  metrics=['accuracy'])
-
-    if tensorboard_log_dir:
-        if not path.isdir(tensorboard_log_dir):
-            makedirs(tensorboard_log_dir)
-        callbacks = [
-            TensorBoard(log_dir=tensorboard_log_dir, histogram_freq=0, write_graph=True, write_images=True)
-        ]
-    else:
-        callbacks = []
+                  metrics=[specificity_at_sensitivity(0.5), 'accuracy'])
 
     model.fit(x_train, y_train,
               batch_size=batch_size,
@@ -249,6 +271,8 @@ def run(download_dir, save_to, batch_size, num_classes, epochs,
 
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
+
+    # print('specificity_at_sensitivity', specificity_at_sensitivity(x_test=x_test, y_test=y_test))
 
     # Save model and weights
     save_dir = path.dirname(save_to)
