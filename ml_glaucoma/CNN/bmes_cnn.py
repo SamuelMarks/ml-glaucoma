@@ -12,7 +12,7 @@ import keras
 import numpy as np
 import tensorflow as tf
 from keras import backend as K
-from keras.callbacks import TensorBoard
+from keras.callbacks import TensorBoard, Callback
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten
 from keras.models import Sequential
@@ -130,19 +130,30 @@ prepare_data.i = 1
 # img_rows, img_cols = 28, 28
 
 # the data, shuffled and split between train and test sets
+class SensitivitySpecificityCallback(Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        if epoch % 10 == 1:
+            x_test, y_test = self.validation_data
+            predictions = self.model.predict(x_test)
+            y_test = np.argmax(y_test, axis=-1)
+            predictions = np.argmax(predictions, axis=-1)
+            c = confusion_matrix(y_test, predictions)
+
+            print('Confusion matrix:\n', c)
+            print('sensitivity', c[0, 0] / (c[0, 1] + c[0, 0]))
+            print('specificity', c[1, 1] / (c[1, 1] + c[1, 0]))
 
 
 def run(download_dir, save_to, batch_size, num_classes, epochs,
         transfer_model, model_name, dropout, pixels, tensorboard_log_dir):
+    callbacks = [SensitivitySpecificityCallback()]
     if tensorboard_log_dir:
         if not path.isdir(tensorboard_log_dir):
             makedirs(tensorboard_log_dir)
-        callbacks = [
+        callbacks.append(
             TensorBoard(log_dir=tensorboard_log_dir, histogram_freq=0,
                         write_graph=True, write_images=True)
-        ]
-    else:
-        callbacks = []
+        )
 
     download(download_dir)
 
