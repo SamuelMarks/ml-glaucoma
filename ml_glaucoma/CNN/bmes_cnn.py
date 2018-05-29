@@ -132,8 +132,11 @@ prepare_data.i = 1
 # the data, shuffled and split between train and test sets
 class SensitivitySpecificityCallback(Callback):
     def on_epoch_end(self, epoch, logs=None):
+        print('self.validation_data =', self.validation_data, ';')
         if epoch % 10 == 1:
-            x_test, y_test = self.validation_data
+            x_test = self.validation_data[0]
+            y_test = self.validation_data[1]
+            # x_test, y_test = self.validation_data
             predictions = self.model.predict(x_test)
             y_test = np.argmax(y_test, axis=-1)
             predictions = np.argmax(predictions, axis=-1)
