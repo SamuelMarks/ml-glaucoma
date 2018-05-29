@@ -132,8 +132,7 @@ prepare_data.i = 1
 # the data, shuffled and split between train and test sets
 class SensitivitySpecificityCallback(Callback):
     def on_epoch_end(self, epoch, logs=None):
-        print('self.validation_data =', self.validation_data, ';')
-        if epoch % 10 == 1:
+        if epoch:
             x_test = self.validation_data[0]
             y_test = self.validation_data[1]
             # x_test, y_test = self.validation_data
@@ -143,8 +142,8 @@ class SensitivitySpecificityCallback(Callback):
             c = confusion_matrix(y_test, predictions)
 
             print('Confusion matrix:\n', c)
-            print('sensitivity', c[0, 0] / (c[0, 1] + c[0, 0]))
-            print('specificity', c[1, 1] / (c[1, 1] + c[1, 0]))
+            print('[{:03d}] sensitivity'.format(epoch), c[0, 0] / (c[0, 1] + c[0, 0]))
+            print('[{:03d}] specificity'.format(epoch), c[1, 1] / (c[1, 1] + c[1, 0]))
 
 
 def run(download_dir, save_to, batch_size, num_classes, epochs,
