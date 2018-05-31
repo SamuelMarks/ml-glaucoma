@@ -23,7 +23,8 @@ def _build_parser():
     subparsers = parser.add_subparsers(dest='command')
 
     data_parser = subparsers.add_parser('data', help='Data preprocessing runner')
-    data_parser.add_argument('-s', '--save', dest='save_to', help='Save h5 file of dataset', required=True)
+    data_parser.add_argument('-s', '--save', help='Save h5 file of dataset, following preprocessing',
+                             dest='preprocess_to', required=True)
     data_parser.add_argument('-f', '--force', dest='force_new', help='Force new h5 file of dataset being created',
                              action='store_true')
     data_parser.add_argument('-p', '--pixels', help='Pixels. E.g.: 400 for 400px * 400px',
@@ -40,8 +41,8 @@ def _build_parser():
     cnn_parser.add_argument('-e', '--epochs', help='Number of epochs', default=20, type=int)
     cnn_parser.add_argument('-m', '--model', help='Filename for h5 trained model file',
                             dest='model_name', required=True)
-    cnn_parser.add_argument('-s', '--save', help='Save h5 file of dataset', dest='save_to',
-                            required=True)
+    cnn_parser.add_argument('-s', '--save', help='Save h5 file of dataset, following preprocessing',
+                            dest='preprocess_to', required=True)
     cnn_parser.add_argument('-d', '--download-dir', help='Directory to store precompiled CNN nets', required=True)
     cnn_parser.add_argument('-t', '--transfer-model',
                             help='Transfer model. Currently any one of: `keras.application`, e.g.: "vgg16"; "resnet50"')

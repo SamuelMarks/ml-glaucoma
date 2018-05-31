@@ -57,11 +57,11 @@ def download(download_dir, force_new=False):
                 f.write(chunk)
 
 
-def prepare_data(save_to, pixels, force_new=False):
+def prepare_data(preprocess_to, pixels, force_new=False):
     def _parse_function(filename):
         image = cv2.imread(filename)
         image_resized = cv2.resize(image, (pixels, pixels))
-        print("Importing image ", prepare_data.i, end='\r')
+        print('Importing image ', prepare_data.i, end='\r')
         prepare_data.i += 1
         return image_resized
 
@@ -85,7 +85,7 @@ def prepare_data(save_to, pixels, force_new=False):
 
         img_names, data_labels = _get_filenames(neg_ids, pos_ids, id_to_imgs)
 
-        print("Total images: ", len(img_names))
+        print('Total images: ', len(img_names))
 
         prepare_data.i = 1
         dataset_tensor = np.stack(list(map(_parse_function, img_names)))
@@ -93,8 +93,8 @@ def prepare_data(save_to, pixels, force_new=False):
 
         return dataset_tensor, data_labels
 
-    if not force_new and path.isfile(save_to):
-        f = h5py.File(save_to, 'r')
+    if not force_new and path.isfile(preprocess_to):
+        f = h5py.File(preprocess_to, 'r')
         x_train_dset = f.get('x_train')
         y_train_dset = f.get('y_train')
         x_test_dset = f.get('x_test')
@@ -114,11 +114,11 @@ def prepare_data(save_to, pixels, force_new=False):
     x_train, y_train = x[:train_amount], y[:train_amount]
     x_test, y_test = x[train_amount:], y[train_amount:]
 
-    f = h5py.File(save_to, 'w')
-    x_train = f.create_dataset("x_train", data=x_train, )  # compression='lzf')
-    y_train = f.create_dataset("y_train", data=y_train, )  # compression='lzf')
-    x_test = f.create_dataset("x_test", data=x_test, )  # compression='lzf')
-    y_test = f.create_dataset("y_test", data=y_test, )  # compression='lzf')
+    f = h5py.File(preprocess_to, 'w')
+    x_train = f.create_dataset('x_train', data=x_train, )  # compression='lzf')
+    y_train = f.create_dataset('y_train', data=y_train, )  # compression='lzf')
+    x_test = f.create_dataset('x_test', data=x_test, )  # compression='lzf')
+    y_test = f.create_dataset('y_test', data=y_test, )  # compression='lzf')
 
     return (x_train, y_train), (x_test, y_test)
 
@@ -146,21 +146,28 @@ class SensitivitySpecificityCallback(Callback):
             print('[{:03d}] specificity'.format(epoch), c[1, 1] / (c[1, 1] + c[1, 0]))
 
 
-def run(download_dir, save_to, batch_size, num_classes, epochs,
+def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
         transfer_model, model_name, dropout, pixels, tensorboard_log_dir):
     callbacks = [SensitivitySpecificityCallback()]
     if tensorboard_log_dir:
         if not path.isdir(tensorboard_log_dir):
             makedirs(tensorboard_log_dir)
         callbacks.append(
-            TensorBoard(log_dir=tensorboard_log_dir, histogram_freq=0,
-                        write_graph=True, write_images=True)
+            TensorBoard(log_dir=tensorboard_log_dir, histogram_freq=0, write_graph=True, write_images=True)
         )
 
-    download(download_dir)
+    # download(download_dir)
 
-    (x_train, y_train), (x_test, y_test) = prepare_data(save_to, pixels)  # cifar10.load_data()
-    print("Fraction negative training examples: ", (len(y_train) - np.sum(y_train)) / len(y_train))
+    save_dir = path.dirname(preprocess_to)
+    if not path.isdir(save_dir):
+        makedirs(save_dir)
+
+    assert model_name != path.basename(preprocess_to), '{model_name} is same as {preprocess_to}'.format(
+        model_name=model_name, preprocess_to=preprocess_to
+    )
+
+    (x_train, y_train), (x_test, y_test) = prepare_data(preprocess_to, pixels)  # cifar10.load_data()
+    print('Fraction negative training examples: ', (len(y_train) - np.sum(y_train)) / len(y_train))
 
     # indices = [i for i,label in enumerate(y_train) if label > 1]
     # y_train = np.delete(y_train,indices,axis=0)
@@ -204,37 +211,32 @@ def run(download_dir, save_to, batch_size, num_classes, epochs,
             model.add(getattr(keras.applications, transfer_model.upper())(
                 include_top=False, weights='imagenet', pooling='avg'
             ))
-            '''
-            for layer in vgg_model.layers:
-                layer.trainable = True
-                model.add(layer)
-            '''
-        else:  # if transfer_model.startswith('resnet'):
+
+        else:
             model.add(getattr(keras.applications, transfer_model.upper())(
-                include_top=False, pooling='avg'  # , weights=resnet_weights_path
+                include_top=False, pooling='avg'
             ))
 
         model.add(Dense(num_classes, activation='softmax'))
 
-        # Say not to train first layer model. It is already trained.
         model.layers[0].trainable = False
     else:
         model.add(Conv2D(32,
-                         kernel_size=(7, 7),  # as suggested
+                         kernel_size=(7, 7),
                          activation='relu',
-                         padding='same',  # as suggested
+                         padding='same',
                          input_shape=input_shape))
-        model.add(MaxPooling2D(pool_size=(2, 2)))  # as suggested
+        model.add(MaxPooling2D(pool_size=(2, 2)))
         if dropout > 3:
-            model.add(Dropout(.5))  # as suggested
-        model.add(Conv2D(64, (5, 5), activation='relu', padding='same'))  # as suggested
+            model.add(Dropout(.5))
+        model.add(Conv2D(64, (5, 5), activation='relu', padding='same'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         if dropout > 2:
             model.add(Dropout(.5))
-        model.add(Conv2D(32, (3, 3), activation='relu', padding='same'))  # as suggested
-        model.add(MaxPooling2D(pool_size=(2, 2)))  # as suggested
+        model.add(Conv2D(32, (3, 3), activation='relu', padding='same'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
         if dropout > 1:
-            model.add(Dropout(.5))  # as suggested
+            model.add(Dropout(.5))
         model.add(Flatten())
         model.add(Dense(128, activation='relu'))
         if dropout > 0:
@@ -291,19 +293,15 @@ def run(download_dir, save_to, batch_size, num_classes, epochs,
     # print('specificity_at_sensitivity', specificity_at_sensitivity(x_test=x_test, y_test=y_test))
 
     # Save model and weights
-    save_dir = path.dirname(save_to)
-    if not path.isdir(save_dir):
-        makedirs(save_dir)
+
     model_path = path.join(save_dir, model_name)
     model.save(model_path)
-    print('Saved trained model at {}'.format(model_path))
+    print('Saved trained model at "{model_path}"'.format(model_path=model_path))
 
     predictions = model.predict(x_test)
     y_test = np.argmax(y_test, axis=-1)
     predictions = np.argmax(predictions, axis=-1)
-    confusion = confusion_matrix(y_test, predictions)
-    print("Confusion matrix:")
-    print(confusion)
-    c = confusion
-    print("sensitivity = ", c[0, 0] / (c[0, 1] + c[0, 0]))
-    print("specificity = ", c[1, 1] / (c[1, 1] + c[1, 0]))
+    c = confusion_matrix(y_test, predictions)
+    print('Confusion matrix:\n', c)
+    print('sensitivity', c[0, 0] / (c[0, 1] + c[0, 0]))
+    print('specificity', c[1, 1] / (c[1, 1] + c[1, 0]))
