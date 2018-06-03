@@ -13,3 +13,4 @@ tensorflow
 opencv-python
 scikit-learn
 urllib3[secure]
+numpy

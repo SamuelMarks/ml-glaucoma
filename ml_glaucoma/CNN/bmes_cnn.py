@@ -3,32 +3,67 @@
 
 from __future__ import print_function
 
+from itertools import groupby, takewhile, islice
+from operator import itemgetter
 from os import path, makedirs
+from platform import python_version_tuple
 
-import certifi
-import cv2
-import h5py
-import keras
+from six import iteritems
+
+from ml_glaucoma.utils import pp
+
+if python_version_tuple()[0] == '3':
+    from functools import reduce
+
+    imap = map
+    ifilter = filter
+
 import numpy as np
-import tensorflow as tf
-from keras import backend as K
-from keras.callbacks import TensorBoard, Callback
-from keras.layers import Conv2D, MaxPooling2D
-from keras.layers import Dense, Dropout, Flatten
-from keras.models import Sequential
-from sklearn.metrics import confusion_matrix
-from sklearn.utils import shuffle
-from urllib3 import PoolManager
+
+from keras.callbacks import Callback
 
 from ml_glaucoma import get_logger
 from ml_glaucoma.utils.get_data import get_data
 
 logger = get_logger(__file__.partition('.')[0])
 
-K.set_image_data_format('channels_last')
+
+def parser(infile, top, threshold, by_diff):
+    epoch2stat = {k: tuple((lambda stats: stats)(tuple(imap(itemgetter(1), v))))
+                  for k, v in groupby(sorted(imap(lambda l: (l[0], l[1]),
+                                                  ifilter(None, imap(
+                                                      lambda l: (lambda fst: (
+                                                          lambda three: (int(three), l.rstrip()[l.rfind(':') + 2:])
+                                                          if three is not None and three.isdigit() and int(
+                                                              three[0]) < 4 else None)(
+                                                          l[fst - 3:fst] if fst > -1 else None))(l.rfind(']')), infile)
+                                                          )), key=itemgetter(0)),
+                                      itemgetter(0)
+                                      )}
+
+    if threshold is not None:
+        within_threshold = sorted((
+            (k, reduce(lambda a, b: a >= threshold <= b, imap(
+                lambda val: float(''.join(takewhile(lambda c: c.isdigit() or c == '.', val[::-1]))[::-1]), v))
+             ) for k, v in iteritems(epoch2stat)), key=itemgetter(1))
+
+        pp(tuple(islice((epoch2stat[k[0]] for k in within_threshold if k[1]), 0, top)))
+    elif by_diff:
+        lowest_diff = sorted((
+            (k, reduce(lambda a, b: abs(a - b),
+                       imap(lambda val: float(''.join(takewhile(lambda c: c.isdigit() or c == '.', val[::-1]))[::-1]),
+                            v))
+             ) for k, v in iteritems(epoch2stat)), key=itemgetter(1))
+
+        pp(tuple(islice((epoch2stat[k[0]] for k in lowest_diff), 0, top)))
+    else:
+        pp(epoch2stat)
 
 
 def download(download_dir, force_new=False):
+    from urllib3 import PoolManager
+    import certifi
+
     http = PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
 
     if not path.exists(download_dir):
@@ -58,6 +93,10 @@ def download(download_dir, force_new=False):
 
 
 def prepare_data(preprocess_to, pixels, force_new=False):
+    import cv2
+    import h5py
+    from sklearn.utils import shuffle
+
     def _parse_function(filename):
         image = cv2.imread(filename)
         image_resized = cv2.resize(image, (pixels, pixels))
@@ -129,25 +168,40 @@ prepare_data.i = 1
 # input image dimensions
 # img_rows, img_cols = 28, 28
 
+def output_sensitivity_specificity(epoch, predictions, y_test):
+    from sklearn.metrics import confusion_matrix
+
+    y_test = np.argmax(y_test, axis=-1)
+    predictions = np.argmax(predictions, axis=-1)
+    c = confusion_matrix(y_test, predictions)
+    print('Confusion matrix:\n', c)
+    print('[{:03d}] sensitivity'.format(epoch), c[0, 0] / (c[0, 1] + c[0, 0]))
+    print('[{:03d}] specificity'.format(epoch), c[1, 1] / (c[1, 1] + c[1, 0]))
+
+
 # the data, shuffled and split between train and test sets
 class SensitivitySpecificityCallback(Callback):
     def on_epoch_end(self, epoch, logs=None):
         if epoch:
             x_test = self.validation_data[0]
             y_test = self.validation_data[1]
-            # x_test, y_test = self.validation_data
             predictions = self.model.predict(x_test)
-            y_test = np.argmax(y_test, axis=-1)
-            predictions = np.argmax(predictions, axis=-1)
-            c = confusion_matrix(y_test, predictions)
-
-            print('Confusion matrix:\n', c)
-            print('[{:03d}] sensitivity'.format(epoch), c[0, 0] / (c[0, 1] + c[0, 0]))
-            print('[{:03d}] specificity'.format(epoch), c[1, 1] / (c[1, 1] + c[1, 0]))
+            output_sensitivity_specificity(epoch, predictions, y_test)
 
 
 def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
         transfer_model, model_name, dropout, pixels, tensorboard_log_dir):
+    import keras
+    import tensorflow as tf
+
+    from keras import backend as K
+    from keras.callbacks import TensorBoard
+    from keras.layers import Conv2D, MaxPooling2D
+    from keras.layers import Dense, Dropout, Flatten
+    from keras.models import Sequential
+
+    K.set_image_data_format('channels_last')
+
     callbacks = [SensitivitySpecificityCallback()]
     if tensorboard_log_dir:
         if not path.isdir(tensorboard_log_dir):
@@ -300,8 +354,5 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
 
     predictions = model.predict(x_test)
     y_test = np.argmax(y_test, axis=-1)
-    predictions = np.argmax(predictions, axis=-1)
-    c = confusion_matrix(y_test, predictions)
-    print('Confusion matrix:\n', c)
-    print('sensitivity', c[0, 0] / (c[0, 1] + c[0, 0]))
-    print('specificity', c[1, 1] / (c[1, 1] + c[1, 0]))
+
+    output_sensitivity_specificity(epochs, predictions, y_test)

@@ -1,5 +1,5 @@
-from argparse import ArgumentParser
-from sys import modules
+from argparse import ArgumentParser, FileType
+from sys import modules, stdin
 
 from ml_glaucoma import __version__
 from ml_glaucoma.CNN import bmes_cnn
@@ -51,6 +51,15 @@ def _build_parser():
                             type=int, default=400)
     cnn_parser.add_argument('--tensorboard-log-dir', help='Enabled Tensorboard integration and sets its log dir')
 
+    post_parser = subparsers.add_parser('parser',
+                                        help='Show metrics from output. Default: per epoch sensitivity & specificity.')
+    post_parser.add_argument('infile', nargs='?', type=FileType('r'), default=stdin,
+                             help='File to work from. Defaults to stdin. So can pipe.')
+    post_parser.add_argument('--threshold', help='E.g.: 0.7 for sensitivity & specificity >= 70%%', type=float)
+    post_parser.add_argument('--top', help='Show top k results', type=int)
+    post_parser.add_argument('--by-diff', help='Sort by lowest difference between sensitivity & specificity',
+                             action='store_true')
+
     return parser
 
 
@@ -58,8 +67,13 @@ if __name__ == '__main__':
     kwargs = dict(_build_parser().parse_args()._get_kwargs())
 
     command = kwargs.pop('command')
+
+    if command is None:
+        raise ReferenceError('You must specify a command. Append `--help` for details.')
+
     getattr(bmes_cnn, {
         'data': 'prepare_data',
         'download': 'download',
-        'cnn': 'run'
+        'cnn': 'run',
+        'parser': 'parser'
     }[command])(**kwargs)

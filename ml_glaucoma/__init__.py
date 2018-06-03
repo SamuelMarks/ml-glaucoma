@@ -6,10 +6,8 @@ from os import path
 
 import yaml
 
-from ml_glaucoma.utils import pp
-
 __author__ = 'Samuel Marks'
-__version__ = '0.0.11'
+__version__ = '0.0.12'
 
 
 def get_logger(name=None):

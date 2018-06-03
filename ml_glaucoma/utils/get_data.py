@@ -2,7 +2,7 @@ from collections import namedtuple
 from fnmatch import filter as fnmatch_filter
 from functools import partial
 from itertools import chain
-from logging import INFO,NOTSET
+from logging import NOTSET
 from os import path, remove, walk, environ
 from platform import python_version_tuple
 from random import sample
@@ -10,6 +10,8 @@ from socket import getfqdn
 from sys import modules
 
 from six import iteritems, itervalues
+
+from ml_glaucoma.utils.prepare_data import prepare_data
 
 if python_version_tuple()[0] == '3':
     from importlib import reload
@@ -24,7 +26,6 @@ from openpyxl import load_workbook
 from sas7bdat import SAS7BDAT
 
 import numpy as np
-import tensorflow as tf
 from tensorflow.contrib.learn.python.learn.datasets.base import Datasets
 
 from ml_glaucoma import get_logger
@@ -43,7 +44,6 @@ globals()[RecImg.__name__] = RecImg
 cache = Cache(fname=environ.get('CACHE_FNAME') if 'NO_REDIS' in environ else redis_cursor)
 rand_cache = Cache(fname=path.join(path.dirname(path.dirname(__file__)), '_data', '.cache', 'rand_cache.pkl')).load()
 fqdn = getfqdn()
-
 
 
 def _update_generated_types_py(args=None, replace=False):
@@ -218,7 +218,7 @@ def get_datasets(no_oags=970, oags=30, skip_save=True):
     no_oags1 = pickled_cache['no_oags1']
     oags1 = pickled_cache['oags1']
     tbl_ids = pickled_cache['tbl_ids']
-    #rand_cache = pickled_cache['rand_cache']
+    # rand_cache = pickled_cache['rand_cache']
     train, test = (frozenset(chain(
         (no_oags1[k] for k in rand_cache['2000 in 0-3547'][i * no_oags:no_oags + i * no_oags]),
         (oags1[k] for k in rand_cache['0-108'][i * oags:oags + i * oags])
@@ -238,8 +238,8 @@ def _log_set_stats():
     logger.debug('# in test set:'.ljust(just) + str(len(datasets.test)))
     logger.debug('# in validation set:'.ljust(just) + str(len(datasets.validation)))
     logger.debug('# shared between sets:'.ljust(just) + str(sum((len(datasets.validation & datasets.test),
-                                                                len(datasets.test & datasets.train),
-                                                                len(datasets.validation & datasets.train)))))
+                                                                 len(datasets.test & datasets.train),
+                                                                 len(datasets.validation & datasets.train)))))
     # '# shared between sets:'.ljust(just), sum(len(s0&s1) for s0, s1 in combinations((validation, test, train), 2))
     logger.debug(
         '# len(all sets):'.ljust(just) + str(sum(map(len, (datasets.train, datasets.test, datasets.validation)))))
@@ -264,16 +264,20 @@ def get_features(feature_names, skip_save=True):
     return np.bmat(np.fromiter((idx for idx, _ in enumerate(feature_names)), np.float32))
 
 
-    train = _create_dataset(data_obj, data_obj.datasets.train)
-    validation = _create_dataset(data_obj, data_obj.datasets.validation)
-    test = _create_dataset(data_obj, data_obj.datasets.test)
-    return train, validation, test
+# Random dead code?
+'''
+train = _create_dataset(data_obj, data_obj.datasets.train)
+validation = _create_dataset(data_obj, data_obj.datasets.validation)
+test = _create_dataset(data_obj, data_obj.datasets.test)
+return train, validation, test
+'''
 
 Data = namedtuple('Data', ('tbl', 'datasets', 'features', 'feature_names', 'pickled_cache'))
 
 
 @run_once
-def get_data(no_oags=970, oags=30, new_base_dir=None, skip_save=True, cache_fname=None, invalidate=False):  # still saves once
+def get_data(no_oags=970, oags=30, new_base_dir=None, skip_save=True, cache_fname=None,
+             invalidate=False):  # still saves once
     """
     Gets and optionally caches data, using SAS | XLSX files as index, and BMES root as files
 
@@ -314,7 +318,7 @@ def get_data(no_oags=970, oags=30, new_base_dir=None, skip_save=True, cache_fnam
 
     global base_dir
     assert new_base_dir or base_dir, "No database directory provided"
-    base_dir = new_base_dir or base_dir #or path.join(path.expanduser('~'), 'repos', 'thesis', 'BMES')
+    base_dir = new_base_dir or base_dir  # or path.join(path.expanduser('~'), 'repos', 'thesis', 'BMES')
     _get_tbl(path.join(base_dir, 'glaucoma_20161205plus_Age23.xlsx'))
     _get_sas_tbl(path.join(base_dir, 'glaucoma_20161205plus_age23.sas7bdat'))
 
@@ -374,9 +378,6 @@ def get_data(no_oags=970, oags=30, new_base_dir=None, skip_save=True, cache_fnam
     return data
 
 
-
-
-
 _update_generated_types_py()
 import generated_types
 
@@ -384,4 +385,3 @@ if __name__ == '__main__':
     _data = get_data(no_oags=970, oags=30, new_base_dir='/mnt')
     train, val, test = prepare_data(_data)
     print(train)
-
