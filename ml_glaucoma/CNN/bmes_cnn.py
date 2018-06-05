@@ -265,6 +265,78 @@ def binary_segmentation_recall(y_true, y_pred):
     return approx_recall
 
 
+class BinaryTruePositives(keras.layers.Layer):
+    """Stateful Metric to count the total true positives over all batches.
+        Assumes predictions and targets of shape `(samples, 1)`.
+        # Arguments
+            name: String, name for the metric.
+    """
+
+    def __init__(self, name='true_positives', **kwargs):
+        super(BinaryTruePositives, self).__init__(name=name, **kwargs)
+        self.stateful = True
+        self.true_positives = K.variable(value=0, dtype='int32')
+
+    def reset_states(self):
+        K.set_value(self.true_positives, 0)
+
+    def __call__(self, y_true, y_pred):
+        """Computes the number of true positives in a batch.
+        # Arguments
+            y_true: Tensor, batch_wise labels
+            y_pred: Tensor, batch_wise predictions
+        # Returns
+            The total number of true positives seen this epoch at the
+                completion of the batch.
+        """
+        y_true = K.cast(y_true, 'int32')
+        y_pred = K.cast(K.round(y_pred), 'int32')
+        correct_preds = K.cast(K.equal(y_pred, y_true), 'int32')
+        true_pos = K.cast(K.sum(correct_preds * y_true), 'int32')
+        current_true_pos = self.true_positives * 1
+        self.add_update(K.update_add(self.true_positives,
+                                     true_pos),
+                        inputs=[y_true, y_pred])
+
+        return current_true_pos + true_pos
+
+
+# custom metrics for categorical
+def specificity(y_true, y_pred):
+    return K.cast(K.all((
+        K.equal(K.argmax(y_true, axis=-1), 1),
+        K.equal(K.argmax(y_pred, axis=-1), 1)
+    ), axis=1), K.floatx())
+
+
+def sensitivity(y_true, y_pred):
+    return K.cast(K.all((
+        K.equal(K.argmax(y_true, axis=-1), 2),
+        K.equal(K.argmax(y_pred, axis=-1), 2)
+    ), axis=1), K.floatx())
+
+
+def specificity_at_sensitivity(sensitivity, **kwargs):
+    def metric(labels, predictions):
+        # any tensorflow metric
+        value, update_op = tf.metrics.specificity_at_sensitivity(labels, predictions, sensitivity, **kwargs)
+
+        # find all variables created for this metric
+        metric_vars = (i for i in tf.local_variables() if 'specificity_at_sensitivity' in i.name.split('/')[2])
+
+        # Add metric variables to GLOBAL_VARIABLES collection.
+        # They will be initialized for new session.
+        for v in metric_vars:
+            tf.add_to_collection(tf.GraphKeys.GLOBAL_VARIABLES, v)
+
+        # force to update metric values
+        with tf.control_dependencies([update_op]):
+            value = tf.identity(value)
+            return value
+
+    return metric
+
+
 def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
         transfer_model, model_name, dropout, pixels, tensorboard_log_dir,
         optimizer, loss):
@@ -370,42 +442,14 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
             model.add(Dropout(.5))
         model.add(Dense(num_classes, activation='softmax'))
 
-    # custom metrics for categorical
-    def specificity(y_true, y_pred):
-        return K.cast(K.all((
-            K.equal(K.argmax(y_true, axis=-1), 1),
-            K.equal(K.argmax(y_pred, axis=-1), 1)
-        ), axis=1), K.floatx())
-
-    def sensitivity(y_true, y_pred):
-        return K.cast(K.all((
-            K.equal(K.argmax(y_true, axis=-1), 2),
-            K.equal(K.argmax(y_pred, axis=-1), 2)
-        ), axis=1), K.floatx())
-
-    def specificity_at_sensitivity(sensitivity, **kwargs):
-        def metric(labels, predictions):
-            # any tensorflow metric
-            value, update_op = tf.metrics.specificity_at_sensitivity(labels, predictions, sensitivity, **kwargs)
-
-            # find all variables created for this metric
-            metric_vars = (i for i in tf.local_variables() if 'specificity_at_sensitivity' in i.name.split('/')[2])
-
-            # Add metric variables to GLOBAL_VARIABLES collection.
-            # They will be initialized for new session.
-            for v in metric_vars:
-                tf.add_to_collection(tf.GraphKeys.GLOBAL_VARIABLES, v)
-
-            # force to update metric values
-            with tf.control_dependencies([update_op]):
-                value = tf.identity(value)
-                return value
-
-        return metric
+    metric_fn = BinaryTruePositives()
+    config = keras.metrics.serialize(metric_fn)
+    metric_fn = keras.metrics.deserialize(
+        config, custom_objects={'BinaryTruePositives': BinaryTruePositives})
 
     model.compile(loss=getattr(keras.losses, loss),
                   optimizer=getattr(keras.optimizers, optimizer)() if optimizer in dir(keras.optimizers) else optimizer,
-                  metrics=['accuracy', binary_segmentation_recall])
+                  metrics=['accuracy', metric_fn])
 
     model.fit(x_train, y_train,
               batch_size=batch_size,
