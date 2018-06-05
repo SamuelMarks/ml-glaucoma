@@ -200,6 +200,33 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
     from keras.layers import Dense, Dropout, Flatten
     from keras.models import Sequential
 
+    # from: https://stackoverflow.com/a/48720556
+    def reweight(y_true, y_pred, tp_weight=0.2, tn_weight=0.2, fp_weight=1.2, fn_weight=1.2):
+        # Get predictions
+        y_pred_classes = K.greater_equal(y_pred, 0.5)
+        y_pred_classes_float = K.cast(y_pred_classes, K.floatx())
+
+        # Get misclassified examples
+        wrongly_classified = K.not_equal(y_true, y_pred_classes_float)
+        wrongly_classified_float = K.cast(wrongly_classified, K.floatx())
+
+        # Get correctly classified examples
+        correctly_classified = K.equal(y_true, y_pred_classes_float)
+        correctly_classified_float = K.cast(wrongly_classified, K.floatx())
+
+        # Get tp, fp, tn, fn
+        tp = correctly_classified_float * y_true
+        tn = correctly_classified_float * (1 - y_true)
+        fp = wrongly_classified_float * y_true
+        fn = wrongly_classified_float * (1 - y_true)
+
+        # Get weights
+        weight_tensor = tp_weight * tp + fp_weight * fp + tn_weight * tn + fn_weight * fn
+
+        loss = K.binary_crossentropy(y_true, y_pred)
+        weighted_loss = loss * weight_tensor
+        return weighted_loss
+
     K.set_image_data_format('channels_last')
 
     callbacks = [SensitivitySpecificityCallback()]
@@ -330,7 +357,7 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
 
     model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer=keras.optimizers.Adadelta(),
-                  metrics=[specificity_at_sensitivity(0.5), 'accuracy'])
+                  metrics=[reweight, 'accuracy'])
 
     model.fit(x_train, y_train,
               batch_size=batch_size,
