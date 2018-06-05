@@ -257,6 +257,14 @@ def fmeasure(y_true, y_pred):
     return fbeta_score(y_true, y_pred, beta=1)
 
 
+def binary_segmentation_recall(y_true, y_pred):
+    # We assume y_true and y_pred have shape [?, W, H, 1]
+    # This is a segmentation loss, for classification it doesn't really make sense.
+    tp_ish = K.hard_sigmoid(100. * (y_pred - 0.5))
+    approx_recall = K.sum(tp_ish, [1, 2, 3]) / K.sum(y_true, axis=[1, 2, 3])
+    return approx_recall
+
+
 def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
         transfer_model, model_name, dropout, pixels, tensorboard_log_dir,
         optimizer, loss):
@@ -397,7 +405,7 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
 
     model.compile(loss=getattr(keras.losses, loss),
                   optimizer=getattr(keras.optimizers, optimizer)() if optimizer in dir(keras.optimizers) else optimizer,
-                  metrics=['accuracy', fmeasure, recall, precision])
+                  metrics=['accuracy', binary_segmentation_recall])
 
     model.fit(x_train, y_train,
               batch_size=batch_size,
