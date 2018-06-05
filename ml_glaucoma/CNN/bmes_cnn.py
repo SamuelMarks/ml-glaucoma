@@ -54,7 +54,9 @@ def parser(infile, top, threshold, by_diff):
     if threshold is not None:
         within_threshold = sorted((
             (k, reduce(lambda a, b: a >= threshold <= b, imap(
-                lambda val: float(''.join(takewhile(lambda c: c.isdigit() or c == '.', val[::-1]))[::-1]), v))
+                lambda val: float((lambda val: float(val) if val.isdigit() else .0)(
+                    ''.join(takewhile(lambda c: c.isdigit() or c == '.', val[::-1]))[::-1]
+                )), v))
              ) for k, v in iteritems(epoch2stat)), key=itemgetter(1))
 
         pp(tuple(islice((epoch2stat[k[0]] for k in within_threshold if k[1]), 0, top)))
