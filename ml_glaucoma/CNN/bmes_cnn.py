@@ -8,7 +8,15 @@ from operator import itemgetter
 from os import path, makedirs
 from platform import python_version_tuple
 
+import keras
+import tensorflow as tf
+from keras import backend as K
+from keras.callbacks import TensorBoard
+from keras.layers import Conv2D, MaxPooling2D
+from keras.layers import Dense, Dropout, Flatten
+from keras.models import Sequential
 from six import iteritems
+from sklearn.metrics import precision_recall_fscore_support, fbeta_score
 
 from ml_glaucoma.utils import pp
 
@@ -22,8 +30,10 @@ import numpy as np
 
 from keras.callbacks import Callback
 
-from ml_glaucoma import get_logger
+from ml_glaucoma import get_logger, __version__
 from ml_glaucoma.utils.get_data import get_data
+
+K.set_image_data_format('channels_last')
 
 logger = get_logger(__file__.partition('.')[0])
 
@@ -189,46 +199,64 @@ class SensitivitySpecificityCallback(Callback):
             output_sensitivity_specificity(epoch, predictions, y_test)
 
 
+# from: https://stackoverflow.com/a/48720556
+def reweight(y_true, y_pred, tp_weight=0.2, tn_weight=0.2, fp_weight=1.2, fn_weight=1.2):
+    # Get predictions
+    y_pred_classes = K.greater_equal(y_pred, 0.5)
+    y_pred_classes_float = K.cast(y_pred_classes, K.floatx())
+
+    # Get misclassified examples
+    wrongly_classified = K.not_equal(y_true, y_pred_classes_float)
+    wrongly_classified_float = K.cast(wrongly_classified, K.floatx())
+
+    # Get correctly classified examples
+    correctly_classified = K.equal(y_true, y_pred_classes_float)
+    correctly_classified_float = K.cast(wrongly_classified, K.floatx())
+
+    # Get tp, fp, tn, fn
+    tp = correctly_classified_float * y_true
+    tn = correctly_classified_float * (1 - y_true)
+    fp = wrongly_classified_float * y_true
+    fn = wrongly_classified_float * (1 - y_true)
+
+    # Get weights
+    weight_tensor = tp_weight * tp + fp_weight * fp + tn_weight * tn + fn_weight * fn
+
+    loss = K.binary_crossentropy(y_true, y_pred)
+    weighted_loss = loss * weight_tensor
+    return weighted_loss
+
+
+def f_score_obj(y_true, y_pred):
+    y_true = K.eval(y_true)
+    y_pred = K.eval(y_pred)
+    precision, recall, f_score, support = precision_recall_fscore_support(y_true, y_pred)
+    return K.variable(1. - f_score[1])
+
+
+def precision(y_true, y_pred):
+    # Calculates the precision
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    precision = true_positives / (predicted_positives + K.epsilon())
+    return precision
+
+
+def recall(y_true, y_pred):
+    # Calculates the recall
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_positives / (possible_positives + K.epsilon())
+    return recall
+
+
+def fmeasure(y_true, y_pred):
+    # Calculates the f-measure, the harmonic mean of precision and recall.
+    return fbeta_score(y_true, y_pred, beta=1)
+
+
 def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
-        transfer_model, model_name, dropout, pixels, tensorboard_log_dir):
-    import keras
-    import tensorflow as tf
-
-    from keras import backend as K
-    from keras.callbacks import TensorBoard
-    from keras.layers import Conv2D, MaxPooling2D
-    from keras.layers import Dense, Dropout, Flatten
-    from keras.models import Sequential
-
-    # from: https://stackoverflow.com/a/48720556
-    def reweight(y_true, y_pred, tp_weight=0.2, tn_weight=0.2, fp_weight=1.2, fn_weight=1.2):
-        # Get predictions
-        y_pred_classes = K.greater_equal(y_pred, 0.5)
-        y_pred_classes_float = K.cast(y_pred_classes, K.floatx())
-
-        # Get misclassified examples
-        wrongly_classified = K.not_equal(y_true, y_pred_classes_float)
-        wrongly_classified_float = K.cast(wrongly_classified, K.floatx())
-
-        # Get correctly classified examples
-        correctly_classified = K.equal(y_true, y_pred_classes_float)
-        correctly_classified_float = K.cast(wrongly_classified, K.floatx())
-
-        # Get tp, fp, tn, fn
-        tp = correctly_classified_float * y_true
-        tn = correctly_classified_float * (1 - y_true)
-        fp = wrongly_classified_float * y_true
-        fn = wrongly_classified_float * (1 - y_true)
-
-        # Get weights
-        weight_tensor = tp_weight * tp + fp_weight * fp + tn_weight * tn + fn_weight * fn
-
-        loss = K.binary_crossentropy(y_true, y_pred)
-        weighted_loss = loss * weight_tensor
-        return weighted_loss
-
-    K.set_image_data_format('channels_last')
-
+        transfer_model, model_name, dropout, pixels, tensorboard_log_dir, optimizer):
     callbacks = [SensitivitySpecificityCallback()]
     if tensorboard_log_dir:
         if not path.isdir(tensorboard_log_dir):
@@ -247,8 +275,14 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
         model_name=model_name, preprocess_to=preprocess_to
     )
 
+    print('\n============================\nml_glaucoma {version} with transfer of {transfer_model} (dropout: {dropout}.'
+          'Uses optimiser: {optimizer}'.format(version=__version__,
+                                               transfer_model=transfer_model,
+                                               dropout=dropout,
+                                               optimizer=optimizer))
+
     (x_train, y_train), (x_test, y_test) = prepare_data(preprocess_to, pixels)  # cifar10.load_data()
-    print('Fraction negative training examples: ', (len(y_train) - np.sum(y_train)) / len(y_train))
+    print('Fraction negative training examples:', np.divide(np.subtract(len(y_train), np.sum(y_train)), len(y_train)))
 
     # indices = [i for i,label in enumerate(y_train) if label > 1]
     # y_train = np.delete(y_train,indices,axis=0)
@@ -280,7 +314,7 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
     y_train = keras.utils.to_categorical(y_train, num_classes)
     y_test = keras.utils.to_categorical(y_test, num_classes)
 
-    resnet_weights_path = path.join(download_dir, 'resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5')
+    # resnet_weights_path = path.join(download_dir, 'resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5')
 
     model = Sequential()
 
@@ -326,14 +360,16 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
 
     # custom metrics for categorical
     def specificity(y_true, y_pred):
-        return K.cast(K.all(
-            (K.equal(K.argmax(y_true, axis=-1), 1), K.equal(K.argmax(y_pred, axis=-1), 1))
-            , axis=1), K.floatx())
+        return K.cast(K.all((
+            K.equal(K.argmax(y_true, axis=-1), 1),
+            K.equal(K.argmax(y_pred, axis=-1), 1)
+        ), axis=1), K.floatx())
 
     def sensitivity(y_true, y_pred):
-        return K.cast(K.all(
-            (K.equal(K.argmax(y_true, axis=-1), 2), K.equal(K.argmax(y_pred, axis=-1), 2))
-            , axis=1), K.floatx())
+        return K.cast(K.all((
+            K.equal(K.argmax(y_true, axis=-1), 2),
+            K.equal(K.argmax(y_pred, axis=-1), 2)
+        ), axis=1), K.floatx())
 
     def specificity_at_sensitivity(sensitivity, **kwargs):
         def metric(labels, predictions):
@@ -356,8 +392,8 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
         return metric
 
     model.compile(loss=keras.losses.categorical_crossentropy,
-                  optimizer=keras.optimizers.Adadelta(),
-                  metrics=[reweight, 'accuracy'])
+                  optimizer=getattr(keras.optimizers, optimizer)() if optimizer in dir(keras.optimizers) else optimizer,
+                  metrics=['accuracy', fmeasure, recall, precision])
 
     model.fit(x_train, y_train,
               batch_size=batch_size,

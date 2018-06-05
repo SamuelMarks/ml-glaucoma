@@ -50,6 +50,7 @@ def _build_parser():
     cnn_parser.add_argument('-p', '--pixels', help='Pixels. E.g.: 400 for 400px * 400px',
                             type=int, default=400)
     cnn_parser.add_argument('--tensorboard-log-dir', help='Enabled Tensorboard integration and sets its log dir')
+    cnn_parser.add_argument('--optimizer', default='Adadelta')
 
     post_parser = subparsers.add_parser('parser',
                                         help='Show metrics from output. Default: per epoch sensitivity & specificity.')
