@@ -256,7 +256,8 @@ def fmeasure(y_true, y_pred):
 
 
 def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
-        transfer_model, model_name, dropout, pixels, tensorboard_log_dir, optimizer):
+        transfer_model, model_name, dropout, pixels, tensorboard_log_dir,
+        optimizer, loss):
     callbacks = [SensitivitySpecificityCallback()]
     if tensorboard_log_dir:
         if not path.isdir(tensorboard_log_dir):
@@ -276,10 +277,11 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
     )
 
     print('\n============================\nml_glaucoma {version} with transfer of {transfer_model} (dropout: {dropout}.'
-          'Uses optimiser: {optimizer}'.format(version=__version__,
-                                               transfer_model=transfer_model,
-                                               dropout=dropout,
-                                               optimizer=optimizer))
+          'Uses optimiser: {optimizer} with loss: {loss}'.format(version=__version__,
+                                                                 transfer_model=transfer_model,
+                                                                 dropout=dropout,
+                                                                 optimizer=optimizer,
+                                                                 loss=loss))
 
     (x_train, y_train), (x_test, y_test) = prepare_data(preprocess_to, pixels)  # cifar10.load_data()
     print('Fraction negative training examples:', np.divide(np.subtract(len(y_train), np.sum(y_train)), len(y_train)))
@@ -391,7 +393,7 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
 
         return metric
 
-    model.compile(loss=keras.losses.categorical_crossentropy,
+    model.compile(loss=getattr(keras.losses, loss),
                   optimizer=getattr(keras.optimizers, optimizer)() if optimizer in dir(keras.optimizers) else optimizer,
                   metrics=['accuracy', fmeasure, recall, precision])
 
