@@ -39,24 +39,29 @@ logger = get_logger(__file__.partition('.')[0])
 
 
 def parser(infile, top, threshold, by_diff):
-    epoch2stat = {k: tuple((lambda stats: stats)(tuple(imap(itemgetter(1), v))))
-                  for k, v in groupby(sorted(imap(lambda l: (l[0], l[1]),
-                                                  ifilter(None, imap(
-                                                      lambda l: (lambda fst: (
-                                                          lambda three: (int(three), l.rstrip()[l.rfind(':') + 2:])
-                                                          if three is not None and three.isdigit() and int(
-                                                              three[0]) < 4 else None)(
-                                                          l[fst - 3:fst] if fst > -1 else None))(l.rfind(']')), infile)
-                                                          )), key=itemgetter(0)),
-                                      itemgetter(0)
-                                      )}
+    epoch2stat = {
+        key: val
+        for key, val in iteritems(
+        {
+            k: tuple((lambda stats: stats)(tuple(imap(itemgetter(1), v))))
+            for k, v in groupby(sorted(imap(lambda l: (l[0], l[1]),
+                                            ifilter(None, imap(
+                                                lambda l: (lambda fst: (
+                                                    lambda three: (int(three), l.rstrip()[l.rfind(':') + 2:])
+                                                    if three is not None and three.isdigit() and int(
+                                                        three[0]) < 4 else None)(
+                                                    l[fst - 3:fst] if fst > -1 else None))(l.rfind(']')), infile)
+                                                    )), key=itemgetter(0)),
+                                itemgetter(0))
+        })
+        if val and len(val) == 2
+    }
 
     if threshold is not None:
         within_threshold = sorted((
             (k, reduce(lambda a, b: a >= threshold <= b, imap(
-                lambda val: float((lambda val: float(val) if val.isdigit() else .0)(
-                    ''.join(takewhile(lambda c: c.isdigit() or c == '.', val[::-1]))[::-1]
-                )), v))
+                lambda val: float(''.join(takewhile(lambda c: c.isdigit() or c == '.', val[::-1]))[::-1]),
+                v))
              ) for k, v in iteritems(epoch2stat)), key=itemgetter(1))
 
         pp(tuple(islice((epoch2stat[k[0]] for k in within_threshold if k[1]), 0, top)))
