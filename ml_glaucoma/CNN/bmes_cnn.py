@@ -16,7 +16,7 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten
 from keras.models import Sequential
 from six import iteritems
-from sklearn.metrics import precision_recall_fscore_support, fbeta_score
+from sklearn.metrics import precision_recall_fscore_support, fbeta_score, confusion_matrix
 
 from ml_glaucoma.utils import pp
 
@@ -44,19 +44,17 @@ def parser(infile, top, threshold, by_diff):
         for key, val in iteritems(
         {
             k: tuple(imap(itemgetter(1), v))
-            for k, v in groupby(  # sorted
-            (imap(lambda l: (l[0], l[1]),
-                  ifilter(None, imap(
-                      lambda l: (lambda fst: (
-                          lambda three: (int(three), l.rstrip()[l.rfind(':') + 2:])
-                          if three is not None and three.isdigit() and int(
-                              three[0]) < 4 else None)(
-                          l[fst - 3:fst] if fst > -1 else None))(l.rfind(']')), infile)
-                          ))  # , key=itemgetter(0)
-             ), itemgetter(0))
+            for k, v in groupby(
+            imap(lambda l: (l[0], l[1]),
+                 ifilter(None, imap(
+                     lambda l: (lambda fst: (
+                         lambda three: (int(three), l.rstrip()[l.rfind(':') + 2:])
+                         if three is not None and three.isdigit() and int(three[0]) < 4 else None)(
+                         l[fst - 3:fst] if fst > -1 else None))(l.rfind(']')), infile)
+                         ))
+            , itemgetter(0))
         })
         if val and len(val) == 2
-
     }
 
     if threshold is not None:
@@ -479,5 +477,25 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
 
     predictions = model.predict(x_test)
     y_test = np.argmax(y_test, axis=-1)
+
+    predictions = np.argmax(predictions, axis=-1)
+
+    predictions = np.argmax(predictions, axis=-1)
+    confusion = confusion_matrix(y_test, predictions)
+    print("Confusion matrix:")
+    print(confusion)
+    c = confusion
+    print("sensitivity = ", c[0, 0] / (c[0, 1] + c[0, 0]))
+    print("specificity = ", c[1, 1] / (c[1, 1] + c[1, 0]))
+
+
+    confusion = tf.confusion_matrix(y_test, predictions)
+    print("Confusion matrix:")
+    print(confusion)
+    c = confusion
+    print("sensitivity = ", c[0, 0] / (c[0, 1] + c[0, 0]))
+
+
+    print("specificity = ", c[1, 1] / (c[1, 1] + c[1, 0]))
 
     output_sensitivity_specificity(epochs, predictions, y_test)
