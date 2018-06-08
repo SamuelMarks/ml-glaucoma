@@ -18,6 +18,7 @@ from keras.layers import Dense, Dropout, Flatten
 from keras.models import Sequential
 from six import iteritems
 from sklearn.metrics import precision_recall_fscore_support, fbeta_score, confusion_matrix
+from tensorflow.python.platform import tf_logging
 
 from ml_glaucoma.utils import pp
 
@@ -37,7 +38,7 @@ from ml_glaucoma.utils.get_data import get_data
 K.set_image_data_format('channels_last')
 
 logger = get_logger(__file__.partition('.')[0])
-logging.getLogger("tensorflow").setLevel(logging.WARNING)
+tf_logging._get_logger().setLevel(logging.WARNING)
 
 def parser(infile, top, threshold, by_diff):
     epoch2stat = {
