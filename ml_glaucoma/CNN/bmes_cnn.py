@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+import logging
 from itertools import groupby, takewhile, islice
 from operator import itemgetter
 from os import path, makedirs
@@ -36,7 +37,7 @@ from ml_glaucoma.utils.get_data import get_data
 K.set_image_data_format('channels_last')
 
 logger = get_logger(__file__.partition('.')[0])
-
+logging.getLogger("tensorflow").setLevel(logging.WARNING)
 
 def parser(infile, top, threshold, by_diff):
     epoch2stat = {
