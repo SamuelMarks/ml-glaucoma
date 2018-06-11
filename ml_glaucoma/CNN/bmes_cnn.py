@@ -38,7 +38,9 @@ from ml_glaucoma.utils.get_data import get_data
 K.set_image_data_format('channels_last')
 
 logger = get_logger(__file__.partition('.')[0])
+logger.setLevel(logging.NOTSET)
 tf_logging._get_logger().setLevel(logging.WARNING)
+
 
 def parser(infile, top, threshold, by_diff):
     epoch2stat = {
@@ -365,13 +367,18 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
     )
 
     print('\n============================\nml_glaucoma {version} with transfer of {transfer_model} (dropout: {dropout}.'
-          'Uses optimiser: {optimizer} with loss: {loss}'.format(version=__version__,
-                                                                 transfer_model=transfer_model,
-                                                                 dropout=dropout,
-                                                                 optimizer=optimizer,
-                                                                 loss=loss))
+          ' Uses optimiser: {optimizer} with loss: {loss})'.format(version=__version__,
+                                                                   transfer_model=transfer_model,
+                                                                   dropout=dropout,
+                                                                   optimizer=optimizer,
+                                                                   loss=loss))
 
     (x_train, y_train), (x_test, y_test) = prepare_data(preprocess_to, pixels)  # cifar10.load_data()
+    print('x_train:', x_train, ';')
+    print('y_train:', y_train, ';')
+    print('x_test:', x_train, ';')
+    print('y_test:', y_train, ';')
+
     print('Fraction negative training examples:', np.divide(np.subtract(len(y_train), np.sum(y_train)), len(y_train)))
 
     # indices = [i for i,label in enumerate(y_train) if label > 1]
@@ -490,13 +497,11 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
     print("sensitivity = ", c[0, 0] / (c[0, 1] + c[0, 0]))
     print("specificity = ", c[1, 1] / (c[1, 1] + c[1, 0]))
 
-
     confusion = tf.confusion_matrix(y_test, predictions)
     print("Confusion matrix:")
     print(confusion)
     c = confusion
     print("sensitivity = ", c[0, 0] / (c[0, 1] + c[0, 0]))
-
 
     print("specificity = ", c[1, 1] / (c[1, 1] + c[1, 0]))
 
