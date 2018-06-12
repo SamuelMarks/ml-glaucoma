@@ -52,6 +52,7 @@ def _build_parser():
     cnn_parser.add_argument('--tensorboard-log-dir', help='Enabled Tensorboard integration and sets its log dir')
     cnn_parser.add_argument('--optimizer', default='Adadelta')
     cnn_parser.add_argument('--loss', default='categorical_crossentropy')
+    cnn_parser.add_argument('--architecture', help='Current options: unet; for U-Net architecture')
 
     post_parser = subparsers.add_parser('parser',
                                         help='Show metrics from output. Default: per epoch sensitivity & specificity.')
