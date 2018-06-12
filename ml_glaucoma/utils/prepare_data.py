@@ -1,10 +1,10 @@
-def prepare_data(data_obj):
-    import tensorflow as tf
+import tensorflow as tf
 
+def prepare_data(data_obj, pixels):
     def _parse_function(filename, label):
         image = tf.image.decode_jpeg(tf.read_file(filename), channels=3)
         print(image.shape)
-        image_resized = tf.image.resize_images(image, [200, 200])
+        image_resized = tf.image.resize_images(image, [pixels, pixels])
         print(image_resized.shape)
         return image_resized, label
 

@@ -3,6 +3,9 @@ from sys import modules, stdin
 
 from ml_glaucoma import __version__
 from ml_glaucoma.CNN import bmes_cnn
+from ml_glaucoma.download import download
+from ml_glaucoma.parser import parser
+from ml_glaucoma.prepare import prepare_data
 
 # Original options
 '''
@@ -53,6 +56,7 @@ def _build_parser():
     cnn_parser.add_argument('--optimizer', default='Adadelta')
     cnn_parser.add_argument('--loss', default='categorical_crossentropy')
     cnn_parser.add_argument('--architecture', help='Current options: unet; for U-Net architecture')
+    cnn_parser.add_argument('--metrics', help='precision_recall or btp')
 
     post_parser = subparsers.add_parser('parser',
                                         help='Show metrics from output. Default: per epoch sensitivity & specificity.')
@@ -74,9 +78,8 @@ if __name__ == '__main__':
     if command is None:
         raise ReferenceError('You must specify a command. Append `--help` for details.')
 
-    getattr(bmes_cnn, {
-        'data': 'prepare_data',
-        'download': 'download',
-        'cnn': 'run',
-        'parser': 'parser'
-    }[command])(**kwargs)
+    ({'data': prepare_data,
+      'download': download,
+      'cnn': bmes_cnn.run,
+      'parser': parser
+      }[command])(**kwargs)

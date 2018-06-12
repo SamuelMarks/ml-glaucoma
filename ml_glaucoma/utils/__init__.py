@@ -2,6 +2,7 @@ from collections import deque
 from datetime import datetime
 from itertools import islice
 from os import environ
+from platform import python_version_tuple
 from pprint import PrettyPrinter
 
 redis_cursor = None
@@ -9,6 +10,9 @@ if 'NO_REDIS' not in environ:
     from redis import StrictRedis
 
     redis_cursor = StrictRedis(host='localhost', port=6379, db=0)
+
+if python_version_tuple()[0] == '3':
+    xrange = range
 
 pp = PrettyPrinter(indent=4).pprint
 
@@ -32,3 +36,13 @@ def json_serial(obj):
         serial = obj.isoformat()
         return serial
     raise TypeError("Type not serializable")
+
+
+def find_nth(s, x, n=0, overlap=False):
+    l = 1 if overlap else len(x)
+    i = -l
+    for c in xrange(n + 1):
+        i = s.find(x, i + l)
+        if i < 0:
+            break
+    return i

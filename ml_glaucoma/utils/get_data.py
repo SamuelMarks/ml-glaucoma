@@ -383,5 +383,5 @@ import generated_types
 
 if __name__ == '__main__':
     _data = get_data(no_oags=970, oags=30, new_base_dir='/mnt')
-    train, val, test = prepare_data(_data)
+    train, val, test = prepare_data(_data, pixels=200)
     print(train)
