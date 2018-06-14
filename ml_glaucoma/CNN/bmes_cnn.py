@@ -27,6 +27,7 @@ K.set_image_data_format('channels_last')
 logger = get_logger(__file__.partition('.')[0])
 logger.setLevel(logging.NOTSET)
 tf_logging._get_logger().setLevel(logging.WARNING)
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
 
 # input image dimensions
