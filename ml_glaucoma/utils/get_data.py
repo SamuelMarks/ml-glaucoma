@@ -4,7 +4,7 @@ import struct
 from collections import namedtuple
 from fnmatch import filter as fnmatch_filter
 from functools import partial
-from itertools import chain, groupby, ifilter, izip
+from itertools import chain, groupby, izip
 from operator import itemgetter
 from os import path, remove, walk, environ, symlink, makedirs
 from platform import python_version_tuple
@@ -13,17 +13,18 @@ from shutil import rmtree
 from socket import getfqdn
 from sys import modules
 
+import quantumrandom
 from six import iteritems, itervalues
-
-from ml_glaucoma.utils.prepare_data import prepare_data
 
 if python_version_tuple()[0] == '3':
     from importlib import reload
+    from functools import reduce
 
     xrange = range
     imap = map
+    ifilter = filter
 else:
-    from itertools import imap
+    from itertools import imap, ifilter
 
 from openpyxl import load_workbook
 from sas7bdat import SAS7BDAT
@@ -39,7 +40,6 @@ logger = get_logger(modules[__name__].__name__)
 # logger.setLevel(CRITICAL)
 
 pickled_cache = {}
-base_dir = '/mnt'
 just = 50
 RecImg = namedtuple('RecImg', ('rec', 'imgs'))  # type: (generated_types.T0, [str])
 globals()[RecImg.__name__] = RecImg
@@ -47,8 +47,22 @@ globals()[RecImg.__name__] = RecImg
 IdEyeFname = namedtuple('IdEyeFname', ('id', 'eye', 'fname'))
 
 cache = Cache(fname=environ.get('CACHE_FNAME') if 'NO_REDIS' in environ else redis_cursor)
-rand_cache = Cache(fname=path.join(path.dirname(path.dirname(__file__)), '_data', '.cache', 'rand_cache.pkl')).load()
+rand_cache_obj = Cache(fname=path.join(path.dirname(path.dirname(__file__)), '_data', '.cache', 'rand_cache.pkl'))
+rand_cache_recreate = environ.get('RECREATE_RAND_CACHE', False)
+rand_cache = rand_cache_obj.load()
 fqdn = getfqdn()
+
+
+def create_random_numbers(minimum, maximum, n):
+    whole, prev = frozenset(), frozenset()
+    while len(whole) < n:
+        whole = reduce(frozenset.union,
+                       (frozenset(imap(lambda num: minimum + (num % maximum),
+                                       quantumrandom.get_data(data_type='uint16', array_length=1024))),
+                        prev))
+        prev = whole
+        print(len(whole), 'of', n)
+    return sample(whole, n)
 
 
 class UnknownImageFormat(Exception):
@@ -198,7 +212,8 @@ def _populate_imgs(img_directory, skip_save=True):
             {_id: tuple(group)} for _id, group in groupby(all_imgs, key=itemgetter(0))
         ) for key in d}  # type: {str: tuple(IdEyeFname)}
 
-        total_imgs_assoc_to_id = sum(len(v) for k, v in iteritems(id2ideyefname))
+        pickled_cache['total_imgs_assoc_to_id'] = total_imgs_assoc_to_id = sum(
+            len(v) for k, v in iteritems(id2ideyefname))
         pickled_cache['tbl'] = tbl = {id_: RecImg(recimg.rec, id2ideyefname[id_])
                                       for id_, recimg in iteritems(tbl)
                                       if id_ in id2ideyefname}
@@ -336,8 +351,8 @@ def get_datasets(no_oags=970, oags=30, skip_save=True):
     tbl_ids = pickled_cache['tbl_ids']
     # rand_cache = pickled_cache['rand_cache']
     train, test = (frozenset(chain(
-        (no_oags1[k] for k in rand_cache['2000 in 0-3547'][i * no_oags:no_oags + i * no_oags]),
-        (oags1[k] for k in rand_cache['0-108'][i * oags:oags + i * oags])
+        (no_oags1[k] for k in rand_cache['0-13661'][i * no_oags:no_oags + i * no_oags]),
+        (oags1[k] for k in rand_cache['0-412'][i * oags:oags + i * oags])
     )) for i in xrange(2))
 
     pickled_cache['datasets'] = Datasets(train=train, test=test, validation=(train | test) ^ tbl_ids)
@@ -391,22 +406,93 @@ return train, validation, test
 Data = namedtuple('Data', ('tbl', 'datasets', 'features', 'feature_names', 'pickled_cache'))
 
 
+def link_distribute_dataset(train_ratio, test_ratio, train_positive_ratio, test_positive_ratio, split_dir):
+    global rand_cache, pickled_cache
+
+    train_dir = path.join(split_dir, 'train')
+    test_dir = path.join(split_dir, 'test')
+    valid_dir = path.join(split_dir, 'valid')
+
+    glaucoma_fnames = tuple(pickled_cache['glaucoma_fnames'])
+    bmes1_no_glaucoma_fnames = tuple(pickled_cache['bmes1_no_glaucoma_fnames'])
+
+    len_glaucoma_fnames = len(glaucoma_fnames)
+    len_no_glaucoma_fnames = len(bmes1_no_glaucoma_fnames)
+
+    rand_glaucoma = rand_cache['0-{:d}'.format(len_glaucoma_fnames)]
+    rand_no_glaucoma = rand_cache['0-{:d}'.format(len_no_glaucoma_fnames)]
+
+    outer_locals = locals()
+
+    def n_stats(dataset):
+        _no_glaucoma_n = int(outer_locals['{}_ratio'.format(dataset)] * len_no_glaucoma_fnames)
+        _glaucoma_n = int(outer_locals['{}_positive_ratio'.format(dataset)] * len_glaucoma_fnames)
+        logger.debug('# of negative {} images:'.format(dataset).ljust(just) + '{:d}'.format(_no_glaucoma_n))
+        logger.debug('# of positive {} images:'.format(dataset).ljust(just) + '{:d}'.format(_glaucoma_n))
+        return _no_glaucoma_n, _glaucoma_n
+
+    train_no_glaucoma_n, train_glaucoma_n = n_stats('train')
+    test_no_glaucoma_n, test_glaucoma_n = n_stats('test')
+
+    def idx_to_tuple(d, indices):
+        return tuple(imap(lambda idx: d[idx], indices))
+
+    # ACTION!
+
+    train_glaucoma_fnames = idx_to_tuple(glaucoma_fnames, rand_glaucoma[:train_glaucoma_n])
+    train_no_glaucoma_fnames = idx_to_tuple(bmes1_no_glaucoma_fnames, rand_no_glaucoma[:train_no_glaucoma_n])
+
+    make_symlinks(path.join(train_dir, 'glaucoma'), filenames=train_glaucoma_fnames, clean_dir=True)
+    make_symlinks(path.join(train_dir, 'no_glaucoma'), filenames=train_no_glaucoma_fnames, clean_dir=True)
+
+    test_glaucoma_fnames = idx_to_tuple(glaucoma_fnames,
+                                        rand_glaucoma[train_glaucoma_n:train_glaucoma_n + test_glaucoma_n])
+    test_no_glaucoma_fnames = idx_to_tuple(bmes1_no_glaucoma_fnames,
+                                           rand_no_glaucoma[
+                                           train_no_glaucoma_n:train_no_glaucoma_n + test_no_glaucoma_n])
+
+    make_symlinks(path.join(test_dir, 'glaucoma'), filenames=test_glaucoma_fnames, clean_dir=True)
+    make_symlinks(path.join(test_dir, 'no_glaucoma'), filenames=test_no_glaucoma_fnames, clean_dir=True)
+
+    valid_glaucoma_fnames = idx_to_tuple(glaucoma_fnames, rand_glaucoma[train_glaucoma_n + test_glaucoma_n:])
+    valid_no_glaucoma_fnames = idx_to_tuple(bmes1_no_glaucoma_fnames,
+                                            rand_no_glaucoma[train_no_glaucoma_n + test_no_glaucoma_n:])
+
+    make_symlinks(path.join(valid_dir, 'glaucoma'), filenames=valid_glaucoma_fnames, clean_dir=True)
+    make_symlinks(path.join(valid_dir, 'no_glaucoma'), filenames=valid_no_glaucoma_fnames, clean_dir=True)
+
+    return Datasets(train=train_dir, test=test_dir, validation=valid_dir)
+
+
 @run_once
-def get_data(no_oags=970, oags=30, new_base_dir=None, skip_save=True, cache_fname=None,
+def get_data(base_dir, split_dir,
+             train_ratio=.8, test_ratio=.1, train_positive_ratio=.8, test_positive_ratio=.1,
+             skip_save=True, cache_fname=None,
              invalidate=False):  # still saves once
     """
     Gets and optionally caches data, using SAS | XLSX files as index, and BMES root as files
 
-    :keyword no_oags: Number of Open Angle Glaucoma negative to include in test [#no_oags] and train [#no_oags].
-    Everything leftover goes into validation.
-    :type no_oags: ``int``
+    :keyword base_dir: Base dir. Should have a BMES123 folder inside.
+    :type base_dir: ``str``
 
-    :keyword oags: Number of Open Angle Glaucoma positive to include in test [#no_oags] and train [#no_oags].
-    Everything leftover goes into validation.
-    :type oags: ``int``
+    :keyword split_dir: Directory to place parsed files. NOTE: These are symbolically linked from the base dir.
+    :type split_dir: ``str``
 
-    :keyword new_base_dir: Replacement base dir. Default is `path.join(path.expanduser('~'), 'repos', 'thesis', 'BMES')`
-    :type new_base_dir: ``str``
+    :keyword train_ratio: Represent the proportion of the dataset to include in the test split.
+    By default, the value is set to 0.8. Everything leftover goes into validation.
+    :type test_size: ``float``
+
+    :keyword test_ratio: Represent the proportion of the dataset to include in the train split.
+    By default, the value is set to 0.1. Everything leftover goes into validation.
+    :type oags: ``float``
+
+    :keyword train_positive_ratio: Represent the proportion of the glaucoma-present dataset to include in the train split.
+    By default, the value is set to 0.5. Everything leftover goes into validation.
+    :type oags: ``float``
+
+    :keyword test_positive_ratio: Represent the proportion of the glaucoma-present dataset to include in the test split.
+    By default, the value is set to 0.5. Everything leftover goes into validation.
+    :type oags: ``float``
 
     :keyword skip_save: Skips saving
     :type skip_save: ``bool``
@@ -417,8 +503,8 @@ def get_data(no_oags=970, oags=30, new_base_dir=None, skip_save=True, cache_fnam
     :keyword invalidate: Invalidate cache first
     :type invalidate: ``bool``
 
-    :return: data
-    :rtype: ``Data``
+    :return: Datasets (directory strings, subdirs of 'glaucoma', 'no_glaucoma')
+    :rtype: ``Datasets``
     """
     global pickled_cache
     global cache
@@ -432,32 +518,49 @@ def get_data(no_oags=970, oags=30, new_base_dir=None, skip_save=True, cache_fnam
         logger.debug('imported T0 has:'.ljust(just) + '{}'.format(
             generated_types.T0._fields if generated_types.T0 is not None else generated_types.T0))
 
-    global base_dir
-    assert new_base_dir or base_dir, 'No database directory provided'
-    base_dir = new_base_dir or base_dir  # or path.join(path.expanduser('~'), 'repos', 'thesis', 'BMES')
+    assert base_dir, 'No database directory provided'
     _get_tbl(path.join(base_dir, 'glaucoma_20161205plus_Age23.xlsx'))
     _get_sas_tbl(path.join(base_dir, 'glaucoma_20161205plus_age23.sas7bdat'))
 
     _populate_imgs(img_directory=path.join(base_dir, 'BMES123'), skip_save=skip_save)
     _vanilla_stats(skip_save=skip_save)
 
-    # ------- symlinks -------
-    all_imgs = pickled_cache['all_imgs']
-    loags_id2fname = pickled_cache['loags_id2fname']
-    roags_id2fname = pickled_cache['roags_id2fname']
+    if 'glaucoma_fnames' not in pickled_cache:
+        all_imgs = pickled_cache['all_imgs']
+        loags_id2fname = pickled_cache['loags_id2fname']
+        roags_id2fname = pickled_cache['roags_id2fname']
+        pickled_cache['glaucoma_fnames'] = glaucoma_fnames = frozenset(
+            chain.from_iterable(chain.from_iterable((itervalues(loags_id2fname), itervalues(roags_id2fname))))
+        )
+        pickled_cache['bmes1_no_glaucoma_fnames'] = bmes1_no_glaucoma_fnames = frozenset(
+            imap(lambda ideyefname: ideyefname.fname, ifilter(
+                lambda ideyefname: path.basename(
+                    path.dirname(path.dirname(path.dirname(ideyefname.fname)))) == 'BMES1Images', all_imgs
+            ))) - glaucoma_fnames
+    else:
+        glaucoma_fnames = pickled_cache['glaucoma_fnames']
+        bmes1_no_glaucoma_fnames = pickled_cache['bmes1_no_glaucoma_fnames']
 
-    glaucoma_fnames = frozenset(
-        chain.from_iterable(chain.from_iterable((itervalues(loags_id2fname), itervalues(roags_id2fname)))))
-    # pp(tbl)
-    pickled_cache['bmes1_no_glaucoma_fnames'] = bmes1_no_glaucoma_fnames = frozenset(
-        imap(lambda ideyefname: ideyefname.fname, ifilter(
-            lambda ideyefname: path.basename(
-                path.dirname(path.dirname(path.dirname(ideyefname.fname)))) == 'BMES1Images', all_imgs
-        ))) - glaucoma_fnames
-    make_symlinks('/tmp/a/glaucoma', filenames=glaucoma_fnames, clean_dir=True)
-    make_symlinks('/tmp/a/no_glaucoma', filenames=bmes1_no_glaucoma_fnames, clean_dir=True)
-    # ------- symlinks -------
+    global rand_cache_recreate, rand_cache, rand_cache_obj
+    if rand_cache_recreate:
+        rand_cache = {}
+        len_glaucoma_fnames = len(glaucoma_fnames)
+        len_no_glaucoma_fnames = len(bmes1_no_glaucoma_fnames)
+        n = len(glaucoma_fnames) + len(bmes1_no_glaucoma_fnames)
+        rand_cache['0-{:d}'.format(len_glaucoma_fnames)] = create_random_numbers(
+            n=len_glaucoma_fnames, minimum=0, maximum=len_glaucoma_fnames
+        )
+        rand_cache['0-{:d}'.format(len_no_glaucoma_fnames)] = create_random_numbers(
+            n=len_no_glaucoma_fnames, minimum=0, maximum=len_no_glaucoma_fnames
+        )
+        rand_cache_obj.save(rand_cache)
 
+    return link_distribute_dataset(train_ratio=train_ratio, test_ratio=test_ratio,
+                                   train_positive_ratio=train_positive_ratio, test_positive_ratio=test_positive_ratio,
+                                   split_dir=split_dir)
+
+
+def old(no_oags, oags, skip_save):
     datasets = get_datasets(no_oags=no_oags, oags=oags, skip_save=skip_save)
     _log_set_stats()
 
@@ -526,9 +629,9 @@ _update_generated_types_py()
 import generated_types
 
 if __name__ == '__main__':
-    _data = get_data(no_oags=970, oags=30, new_base_dir='/data')
-    train, val, test = prepare_data(_data, pixels=200)
-    print(train)
+    _data = get_data(base_dir='/data', split_dir='/tmp/b')
+    # train, val, test = prepare_data(_data, pixels=200)
+    # print(train)
 
 '''
 /Users/samuel/repos/.venvs/thenv/bin/python /Users/samuel/repos/thesis/ml-glaucoma/ml_glaucoma/utils/get_data.py

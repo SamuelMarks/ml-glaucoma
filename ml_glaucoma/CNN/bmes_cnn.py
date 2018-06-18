@@ -14,13 +14,14 @@ from keras.callbacks import TensorBoard
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import MaxPooling2D, Conv2D, UpSampling2D
 from keras.models import Sequential
+from keras_preprocessing.image import ImageDataGenerator
 from sklearn.metrics import confusion_matrix
 from tensorflow.python.platform import tf_logging
 
 from ml_glaucoma import get_logger, __version__
 from ml_glaucoma.CNN.helpers import output_sensitivity_specificity
 from ml_glaucoma.CNN.metrics import BinaryTruePositives, SensitivitySpecificityCallback, Recall, Precision
-from ml_glaucoma.prepare import prepare_data
+from ml_glaucoma.utils.get_data import get_data
 
 K.set_image_data_format('channels_last')
 
@@ -88,9 +89,9 @@ def get_unet_light_for_fold0(img_rows, img_cols):
     return model
 
 
-def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
+def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, epochs,
         transfer_model, model_name, dropout, pixels, tensorboard_log_dir,
-        optimizer, loss, architecture, metrics):
+        optimizer, loss, architecture, metrics, split_dir):
     callbacks = [SensitivitySpecificityCallback()]
     if tensorboard_log_dir:
         if not path.isdir(tensorboard_log_dir):
@@ -116,6 +117,30 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
                                                                    optimizer=optimizer,
                                                                    loss=loss))
 
+    'split-dir'
+    test, train, validation = get_data(base_dir=bmes123_pardir, split_dir=split_dir)
+
+    train_datagen = ImageDataGenerator(
+        rescale=1. / 255,
+        shear_range=0.2,
+        zoom_range=0.2,
+        horizontal_flip=True)
+
+    test_datagen = ImageDataGenerator(rescale=1. / 255)
+
+    train_generator = train_datagen.flow_from_directory(
+        test,
+        target_size=(pixels, pixels),
+        batch_size=32,
+        class_mode='binary')
+
+    validation_generator = test_datagen.flow_from_directory(
+        train,
+        target_size=(pixels, pixels),
+        batch_size=32,
+        class_mode='binary')
+
+    '''
     (x_train, y_train), (x_test, y_test) = prepare_data(preprocess_to, pixels)  # cifar10.load_data()
     print('x_train:', x_train, ';')
     print('y_train:', y_train, ';')
@@ -123,6 +148,7 @@ def run(download_dir, preprocess_to, batch_size, num_classes, epochs,
     print('y_test:', y_train, ';')
 
     print('Fraction negative training examples:', np.divide(np.subtract(len(y_train), np.sum(y_train)), len(y_train)))
+    '''
 
     # indices = [i for i,label in enumerate(y_train) if label > 1]
     # y_train = np.delete(y_train,indices,axis=0)

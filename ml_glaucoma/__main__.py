@@ -5,7 +5,6 @@ from ml_glaucoma import __version__
 from ml_glaucoma.CNN import bmes_cnn
 from ml_glaucoma.download import download
 from ml_glaucoma.parser import parser
-from ml_glaucoma.prepare import prepare_data
 
 # Original options
 '''
@@ -25,6 +24,7 @@ def _build_parser():
 
     subparsers = parser.add_subparsers(dest='command')
 
+    '''
     data_parser = subparsers.add_parser('data', help='Data preprocessing runner')
     data_parser.add_argument('-s', '--save', help='Save h5 file of dataset, following preprocessing',
                              dest='preprocess_to', required=True)
@@ -32,6 +32,7 @@ def _build_parser():
                              action='store_true')
     data_parser.add_argument('-p', '--pixels', help='Pixels. E.g.: 400 for 400px * 400px',
                              type=int, default=400)
+    '''
 
     download_parser = subparsers.add_parser('download', help='Download required data')
     download_parser.add_argument('-d', '--download-dir', help='Directory to store precompiled CNN nets', required=True)
@@ -57,6 +58,8 @@ def _build_parser():
     cnn_parser.add_argument('--loss', default='categorical_crossentropy')
     cnn_parser.add_argument('--architecture', help='Current options: unet; for U-Net architecture')
     cnn_parser.add_argument('--metrics', help='precision_recall or btp')
+    cnn_parser.add_argument('--split-dir', help='Place to create symbolic links for train, test, validation split')
+    cnn_parser.add_argument('--bmes123-pardir', help='Parent folder of BMES123 folder')
 
     post_parser = subparsers.add_parser('parser',
                                         help='Show metrics from output. Default: per epoch sensitivity & specificity.')
@@ -78,7 +81,7 @@ if __name__ == '__main__':
     if command is None:
         raise ReferenceError('You must specify a command. Append `--help` for details.')
 
-    ({'data': prepare_data,
+    ({  # 'data': prepare_data,
       'download': download,
       'cnn': bmes_cnn.run,
       'parser': parser
