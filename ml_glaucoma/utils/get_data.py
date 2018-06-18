@@ -1,11 +1,15 @@
+from __future__ import print_function
+
+import struct
 from collections import namedtuple
 from fnmatch import filter as fnmatch_filter
 from functools import partial
-from itertools import chain
-from logging import NOTSET
-from os import path, remove, walk, environ
+from itertools import chain, groupby, ifilter, izip
+from operator import itemgetter
+from os import path, remove, walk, environ, symlink, makedirs
 from platform import python_version_tuple
 from random import sample
+from shutil import rmtree
 from socket import getfqdn
 from sys import modules
 
@@ -17,10 +21,9 @@ if python_version_tuple()[0] == '3':
     from importlib import reload
 
     xrange = range
+    imap = map
 else:
-    from itertools import imap as map
-
-from PIL import Image
+    from itertools import imap
 
 from openpyxl import load_workbook
 from sas7bdat import SAS7BDAT
@@ -33,7 +36,7 @@ from ml_glaucoma.utils import run_once, it_consumes, pp, redis_cursor
 from ml_glaucoma.utils.cache import Cache
 
 logger = get_logger(modules[__name__].__name__)
-logger.setLevel(NOTSET)
+# logger.setLevel(CRITICAL)
 
 pickled_cache = {}
 base_dir = '/mnt'
@@ -41,9 +44,74 @@ just = 50
 RecImg = namedtuple('RecImg', ('rec', 'imgs'))  # type: (generated_types.T0, [str])
 globals()[RecImg.__name__] = RecImg
 
+IdEyeFname = namedtuple('IdEyeFname', ('id', 'eye', 'fname'))
+
 cache = Cache(fname=environ.get('CACHE_FNAME') if 'NO_REDIS' in environ else redis_cursor)
 rand_cache = Cache(fname=path.join(path.dirname(path.dirname(__file__)), '_data', '.cache', 'rand_cache.pkl')).load()
 fqdn = getfqdn()
+
+
+class UnknownImageFormat(Exception):
+    pass
+
+
+def get_image_size(file_path):
+    """
+    Return (width, height) for a given img file content - no external
+    dependencies except the os and struct modules from core
+    """
+    size = path.getsize(file_path)
+
+    with open(file_path) as f:
+        height = -1
+        width = -1
+        data = f.read(25)
+
+        if (size >= 10) and data[:6] in ('GIF87a', 'GIF89a'):
+            # GIFs
+            w, h = struct.unpack('<HH', data[6:10])
+            width = int(w)
+            height = int(h)
+        elif ((size >= 24) and data.startswith('\211PNG\r\n\032\n')
+              and (data[12:16] == 'IHDR')):
+            # PNGs
+            w, h = struct.unpack('>LL', data[16:24])
+            width = int(w)
+            height = int(h)
+        elif (size >= 16) and data.startswith('\211PNG\r\n\032\n'):
+            # older PNGs?
+            w, h = struct.unpack('>LL', data[8:16])
+            width = int(w)
+            height = int(h)
+        elif (size >= 2) and data.startswith('\377\330'):
+            # JPEG
+            msg = ' raised while trying to decode as JPEG.'
+            f.seek(0)
+            f.read(2)
+            b = f.read(1)
+            try:
+                while (b and ord(b) != 0xDA):
+                    while ord(b) != 0xFF: b = f.read(1)
+                    while ord(b) == 0xFF: b = f.read(1)
+                    if ord(b) >= 0xC0 and ord(b) <= 0xC3:
+                        f.read(3)
+                        h, w = struct.unpack('>HH', f.read(4))
+                        break
+                    else:
+                        f.read(int(struct.unpack('>H', f.read(2))[0]) - 2)
+                    b = f.read(1)
+                width = int(w)
+                height = int(h)
+            except struct.error:
+                raise UnknownImageFormat('StructError' + msg)
+            except ValueError:
+                raise UnknownImageFormat('ValueError' + msg)
+            except Exception as e:
+                raise UnknownImageFormat(e.__class__.__name__ + msg)
+        else:
+            raise UnknownImageFormat('Sorry, don\'t know how to get information from this file.')
+
+        return width, height
 
 
 def _update_generated_types_py(args=None, replace=False):
@@ -75,9 +143,9 @@ def _get_tbl(xlsx='glaucoma_20161205plus_Age23.xlsx'):
         return pickled_cache['tbl']
 
     wb = load_workbook(xlsx)
-    rows_gen = wb.get_active_sheet().rows
+    rows_gen = wb.active.rows
 
-    get_vals = partial(map, lambda col: col.value)
+    get_vals = partial(imap, lambda col: col.value)
 
     if generated_types.T0:
         logger.warn('skipping header')
@@ -87,8 +155,8 @@ def _get_tbl(xlsx='glaucoma_20161205plus_Age23.xlsx'):
         _update_generated_types_py(T0_args, replace=True)
         reload(generated_types)
 
-    tbl = dict(map(lambda row: (row[0].value,
-                                RecImg(globals()['generated_types'].T0(*get_vals(row)), None)), rows_gen))
+    tbl = dict(imap(lambda row: (row[0].value,
+                                 RecImg(globals()['generated_types'].T0(*get_vals(row)), None)), rows_gen))
     pickled_cache['tbl'] = tbl  # type: (str, get_data.RecImg)
     pickled_cache['tbl_ids'] = frozenset(tbl.keys())
     return tbl
@@ -101,23 +169,12 @@ def _get_sas_tbl(sas7bdat='glaucoma_20161205plus_age23.sas7bdat', skip_save=True
         return pickled_cache['sas_tbl']
 
     with SAS7BDAT(sas7bdat, skip_header=True) as f:
-        sas_tbl = dict(map(lambda row: (row[0], RecImg(globals()['generated_types'].T0(*row), None)), f.readlines()))
+        sas_tbl = dict(
+            imap(lambda row: (row[0], RecImg(globals()['generated_types'].T0(*row), None)), f.readlines()))
         pickled_cache['sas_tbl'] = sas_tbl
         skip_save or cache.save(pickled_cache)
 
     return sas_tbl
-
-
-def _imgs_of(idnum, img_directory):
-    assert idnum.isdigit()
-    return (path.join(root, filename)
-            for root, dirnames, filenames in walk(img_directory)
-            for filename in fnmatch_filter(filenames,
-                                           '*{idnum}*'.format(idnum=idnum)
-                                           # if fqdn == 'kudu' else '*{idnum}*10pc*'.format(idnum=idnum)
-                                           )
-            if '10pc' not in filename  # or fqdn != 'kudu'
-            )
 
 
 def _populate_imgs(img_directory, skip_save=True):
@@ -126,34 +183,55 @@ def _populate_imgs(img_directory, skip_save=True):
 
     tbl = pickled_cache['tbl']
 
-    if 'id_to_imgs' not in pickled_cache:
+    if 'id2ideyefname' not in pickled_cache:
         if not path.isdir(img_directory):
             raise OSError('{} must exist and contain the images'.format(img_directory))
 
-        pickled_cache['id_to_imgs'] = id_to_imgs = {e.rec.IDNUM: tuple(_imgs_of(e.rec.IDNUM, img_directory))
-                                                    for e in itervalues(tbl)}
-        pickled_cache['tbl'] = tbl = {id_: RecImg(recimg.rec, id_to_imgs[id_]) for id_, recimg in iteritems(tbl)}
+        pickled_cache['all_imgs'] = all_imgs = tuple(sorted(
+            (IdEyeFname(*(lambda fname: (fname[:-1], fname[-1], path.join(root, filename)))(
+                filename[filename.rfind('BMES') + len('BMES') + 1:filename.rfind('-')].partition('-')[0]))
+             for root, dirnames, filenames in walk(img_directory)
+             for filename in fnmatch_filter(filenames, '*.jpg'))
+            , key=itemgetter(0)))  # type: tuple(IdEyeFname)
+
+        pickled_cache['id2ideyefname'] = id2ideyefname = {key: d[key] for d in tuple(
+            {_id: tuple(group)} for _id, group in groupby(all_imgs, key=itemgetter(0))
+        ) for key in d}  # type: {str: tuple(IdEyeFname)}
+
+        total_imgs_assoc_to_id = sum(len(v) for k, v in iteritems(id2ideyefname))
+        pickled_cache['tbl'] = tbl = {id_: RecImg(recimg.rec, id2ideyefname[id_])
+                                      for id_, recimg in iteritems(tbl)
+                                      if id_ in id2ideyefname}
+
+    else:
+        id2ideyefname = pickled_cache['id2ideyefname']
+        all_imgs = pickled_cache['all_imgs']
+        total_imgs_assoc_to_id = pickled_cache['total_imgs_assoc_to_id']
 
     if 'imgs_to_id' not in pickled_cache:
-        pickled_cache['imgs_to_id'] = imgs_to_id = {img: id_ for id_, imgs in iteritems(id_to_imgs)
-                                                    for img in imgs}
-
-    if 'total_imgs_assoc_to_id' not in pickled_cache:
-        pickled_cache['total_imgs_assoc_to_id'] = total_imgs_assoc_to_id = len(imgs_to_id)
+        pickled_cache['imgs_to_id'] = imgs_to_id = {ideyefname.fname: id_
+                                                    for id_, ideyefnames in iteritems(id2ideyefname)
+                                                    for ideyefname in ideyefnames}
+    else:
+        imgs_to_id = pickled_cache['imgs_to_id']
 
     if 'total_imgs' not in pickled_cache:
         pickled_cache['total_imgs'] = total_imgs = sum(
-            len(filenames)
-            for root, dirnames, filenames in walk(path.join('BMES123', 'BMES1Images'))
+            sum(1 for fname in filenames if fname.endswith('.jpg'))
+            for root, dirnames, filenames in walk(img_directory)
         )
+    else:
+        total_imgs = pickled_cache['total_imgs']
 
     # Arghh, where are my views/slices?
     if not skip_save:
         logger.debug('saving in _populate_imgs')
         cache.save(pickled_cache)
 
-    logger.debug('total_imgs == total_imgs_assoc_to_id:'.ljust(just) + '{}'.format(
-        pickled_cache['total_imgs'] == pickled_cache['total_imgs_assoc_to_id']))
+    logger.debug('total_imgs == len(all_imgs) == len(imgs_to_id):'.ljust(just) + '{}'.format(
+        total_imgs == len(all_imgs) == len(imgs_to_id)
+    ))
+    logger.debug('# not allocated in tbl:'.ljust(just) + '{}'.format(len(id2ideyefname) - len(tbl)))
 
     return pickled_cache
 
@@ -164,11 +242,19 @@ def _vanilla_stats(skip_save=True):
 
     tbl = pickled_cache['tbl']
     sas_tbl = pickled_cache['sas_tbl']
+    id2ideyefname = pickled_cache['id2ideyefname']
 
     if 'oags1' not in pickled_cache:
         pickled_cache['oags1'] = oags1 = tuple(v.rec.IDNUM for v in itervalues(tbl) if v.rec.oag1)
     else:
         oags1 = pickled_cache['oags1']  # Weird, this doesn't get into locals() from `update_locals`
+
+    if 'loags1' not in pickled_cache:
+        pickled_cache['loag1'] = loag1 = tuple(v.rec.IDNUM for v in itervalues(tbl) if v.rec.loag1)
+        pickled_cache['roag1'] = roag1 = tuple(v.rec.IDNUM for v in itervalues(tbl) if v.rec.roag1)
+    else:
+        loag1 = pickled_cache['loag1']
+        roag1 = pickled_cache['roag1']
 
     if 'no_oags1' not in pickled_cache:
         pickled_cache['no_oags1'] = no_oags1 = tuple(v.rec.IDNUM for v in itervalues(tbl) if not v.rec.oag1)
@@ -177,6 +263,8 @@ def _vanilla_stats(skip_save=True):
         pickled_cache['_vanilla_stats'] = vanilla_stats = '\n'.join(
             '{0}{1}'.format(*t) for t in (('# total:'.ljust(just), len(tbl)),
                                           ('# with oag1:'.ljust(just), len(oags1)),
+                                          ('# with roag1:'.ljust(just), len(roag1)),
+                                          ('# with loag1:'.ljust(just), len(loag1)),
                                           ('# with oag1 and roag1 and loag1:'.ljust(just),
                                            sum(1 for v in itervalues(tbl) if
                                                v.rec.oag1 and v.rec.roag1 and v.rec.loag1)),
@@ -188,10 +276,38 @@ def _vanilla_stats(skip_save=True):
         )
         skip_save or cache.save(pickled_cache)
 
-    it_consumes(map(logger.debug, pickled_cache['_vanilla_stats'].split('\n')))
+    it_consumes(imap(logger.debug, pickled_cache['_vanilla_stats'].split('\n')))
     logger.debug('oags1:'.ljust(just) + '{}'.format(oags1))
+    logger.debug('loag1:'.ljust(just) + '{}'.format(loag1))
+
+    if 'loags_id2fname' not in pickled_cache:
+        id2fname = lambda dataset, eye: (lambda l: dict(izip(l[::2], l[1::2])))(tuple(chain.from_iterable(
+            imap(lambda (idnum, group): (idnum, tuple(imap(itemgetter(1), group))), groupby(chain.from_iterable(
+                imap(lambda ideyefnames: tuple(imap(lambda ideyefname: (ideyefname.id, ideyefname.fname), ideyefnames)),
+                     imap(lambda ideyefnames: ifilter(lambda ideyefname: ideyefname.eye == eye, ideyefnames),
+                          imap(lambda idnum: id2ideyefname[idnum], dataset)))), key=itemgetter(0)
+            )))))
+
+        pickled_cache['loags_id2fname'] = loags_id2fname = id2fname(dataset=loag1, eye='L')
+        pickled_cache['roags_id2fname'] = roags_id2fname = id2fname(dataset=roag1, eye='R')
+    else:
+        loags_id2fname = pickled_cache['loags_id2fname']
+        roags_id2fname = pickled_cache['roags_id2fname']
+    # pp(loags_id2fname)
+
     logger.debug('generated_types.T0._fields:'.ljust(just) + '{}'.format(generated_types.T0._fields))
     return pickled_cache
+
+
+def make_symlinks(dest_dir, filenames, clean_dir=False):
+    if path.isdir(dest_dir):
+        if clean_dir:
+            rmtree(dest_dir)
+            makedirs(dest_dir)  # no goto :(
+    else:
+        makedirs(dest_dir)
+
+    it_consumes(imap(lambda fname: symlink(fname, path.join(dest_dir, path.basename(fname))), filenames))
 
 
 def get_datasets(no_oags=970, oags=30, skip_save=True):
@@ -242,11 +358,11 @@ def _log_set_stats():
                                                                  len(datasets.validation & datasets.train)))))
     # '# shared between sets:'.ljust(just), sum(len(s0&s1) for s0, s1 in combinations((validation, test, train), 2))
     logger.debug(
-        '# len(all sets):'.ljust(just) + str(sum(map(len, (datasets.train, datasets.test, datasets.validation)))))
+        '# len(all sets):'.ljust(just) + str(sum(imap(len, (datasets.train, datasets.test, datasets.validation)))))
     logger.debug('# len(total):'.ljust(just) + str(len(tbl)))
     logger.debug(
         '# len(all sets) == len(total):'.ljust(just) + str(
-            sum(map(len, (datasets.train, datasets.test, datasets.validation))) == len(tbl)))
+            sum(imap(len, (datasets.train, datasets.test, datasets.validation))) == len(tbl)))
 
 
 def random_sample(tbl, ids, num=1):
@@ -317,13 +433,30 @@ def get_data(no_oags=970, oags=30, new_base_dir=None, skip_save=True, cache_fnam
             generated_types.T0._fields if generated_types.T0 is not None else generated_types.T0))
 
     global base_dir
-    assert new_base_dir or base_dir, "No database directory provided"
+    assert new_base_dir or base_dir, 'No database directory provided'
     base_dir = new_base_dir or base_dir  # or path.join(path.expanduser('~'), 'repos', 'thesis', 'BMES')
     _get_tbl(path.join(base_dir, 'glaucoma_20161205plus_Age23.xlsx'))
     _get_sas_tbl(path.join(base_dir, 'glaucoma_20161205plus_age23.sas7bdat'))
 
-    _populate_imgs(img_directory=path.join(base_dir, 'BMES123', 'BMES1Images'), skip_save=skip_save)
+    _populate_imgs(img_directory=path.join(base_dir, 'BMES123'), skip_save=skip_save)
     _vanilla_stats(skip_save=skip_save)
+
+    # ------- symlinks -------
+    all_imgs = pickled_cache['all_imgs']
+    loags_id2fname = pickled_cache['loags_id2fname']
+    roags_id2fname = pickled_cache['roags_id2fname']
+
+    glaucoma_fnames = frozenset(
+        chain.from_iterable(chain.from_iterable((itervalues(loags_id2fname), itervalues(roags_id2fname)))))
+    # pp(tbl)
+    pickled_cache['bmes1_no_glaucoma_fnames'] = bmes1_no_glaucoma_fnames = frozenset(
+        imap(lambda ideyefname: ideyefname.fname, ifilter(
+            lambda ideyefname: path.basename(
+                path.dirname(path.dirname(path.dirname(ideyefname.fname)))) == 'BMES1Images', all_imgs
+        ))) - glaucoma_fnames
+    make_symlinks('/tmp/a/glaucoma', filenames=glaucoma_fnames, clean_dir=True)
+    make_symlinks('/tmp/a/no_glaucoma', filenames=bmes1_no_glaucoma_fnames, clean_dir=True)
+    # ------- symlinks -------
 
     datasets = get_datasets(no_oags=no_oags, oags=oags, skip_save=skip_save)
     _log_set_stats()
@@ -348,11 +481,13 @@ def get_data(no_oags=970, oags=30, new_base_dir=None, skip_save=True, cache_fnam
         for IDNUM, u in iteritems(tbl):
             id_to_img_dims[u.rec.IDNUM] = set()
             for img_fname in u.imgs:
-                with Image.open(img_fname) as img:
-                    width, height = img.size
+                # with Image.open(img_fname) as img: width, height = img.size
+                width, height = get_image_size(img_fname)
 
                 dim = width * height
                 id_to_img_dims[u.rec.IDNUM].add(dim)
+                logger.debug(
+                    'dim:'.ljust(just) + '{dim} [{width} * {height}]'.format(width=width, height=height, dim=dim))
                 img_dims_to_recimg[dim].add(u)
                 # print '{} * {} = {} is {}'.format(width, height, img.size, img_fname)
         pickled_cache['id_to_img_dims'] = id_to_img_dims
@@ -364,8 +499,17 @@ def get_data(no_oags=970, oags=30, new_base_dir=None, skip_save=True, cache_fnam
 
     logger.debug('len(id_to_img_dims):'.ljust(just) + '{:d}'.format(len(id_to_img_dims)))
     logger.debug('len(img_dims_to_recimg):'.ljust(just) + '{:d}'.format(len(img_dims_to_recimg)))
+    logger.debug('img_dims_to_recimg.keys():'.ljust(just) + '{}'.format(img_dims_to_recimg.keys()))
+    logger.debug('img_dims_to_recimg:'.ljust(just) + '{}'.format(img_dims_to_recimg))
     logger.debug('# without oags1 but with loag1 etc.:'.ljust(just) + '{:d}'.format(
-        sum(1 for IDNUM, u in iteritems(tbl) if not u.rec.oag1 and (u.rec.roag1 or u.rec.loag1))))
+        sum(1 for IDNUM, u in iteritems(tbl) if not u.rec.oag1 and (u.rec.roag1 or u.rec.loag1))
+    ))
+    logger.debug('# with loag1:'.ljust(just) + '{:d}'.format(
+        sum(1 for IDNUM, u in iteritems(tbl) if u.rec.loag1)
+    ))
+    logger.debug('# with roag1:'.ljust(just) + '{:d}'.format(
+        sum(1 for IDNUM, u in iteritems(tbl) if u.rec.roag1)
+    ))
     for dim in img_dims_to_recimg:
         logger.debug(
             'len(img_dims_to_recimg[{:d}]):'.format(dim).ljust(just) + '{:d}'.format(len(img_dims_to_recimg[dim])))
@@ -382,6 +526,54 @@ _update_generated_types_py()
 import generated_types
 
 if __name__ == '__main__':
-    _data = get_data(no_oags=970, oags=30, new_base_dir='/mnt')
+    _data = get_data(no_oags=970, oags=30, new_base_dir='/data')
     train, val, test = prepare_data(_data, pixels=200)
     print(train)
+
+'''
+/Users/samuel/repos/.venvs/thenv/bin/python /Users/samuel/repos/thesis/ml-glaucoma/ml_glaucoma/utils/get_data.py
+2018-06-16 00:29:03,925 - get_data - WARNING - skipping header
+2018-06-16 00:38:13,841 - get_data - DEBUG - total_imgs == total_imgs_assoc_to_id:             False
+2018-06-16 00:38:13,866 - __init__ - DEBUG - # total:                                          3654
+2018-06-16 00:38:13,866 - __init__ - DEBUG - # with oag1:                                      108
+2018-06-16 00:38:13,866 - __init__ - DEBUG - # with oag1 and roag1 and loag1:                  52
+2018-06-16 00:38:13,866 - __init__ - DEBUG - # with oag1 and roag1 and loag1 and glaucoma4:    5
+2018-06-16 00:38:13,866 - __init__ - DEBUG - # len(sas_tbl) == len(tbl):                       True
+2018-06-16 00:38:13,866 - get_data - DEBUG - oags1:                                            (u'0836', u'0749', u'0619', u'0422', u'0420', u'1758', u'1757', u'1756', u'1176', u'0447', u'2274', u'2695', u'1144', u'1542', u'0529', u'2194', u'2425', u'2517', u'2510', u'1817', u'2185', u'2189', u'2438', u'0088', u'1801', u'1948', u'1623', u'1622', u'0505', u'0148', u'0373', u'0656', u'0095', u'1485', u'1135', u'3018', u'1002', u'0799', u'1728', u'3003', u'1031', u'0782', u'0236', u'4038', u'0120', u'0535', u'2390', u'2500', u'2174', u'1738', u'0682', u'0118', u'0752', u'1307', u'0921', u'2575', u'2373', u'2391', u'0827', u'1260', u'4059', u'0594', u'0689', u'0105', u'1095', u'0106', u'2393', u'1966', u'3604', u'2359', u'3736', u'2135', u'1402', u'3892', u'1468', u'0481', u'0482', u'0483', u'1886', u'2651', u'1652', u'1651', u'3702', u'0365', u'3716', u'0635', u'2245', u'2240', u'2468', u'1188', u'0204', u'2668', u'3798', u'0801', u'0802', u'4010', u'0171', u'2499', u'3508', u'2206', u'3505', u'2674', u'3215', u'1638', u'2215', u'3370', u'1162', u'1566')
+2018-06-16 00:38:13,866 - get_data - DEBUG - generated_types.T0._fields:                       ('IDNUM', 'age1', 'sex1', 'age4', 'sex4', 'r4vf1', 'l4vf1', 'Zeiss4', 'Canon4', 'oct4', 'bm4', 'Cpoint', 'SurvFlag', 'oag_dur', 'oag1', 'roag1', 'loag1', 'oag23inc', 'roag23inc', 'loag23inc', 'incglau_r4', 'result_r4', 'incglau_l4', 'result_l4', 'agegp1', 'glaucoma4', 'glaucoma4inc', 'bm4testing', 'AGE2', 'age3')
+2018-06-16 00:38:13,867 - get_data - DEBUG - # in train set:                                   1000
+2018-06-16 00:38:13,867 - get_data - DEBUG - # in test set:                                    1000
+2018-06-16 00:38:13,867 - get_data - DEBUG - # in validation set:                              1654
+2018-06-16 00:38:13,867 - get_data - DEBUG - # shared between sets:                            0
+2018-06-16 00:38:13,867 - get_data - DEBUG - # len(all sets):                                  3654
+2018-06-16 00:38:13,867 - get_data - DEBUG - # len(total):                                     3654
+2018-06-16 00:38:13,867 - get_data - DEBUG - # len(all sets) == len(total):                    True
+2018-06-16 00:38:13,867 - get_data - DEBUG - feature_names:                                    ('age1', 'sex1', 'r4vf1', 'l4vf1', 'oag1', 'roag1', 'loag1', 'agegp1')
+2018-06-16 00:38:13,868 - get_data - DEBUG - features:                                         [[0. 1. 2. 3. 4. 5. 6. 7.]]
+RecImg(rec=T0(IDNUM=u'0475', age1=64L, sex1=2L, age4=None, sex4=None, r4vf1=None, l4vf1=None, Zeiss4=None, Canon4=None, oct4=None, bm4=None, Cpoint=datetime.datetime(2007, 12, 31, 0, 0), SurvFlag=0L, oag_dur=10L, oag1=0L, roag1=0L, loag1=0L, oag23inc=0L, roag23inc=0L, loag23inc=0L, incglau_r4=None, result_r4=None, incglau_l4=None, result_l4=None, agegp1=2L, glaucoma4=None, glaucoma4inc=None, bm4testing=None, AGE2=71L, age3=76L), imgs=('/data/BMES123/BMES1Images/R-checked byLauren/BMES10400-10499R/BMES10475R-M.jpg', '/data/BMES123/BMES1Images/R-checked byLauren/BMES10400-10499R/BMES10475R-D.jpg', '/data/BMES123/BMES1Images/L-checkedbyLauren/BMES10400-10499L/BMES10475L-M.jpg', '/data/BMES123/BMES1Images/L-checkedbyLauren/BMES10400-10499L/BMES10475L-D.jpg'))
+2018-06-16 00:38:25,638 - get_data - DEBUG - len(id_to_img_dims):                              3654
+2018-06-16 00:38:25,638 - get_data - DEBUG - len(img_dims_to_recimg):                          4
+2018-06-16 00:38:25,642 - get_data - DEBUG - # without oags1 but with loag1 etc.:              0
+2018-06-16 00:38:25,642 - get_data - DEBUG - len(img_dims_to_recimg[10077696]):                3564
+2018-06-16 00:38:25,644 - get_data - DEBUG - 10077696 with oags1:                              104
+2018-06-16 00:38:25,645 - get_data - DEBUG - 10077696 with oags1:                              104
+2018-06-16 00:38:25,645 - get_data - DEBUG - len(img_dims_to_recimg[487350]):                  0
+2018-06-16 00:38:25,645 - get_data - DEBUG - 487350 with oags1:                                0
+2018-06-16 00:38:25,645 - get_data - DEBUG - 487350 with oags1:                                0
+2018-06-16 00:38:25,645 - get_data - DEBUG - len(img_dims_to_recimg[48769206]):                32
+2018-06-16 00:38:25,645 - get_data - DEBUG - 48769206 with oags1:                              1
+2018-06-16 00:38:25,645 - get_data - DEBUG - 48769206 with oags1:                              1
+2018-06-16 00:38:25,646 - get_data - DEBUG - len(img_dims_to_recimg[100751]):                  0
+2018-06-16 00:38:25,646 - get_data - DEBUG - 100751 with oags1:                                0
+2018-06-16 00:38:25,646 - get_data - DEBUG - 100751 with oags1:                                0
+(?, ?, 3)
+(200, 200, 3)
+(?, ?, 3)
+(200, 200, 3)
+(?, ?, 3)
+(200, 200, 3)
+<MapDataset shapes: ((200, 200, 3), ()), types: (tf.float32, tf.int32)>
+
+Process finished with exit code 0
+
+'''

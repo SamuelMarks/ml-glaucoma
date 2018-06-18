@@ -12,7 +12,7 @@ import tensorflow as tf
 from keras import backend as K, Input, Model
 from keras.callbacks import TensorBoard
 from keras.layers import Dense, Dropout, Flatten
-from keras.layers import MaxPooling2D, Conv2D, merge, UpSampling2D
+from keras.layers import MaxPooling2D, Conv2D, UpSampling2D
 from keras.models import Sequential
 from sklearn.metrics import confusion_matrix
 from tensorflow.python.platform import tf_logging
@@ -25,9 +25,9 @@ from ml_glaucoma.prepare import prepare_data
 K.set_image_data_format('channels_last')
 
 logger = get_logger(__file__.partition('.')[0])
-logger.setLevel(logging.NOTSET)
-tf_logging._get_logger().setLevel(logging.WARNING)
-logging.getLogger('matplotlib').setLevel(logging.WARNING)
+logger.setLevel(logging.CRITICAL)
+tf_logging._get_logger().setLevel(logging.CRITICAL)
+logging.getLogger('matplotlib').setLevel(logging.CRITICAL)
 
 
 # input image dimensions
