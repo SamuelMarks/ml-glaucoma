@@ -118,27 +118,13 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
                                                                    loss=loss))
 
     'split-dir'
-    test, train, validation = get_data(base_dir=bmes123_pardir, split_dir=split_dir)
+    test_dir, train_dir, validation_dir = get_data(base_dir=bmes123_pardir, split_dir=split_dir)
 
-    train_datagen = ImageDataGenerator(
-        rescale=1. / 255,
-        shear_range=0.2,
-        zoom_range=0.2,
-        horizontal_flip=True)
+    idg = ImageDataGenerator(horizontal_flip=True)
 
-    test_datagen = ImageDataGenerator(rescale=1. / 255)
-
-    train_generator = train_datagen.flow_from_directory(
-        test,
-        target_size=(pixels, pixels),
-        batch_size=32,
-        class_mode='binary')
-
-    validation_generator = test_datagen.flow_from_directory(
-        train,
-        target_size=(pixels, pixels),
-        batch_size=32,
-        class_mode='binary')
+    train_seq = idg.flow_from_directory(train_dir, target_size=(pixels, pixels), shuffle=True)
+    valid_seq = idg.flow_from_directory(validation_dir, target_size=(pixels, pixels), shuffle=True)
+    test_seq = idg.flow_from_directory(test_dir, target_size=(pixels, pixels), shuffle=True)
 
     '''
     (x_train, y_train), (x_test, y_test) = prepare_data(preprocess_to, pixels)  # cifar10.load_data()
@@ -158,27 +144,27 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     # y_test = np.delete(y_test,indices,axis=0)
     # x_test = np.delete(x_test,indices,axis=0)
 
-    # if K.image_data_format() == 'channels_first':
-    #    x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
-    #    x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)
-    #    input_shape = (1, img_rows, img_cols)
-    # else:
-    #    x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
-    #    x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
-    #    input_shape = (img_rows, img_cols, 1)
-    input_shape = x_train.shape[1:]
+    if K.image_data_format() == 'channels_first':
+        #    x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
+        #    x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)
+        input_shape = (1, pixels, pixels)
+    else:
+        #    x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
+        #    x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
+        input_shape = (pixels, pixels, 1)
+    # input_shape = x_train.shape[1:]
 
     # x_train = x_train.astype('float32')
     # x_test = x_test.astype('float32')
     # x_train /= 255
     # x_test /= 255
-    print('x_train shape:', x_train.shape)
-    print(x_train.shape[0], 'train samples')
-    print(x_test.shape[0], 'test samples')
+    # print('x_train shape:', x_train.shape)
+    # print(x_train.shape[0], 'train samples')
+    # print(x_test.shape[0], 'test samples')
 
     # convert class vectors to binary class matrices
-    y_train = keras.utils.to_categorical(y_train, num_classes)
-    y_test = keras.utils.to_categorical(y_test, num_classes)
+    # y_train = keras.utils.to_categorical(y_train, num_classes)
+    # y_test = keras.utils.to_categorical(y_test, num_classes)
 
     # resnet_weights_path = path.join(download_dir, 'resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5')
 
@@ -243,18 +229,21 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
             config, custom_objects={'BinaryTruePositives': BinaryTruePositives})
         metrics = ['accuracy', metric_fn]
 
+
     model.compile(loss=getattr(keras.losses, loss),
                   optimizer=getattr(keras.optimizers, optimizer)() if optimizer in dir(keras.optimizers) else optimizer,
                   metrics=metrics)
+    model.fit_generator(train_seq, validation_data=valid_seq, epochs=epochs)
+    score = model.evaluate_generator(test_seq, verbose=0)
 
-    model.fit(x_train, y_train,
+    '''model.fit(x_train, y_train,
               batch_size=batch_size,
               epochs=epochs,
               verbose=1,
               shuffle='batch',
               validation_data=(x_test, y_test),
               callbacks=callbacks)
-    score = model.evaluate(x_test, y_test, verbose=0)
+    score = model.evaluate(x_test, y_test, verbose=0)'''
 
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
