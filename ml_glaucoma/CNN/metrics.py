@@ -48,21 +48,19 @@ class SensitivitySpecificityCallback(TensorBoard):
         return super(SensitivitySpecificityCallback, self).on_epoch_end(epoch, logs)
 '''
 
+
 class SensitivitySpecificityCallback(Callback):
+    def __init__(self, validation_data):
+        super(SensitivitySpecificityCallback, self).__init__()
+        if self.validation_data is None:
+            self.validation_data = validation_data
+
     def on_epoch_end(self, epoch, logs=None):
         if epoch:
-            print('SensitivitySpecificityCallback::self.validation_data:', self.validation_data, ';')
-            print('SensitivitySpecificityCallback::self:', self, ';')
-            for k in dir(self):
-                print('SensitivitySpecificityCallback::self.{}:'.format(k), getattr(self, k), ';')
-
-            for k in dir(self.model):
-                print('SensitivitySpecificityCallback::self.model.{}:'.format(k), getattr(self.model, k), ';')
-            # `self.model.validation_data` ?
-            x_test = self.validation_data[0]
-            y_test = self.validation_data[1]
+            x_test, y_test = self.validation_data[0], self.validation_data[1]
             predictions = self.model.predict(x_test)
             output_sensitivity_specificity(epoch, predictions, y_test)
+
 
 # from: https://stackoverflow.com/a/48720556
 def reweight(y_true, y_pred, tp_weight=0.2, tn_weight=0.2, fp_weight=1.2, fn_weight=1.2):

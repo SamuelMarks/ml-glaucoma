@@ -99,13 +99,12 @@ def get_unet_light_for_fold0(img_rows, img_cols):
 def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, epochs,
         transfer_model, model_name, dropout, pixels, tensorboard_log_dir,
         optimizer, loss, architecture, metrics, split_dir):
-    callbacks = [SensitivitySpecificityCallback()]
-    if tensorboard_log_dir:
-        if not path.isdir(tensorboard_log_dir):
-            makedirs(tensorboard_log_dir)
-        callbacks.append(
-            TensorBoard(log_dir=tensorboard_log_dir, histogram_freq=0, write_graph=True, write_images=True)
-        )
+    print('\n============================\nml_glaucoma {version} with transfer of {transfer_model} (dropout: {dropout}.'
+          ' Uses optimiser: {optimizer} with loss: {loss})'.format(version=__version__,
+                                                                   transfer_model=transfer_model,
+                                                                   dropout=dropout,
+                                                                   optimizer=optimizer,
+                                                                   loss=loss))
 
     # download(download_dir)
 
@@ -117,14 +116,6 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
         model_name=model_name, preprocess_to=preprocess_to
     )
 
-    print('\n============================\nml_glaucoma {version} with transfer of {transfer_model} (dropout: {dropout}.'
-          ' Uses optimiser: {optimizer} with loss: {loss})'.format(version=__version__,
-                                                                   transfer_model=transfer_model,
-                                                                   dropout=dropout,
-                                                                   optimizer=optimizer,
-                                                                   loss=loss))
-
-    'split-dir'
     test_dir, train_dir, validation_dir = get_data(base_dir=bmes123_pardir, split_dir=split_dir)
 
     idg = ImageDataGenerator(horizontal_flip=True)
@@ -132,6 +123,14 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     train_seq = idg.flow_from_directory(train_dir, target_size=(pixels, pixels), shuffle=True)
     valid_seq = idg.flow_from_directory(validation_dir, target_size=(pixels, pixels), shuffle=True)
     test_seq = idg.flow_from_directory(test_dir, target_size=(pixels, pixels), shuffle=True)
+
+    callbacks = [SensitivitySpecificityCallback(validation_data=valid_seq)]
+    if tensorboard_log_dir:
+        if not path.isdir(tensorboard_log_dir):
+            makedirs(tensorboard_log_dir)
+        callbacks.append(
+            TensorBoard(log_dir=tensorboard_log_dir, histogram_freq=0, write_graph=True, write_images=True)
+        )
 
     '''
     (x_train, y_train), (x_test, y_test) = prepare_data(preprocess_to, pixels)  # cifar10.load_data()
@@ -240,10 +239,9 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
                   optimizer=getattr(keras.optimizers, optimizer)() if optimizer in dir(keras.optimizers) else optimizer,
                   metrics=metrics)
 
-    x_val, y_val = izip(*(np.vstack(valid_seq[i])
-                          for i in xrange(len(valid_seq))))
+    # x_val, y_val = izip(*(np.vstack(valid_seq[i]) for i in xrange(len(valid_seq))))
 
-    model.fit_generator(train_seq, validation_data=(x_val, y_val), epochs=epochs, callbacks=callbacks, verbose=1,
+    model.fit_generator(train_seq, validation_data=valid_seq, epochs=epochs, callbacks=callbacks, verbose=1,
                         steps_per_epoch=batch_size, validation_steps=batch_size,
                         # use_multiprocessing=True, workers=multiprocessing.cpu_count()
                         )
