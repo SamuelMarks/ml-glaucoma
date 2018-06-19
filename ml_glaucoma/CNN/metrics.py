@@ -10,6 +10,8 @@ from ml_glaucoma.CNN.helpers import output_sensitivity_specificity
 class SensitivitySpecificityCallback(Callback):
     def on_epoch_end(self, epoch, logs=None):
         if epoch:
+            print('SensitivitySpecificityCallback::self.validation_data:', self.validation_data, ';')
+            print('SensitivitySpecificityCallback::self:', self, ';')
             x_test = self.validation_data[0]
             y_test = self.validation_data[1]
             predictions = self.model.predict(x_test)
