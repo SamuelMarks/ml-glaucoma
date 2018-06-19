@@ -297,7 +297,8 @@ def _vanilla_stats(skip_save=True):
 
     if 'loags_id2fname' not in pickled_cache:
         id2fname = lambda dataset, eye: (lambda l: dict(izip(l[::2], l[1::2])))(tuple(chain.from_iterable(
-            imap(lambda (idnum, group): (idnum, tuple(imap(itemgetter(1), group))), groupby(chain.from_iterable(
+            imap(lambda idnum_group: (idnum_group[0], tuple(imap(itemgetter(1), idnum_group[1]))),
+                 groupby(chain.from_iterable(
                 imap(lambda ideyefnames: tuple(imap(lambda ideyefname: (ideyefname.id, ideyefname.fname), ideyefnames)),
                      imap(lambda ideyefnames: ifilter(lambda ideyefname: ideyefname.eye == eye, ideyefnames),
                           imap(lambda idnum: id2ideyefname[idnum], dataset)))), key=itemgetter(0)
@@ -480,19 +481,19 @@ def get_data(base_dir, split_dir,
 
     :keyword train_ratio: Represent the proportion of the dataset to include in the test split.
     By default, the value is set to 0.8. Everything leftover goes into validation.
-    :type test_size: ``float``
+    :type train_ratio: ``float``
 
     :keyword test_ratio: Represent the proportion of the dataset to include in the train split.
     By default, the value is set to 0.1. Everything leftover goes into validation.
-    :type oags: ``float``
+    :type test_ratio: ``float``
 
     :keyword train_positive_ratio: Represent the proportion of the glaucoma-present dataset to include in the train split.
     By default, the value is set to 0.5. Everything leftover goes into validation.
-    :type oags: ``float``
+    :type train_positive_ratio: ``float``
 
     :keyword test_positive_ratio: Represent the proportion of the glaucoma-present dataset to include in the test split.
     By default, the value is set to 0.5. Everything leftover goes into validation.
-    :type oags: ``float``
+    :type test_positive_ratio: ``float``
 
     :keyword skip_save: Skips saving
     :type skip_save: ``bool``
