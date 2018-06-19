@@ -14,6 +14,10 @@ class SensitivitySpecificityCallback(Callback):
             print('SensitivitySpecificityCallback::self:', self, ';')
             for k in dir(self):
                 print('SensitivitySpecificityCallback::self.{}:'.format(k), getattr(self, k), ';')
+
+            for k in dir(self.model):
+                print('SensitivitySpecificityCallback::self.model.{}:'.format(k), getattr(self.model, k), ';')
+            # `self.model.validation_data` ?
             x_test = self.validation_data[0]
             y_test = self.validation_data[1]
             predictions = self.model.predict(x_test)

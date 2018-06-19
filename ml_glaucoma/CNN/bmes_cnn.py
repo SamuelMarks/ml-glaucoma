@@ -233,8 +233,10 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     model.compile(loss=getattr(keras.losses, loss),
                   optimizer=getattr(keras.optimizers, optimizer)() if optimizer in dir(keras.optimizers) else optimizer,
                   metrics=metrics)
-    model.fit_generator(train_seq, validation_data=valid_seq, epochs=epochs, callbacks=callbacks, verbose=2,
-                        workers=multiprocessing.cpu_count(), use_multiprocessing=True, validation_steps=batch_size)
+    model.fit_generator(train_seq, validation_data=valid_seq, epochs=epochs, callbacks=callbacks, verbose=1,
+                        steps_per_epoch=batch_size, validation_steps=batch_size, workers=multiprocessing.cpu_count(),
+                        # workers=multiprocessing.cpu_count(), use_multiprocessing=True,
+                        )
     score = model.evaluate_generator(test_seq, verbose=0)
 
     '''model.fit(x_train, y_train,
