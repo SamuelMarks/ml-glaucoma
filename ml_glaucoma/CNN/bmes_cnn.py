@@ -229,11 +229,11 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
             config, custom_objects={'BinaryTruePositives': BinaryTruePositives})
         metrics = ['accuracy', metric_fn]
 
-
     model.compile(loss=getattr(keras.losses, loss),
                   optimizer=getattr(keras.optimizers, optimizer)() if optimizer in dir(keras.optimizers) else optimizer,
                   metrics=metrics)
-    model.fit_generator(train_seq, validation_data=valid_seq, epochs=epochs)
+    model.fit_generator(train_seq, validation_data=valid_seq, epochs=epochs, callbacks=callbacks, verbose=1,
+                        batch_size=batch_size)
     score = model.evaluate_generator(test_seq, verbose=0)
 
     '''model.fit(x_train, y_train,
