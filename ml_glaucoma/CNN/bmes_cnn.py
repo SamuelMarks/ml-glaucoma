@@ -4,15 +4,15 @@
 from __future__ import print_function
 
 import logging
-import multiprocessing
 from os import path, makedirs
+from platform import python_version_tuple
 
 import keras
 import numpy as np
 import tensorflow as tf
 from keras import backend as K, Input, Model
 from keras.callbacks import TensorBoard
-from keras.layers import Dense, Dropout, Flatten
+from keras.layers import Dense, Dropout, Flatten, merge
 from keras.layers import MaxPooling2D, Conv2D, UpSampling2D
 from keras.models import Sequential
 from keras_preprocessing.image import ImageDataGenerator
@@ -23,6 +23,12 @@ from ml_glaucoma import get_logger, __version__
 from ml_glaucoma.CNN.helpers import output_sensitivity_specificity
 from ml_glaucoma.CNN.metrics import BinaryTruePositives, SensitivitySpecificityCallback, Recall, Precision
 from ml_glaucoma.utils.get_data import get_data
+
+if python_version_tuple()[0] == '3':
+    xrange = range
+    izip = zip
+else:
+    from itertools import izip
 
 K.set_image_data_format('channels_last')
 
@@ -233,9 +239,13 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     model.compile(loss=getattr(keras.losses, loss),
                   optimizer=getattr(keras.optimizers, optimizer)() if optimizer in dir(keras.optimizers) else optimizer,
                   metrics=metrics)
-    model.fit_generator(train_seq, validation_data=valid_seq, epochs=epochs, callbacks=callbacks, verbose=1,
-                        steps_per_epoch=batch_size, validation_steps=batch_size, workers=multiprocessing.cpu_count(),
-                        # workers=multiprocessing.cpu_count(), use_multiprocessing=True,
+
+    x_val, y_val = izip(*(np.vstack(valid_seq[i])
+                          for i in xrange(len(valid_seq))))
+
+    model.fit_generator(train_seq, validation_data=(x_val, y_val), epochs=epochs, callbacks=callbacks, verbose=1,
+                        steps_per_epoch=batch_size, validation_steps=batch_size,
+                        # use_multiprocessing=True, workers=multiprocessing.cpu_count()
                         )
     score = model.evaluate_generator(test_seq, verbose=0)
 
@@ -258,6 +268,9 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     model_path = path.join(save_dir, model_name)
     model.save(model_path)
     print('Saved trained model at "{model_path}"'.format(model_path=model_path))
+
+    x_test, y_test = izip(*(np.vstack(test_seq[i])
+                            for i in xrange(len(test_seq))))
 
     predictions = model.predict(x_test)
     y_test = np.argmax(y_test, axis=-1)

@@ -1,3 +1,5 @@
+from platform import python_version_tuple
+
 import tensorflow as tf
 from keras import backend as K
 from keras.callbacks import Callback
@@ -6,6 +8,45 @@ from sklearn.metrics import precision_recall_fscore_support, fbeta_score
 
 from ml_glaucoma.CNN.helpers import output_sensitivity_specificity
 
+if python_version_tuple()[0] == '3':
+    xrange = range
+
+'''
+# Adapted from: https://github.com/keras-team/keras/issues/3358#issuecomment-334460423
+class SensitivitySpecificityCallback(TensorBoard):
+    """Sets the self.validation_data property for use with SensitivitySpecificityCallback callback."""
+
+    def __init__(self, batch_gen, **kwargs):
+        super(SensitivitySpecificityCallback, self).__init__(**kwargs)
+        self.batch_gen = batch_gen  # The generator.
+
+    def on_epoch_end(self, epoch, logs=None):
+        # Fill in the `validation_data` property. Obviously this is specific to how your generator works.
+        # Below is an example that yields images and classification tags.
+        # After it's filled in, the regular on_epoch_end method has access to the validation_data.
+        imgs, tags = None, None
+        for s in xrange(self.nb_steps):
+
+            if imgs is None and tags is None:
+                imgs = np.zeros(((self.nb_steps * ib.shape[0],) + ib.shape[1:]), dtype=np.float32)
+                tags = np.zeros(((self.nb_steps * tb.shape[0],) + tb.shape[1:]), dtype=np.uint8)
+            imgs[s * ib.shape[0]:(s + 1) * ib.shape[0]] = ib
+            tags[s * tb.shape[0]:(s + 1) * tb.shape[0]] = tb
+        self.validation_data = [imgs, tags, np.ones(imgs.shape[0]), 0.0]
+        if epoch:
+            print('SensitivitySpecificityCallback::self.validation_data:', self.validation_data, ';')
+            print('SensitivitySpecificityCallback::self:', self, ';')
+            for k in dir(self):
+                print('SensitivitySpecificityCallback::self.{}:'.format(k), getattr(self, k), ';')
+
+            for k in dir(self.model):
+                print('SensitivitySpecificityCallback::self.model.{}:'.format(k), getattr(self.model, k), ';')
+            # `self.model.validation_data` ?
+            x_test, y_test = self.validation_data[0], self.validation_data[1]
+            predictions = self.model.predict(x_test)
+            output_sensitivity_specificity(epoch, predictions, y_test)
+        return super(SensitivitySpecificityCallback, self).on_epoch_end(epoch, logs)
+'''
 
 class SensitivitySpecificityCallback(Callback):
     def on_epoch_end(self, epoch, logs=None):
@@ -22,7 +63,6 @@ class SensitivitySpecificityCallback(Callback):
             y_test = self.validation_data[1]
             predictions = self.model.predict(x_test)
             output_sensitivity_specificity(epoch, predictions, y_test)
-
 
 # from: https://stackoverflow.com/a/48720556
 def reweight(y_true, y_pred, tp_weight=0.2, tn_weight=0.2, fp_weight=1.2, fn_weight=1.2):
