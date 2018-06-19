@@ -147,11 +147,11 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     if K.image_data_format() == 'channels_first':
         #    x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
         #    x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)
-        input_shape = (1, pixels, pixels)
+        input_shape = (3, pixels, pixels)
     else:
         #    x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
         #    x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
-        input_shape = (pixels, pixels, 1)
+        input_shape = (pixels, pixels, 3)
     # input_shape = x_train.shape[1:]
 
     # x_train = x_train.astype('float32')
