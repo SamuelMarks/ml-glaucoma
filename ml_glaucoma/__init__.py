@@ -7,7 +7,7 @@ from os import path
 import yaml
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.20-theta'
+__version__ = '0.0.20-iota'
 
 
 def get_logger(name=None):
