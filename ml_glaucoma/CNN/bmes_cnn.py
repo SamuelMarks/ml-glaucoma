@@ -240,9 +240,13 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
                   metrics=metrics)
 
     # x_val, y_val = izip(*(np.vstack(valid_seq[i]) for i in xrange(len(valid_seq))))
+    x, y = izip(*(valid_seq[i] for i in xrange(len(valid_seq))))
+    x_val = np.vstack(x)
+    y_val = np.vstack(y)
 
-    model.fit_generator(train_seq, validation_data=valid_seq, epochs=epochs, callbacks=callbacks, verbose=1,
-                        # steps_per_epoch=batch_size, validation_steps=batch_size,
+    model.fit_generator(train_seq, validation_data=(x_val, y_val), epochs=epochs, callbacks=callbacks, verbose=1,
+                        steps_per_epoch=batch_size,
+                        # validation_steps=batch_size,
                         # use_multiprocessing=True, workers=multiprocessing.cpu_count()
                         )
     score = model.evaluate_generator(test_seq, verbose=0)

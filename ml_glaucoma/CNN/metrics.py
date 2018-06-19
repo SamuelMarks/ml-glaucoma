@@ -50,13 +50,19 @@ class SensitivitySpecificityCallback(TensorBoard):
 
 
 class SensitivitySpecificityCallback(Callback):
+    validation_data_explicit = None
+
     def __init__(self, validation_data):
         super(SensitivitySpecificityCallback, self).__init__()
         if self.validation_data is None:
-            self.validation_data = validation_data
+            self.validation_data_explicit = validation_data
 
     def on_epoch_end(self, epoch, logs=None):
         if epoch:
+            if self.validation_data is None:
+                print('self.validation_data is None')
+                self.validation_data_explicit = self.validation_data
+
             x_test, y_test = self.validation_data[0], self.validation_data[1]
             predictions = self.model.predict(x_test)
             output_sensitivity_specificity(epoch, predictions, y_test)
