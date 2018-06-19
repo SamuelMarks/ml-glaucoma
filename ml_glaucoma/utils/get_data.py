@@ -4,7 +4,7 @@ import struct
 from collections import namedtuple
 from fnmatch import filter as fnmatch_filter
 from functools import partial
-from itertools import chain, groupby, izip
+from itertools import chain, groupby
 from operator import itemgetter
 from os import path, remove, walk, environ, symlink, makedirs
 from platform import python_version_tuple
@@ -23,8 +23,9 @@ if python_version_tuple()[0] == '3':
     xrange = range
     imap = map
     ifilter = filter
+    izip = zip
 else:
-    from itertools import imap, ifilter
+    from itertools import imap, ifilter, izip
 
 from openpyxl import load_workbook
 from sas7bdat import SAS7BDAT
