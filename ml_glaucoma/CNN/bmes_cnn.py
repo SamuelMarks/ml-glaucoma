@@ -28,8 +28,9 @@ from ml_glaucoma.utils.get_data import get_data
 if python_version_tuple()[0] == '3':
     xrange = range
     izip = zip
+    imap = map
 else:
-    from itertools import izip
+    from itertools import izip, imap
 
 K.set_image_data_format('channels_last')
 
@@ -249,19 +250,10 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     np.save('/tmp/x', x)
     np.save('/tmp/y', y)
 
-    print('type(x) =', type(x))
-    print('x.shape =', x.shape)
-    for k in dir(x):
-        print('x.{k} ='.format(k=k), getattr(x, k))
-
     x_val = np.vstack(x)
-
-    print('type(y) =', type(y))
-    print('y.shape =', y.shape)
-    for k in dir(y):
-        print('y.{k} ='.format(k=k), getattr(y, k))
-
-    y_val = np.vstack(y)
+    y_val = (
+        np.array if frozenset(imap(lambda _: _.shape, y)) ^ frozenset(((32,), (31,))) == frozenset() else np.vstack
+    )(y)
 
     model.fit_generator(train_seq, validation_data=(x_val, y_val), epochs=epochs, callbacks=callbacks, verbose=1)
     score = model.evaluate_generator(test_seq, verbose=0)
