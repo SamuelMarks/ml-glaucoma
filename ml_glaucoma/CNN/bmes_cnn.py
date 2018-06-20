@@ -245,14 +245,22 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
 
     # x_val, y_val = izip(*(np.vstack(valid_seq[i]) for i in xrange(len(valid_seq))))
     x, y = izip(*(valid_seq[i] for i in xrange(len(valid_seq))))
+
+    print('x =', x)
+    print('type(x) =', type(x))
+    for k in dir(x):
+        print('x.{k} ='.format(k=k), getattr(x, k))
+
     x_val = np.vstack(x)
+
+    print('y =', y)
+    print('type(y) =', type(y))
+    for k in dir(y):
+        print('y.{k} ='.format(k=k), getattr(y, k))
+
     y_val = np.vstack(y)
 
-    model.fit_generator(train_seq, validation_data=(x_val, y_val), epochs=epochs, callbacks=callbacks, verbose=1,
-                        # steps_per_epoch=batch_size,
-                        # validation_steps=batch_size,
-                        # use_multiprocessing=True, workers=multiprocessing.cpu_count()
-                        )
+    model.fit_generator(train_seq, validation_data=(x_val, y_val), epochs=epochs, callbacks=callbacks, verbose=1)
     score = model.evaluate_generator(test_seq, verbose=0)
 
     '''model.fit(x_train, y_train,
