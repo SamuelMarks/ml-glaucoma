@@ -246,15 +246,18 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     # x_val, y_val = izip(*(np.vstack(valid_seq[i]) for i in xrange(len(valid_seq))))
     x, y = izip(*(valid_seq[i] for i in xrange(len(valid_seq))))
 
-    print('x =', x)
+    np.save('/tmp/x', x)
+    np.save('/tmp/y', y)
+
     print('type(x) =', type(x))
+    print('x.shape =', x.shape)
     for k in dir(x):
         print('x.{k} ='.format(k=k), getattr(x, k))
 
     x_val = np.vstack(x)
 
-    print('y =', y)
     print('type(y) =', type(y))
+    print('y.shape =', y.shape)
     for k in dir(y):
         print('y.{k} ='.format(k=k), getattr(y, k))
 
