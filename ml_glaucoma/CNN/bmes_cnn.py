@@ -245,7 +245,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     y_val = np.vstack(y)
 
     model.fit_generator(train_seq, validation_data=(x_val, y_val), epochs=epochs, callbacks=callbacks, verbose=1,
-                        steps_per_epoch=batch_size,
+                        # steps_per_epoch=batch_size,
                         # validation_steps=batch_size,
                         # use_multiprocessing=True, workers=multiprocessing.cpu_count()
                         )
