@@ -4,6 +4,7 @@
 from __future__ import print_function
 
 import logging
+from functools import partial
 from os import path, makedirs
 from platform import python_version_tuple
 
@@ -118,11 +119,14 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
 
     test_dir, train_dir, validation_dir = get_data(base_dir=bmes123_pardir, split_dir=split_dir)
 
-    idg = ImageDataGenerator(horizontal_flip=True)
+    idg = ImageDataGenerator(horizontal_flip=True, vertical_flip=True)
 
-    train_seq = idg.flow_from_directory(train_dir, target_size=(pixels, pixels), shuffle=True)
-    valid_seq = idg.flow_from_directory(validation_dir, target_size=(pixels, pixels), shuffle=True)
-    test_seq = idg.flow_from_directory(test_dir, target_size=(pixels, pixels), shuffle=True)
+    flow = partial(idg.flow_from_directory,
+                   target_size=(pixels, pixels), shuffle=True, class_mode='binary', follow_links=True)
+
+    train_seq = flow(train_dir)
+    valid_seq = flow(validation_dir)
+    test_seq = flow(test_dir)
 
     callbacks = [SensitivitySpecificityCallback(validation_data=valid_seq)]
     if tensorboard_log_dir:
