@@ -16,6 +16,7 @@ from keras.callbacks import TensorBoard
 from keras.layers import Dense, Dropout, Flatten, merge
 from keras.layers import MaxPooling2D, Conv2D, UpSampling2D
 from keras.models import Sequential
+from keras.utils import to_categorical
 from keras_preprocessing.image import ImageDataGenerator
 from sklearn.metrics import confusion_matrix
 from tensorflow.python.platform import tf_logging
@@ -252,8 +253,9 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
 
     x_val = np.vstack(x)
     y_val = (
-        np.array if frozenset(imap(lambda _: _.shape, y)) ^ frozenset(((32,), (31,))) == frozenset() else np.vstack
-    )(y)
+        to_categorical(np.array(y)) if frozenset(imap(lambda _: _.shape, y)) ^ frozenset(((32,), (31,))) == frozenset()
+        else np.vstack(y)
+    )
 
     model.fit_generator(train_seq, validation_data=(x_val, y_val), epochs=epochs, callbacks=callbacks, verbose=1)
     score = model.evaluate_generator(test_seq, verbose=0)
