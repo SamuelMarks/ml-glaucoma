@@ -31,7 +31,7 @@ if python_version_tuple()[0] == '3':
     izip = zip
     imap = map
 else:
-    from itertools import izip
+    from itertools import izip, imap
 
 K.set_image_data_format('channels_last')
 
@@ -223,7 +223,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
             model.add(Dense(128, activation='relu'))
             if dropout > 0:
                 model.add(Dropout(.5))
-        model.add(Dense(num_classes, activation='softmax'))
+        model.add(Dense(1 if class_mode == 'binary' else num_classes, activation='softmax'))
 
     if metrics == 'precision_recall':
         metric_fn = BinaryTruePositives()
@@ -249,7 +249,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     np.save('/tmp/y_{}'.format(class_mode), y)
 
     x_val = np.vstack(x)
-    y_val = np.vstack(map(to_categorical, y) if class_mode == 'binary' else y)
+    y_val = np.vstack(imap(to_categorical, y) if class_mode == 'binary' else y)
 
     model.fit_generator(train_seq, validation_data=(x_val, y_val), epochs=epochs, callbacks=callbacks, verbose=1)
     score = model.evaluate_generator(test_seq, verbose=0)
