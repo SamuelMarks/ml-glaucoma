@@ -1,4 +1,7 @@
+from __future__ import print_function
+
 import tensorflow as tf
+
 
 def prepare_data(data_obj, pixels):
     def _parse_function(filename, label):

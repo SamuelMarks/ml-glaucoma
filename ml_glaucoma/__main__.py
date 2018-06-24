@@ -62,6 +62,8 @@ def _build_parser():
     cnn_parser.add_argument('--metrics', help='precision_recall or btp')
     cnn_parser.add_argument('--split-dir', help='Place to create symbolic links for train, test, validation split')
     cnn_parser.add_argument('--bmes123-pardir', help='Parent folder of BMES123 folder')
+    cnn_parser.add_argument('--class-mode', help='Determines the type of label arrays that are returned',
+                            choices=('categorical', 'binary', 'sparse'), default='categorical')
 
     post_parser = subparsers.add_parser('parser',
                                         help='Show metrics from output. Default: per epoch sensitivity & specificity.')

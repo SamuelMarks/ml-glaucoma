@@ -31,7 +31,7 @@ if python_version_tuple()[0] == '3':
     izip = zip
     imap = map
 else:
-    from itertools import izip, imap
+    from itertools import izip
 
 K.set_image_data_format('channels_last')
 
@@ -101,7 +101,7 @@ def get_unet_light_for_fold0(img_rows, img_cols):
 
 def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, epochs,
         transfer_model, model_name, dropout, pixels, tensorboard_log_dir,
-        optimizer, loss, architecture, metrics, split_dir):
+        optimizer, loss, architecture, metrics, split_dir, class_mode):
     print('\n============================\nml_glaucoma {version} with transfer of {transfer_model} (dropout: {dropout}.'
           ' Uses optimiser: {optimizer} with loss: {loss})'.format(version=__version__,
                                                                    transfer_model=transfer_model,
@@ -124,7 +124,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     idg = ImageDataGenerator(horizontal_flip=True, vertical_flip=True)
 
     flow = partial(idg.flow_from_directory,
-                   target_size=(pixels, pixels), shuffle=True, class_mode='binary', follow_links=True)
+                   target_size=(pixels, pixels), shuffle=True, class_mode=class_mode, follow_links=True)
 
     train_seq = flow(train_dir)
     valid_seq = flow(validation_dir)
@@ -159,11 +159,11 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     if K.image_data_format() == 'channels_first':
         #    x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
         #    x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)
-        input_shape = (3, pixels, pixels)
+        input_shape = 3, pixels, pixels
     else:
         #    x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
         #    x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
-        input_shape = (pixels, pixels, 3)
+        input_shape = pixels, pixels, 3
     # input_shape = x_train.shape[1:]
 
     # x_train = x_train.astype('float32')
@@ -230,10 +230,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
         config = keras.metrics.serialize(metric_fn)
         metric_fn = keras.metrics.deserialize(
             config, custom_objects={'BinaryTruePositives': BinaryTruePositives})
-        metrics = ['acc',
-                   Recall(),
-                   Precision(),
-                   metric_fn]
+        metrics = ['acc', Recall(), Precision(), metric_fn]
     else:  # btp
         metric_fn = BinaryTruePositives()
         config = keras.metrics.serialize(metric_fn)
@@ -248,14 +245,11 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     # x_val, y_val = izip(*(np.vstack(valid_seq[i]) for i in xrange(len(valid_seq))))
     x, y = izip(*(valid_seq[i] for i in xrange(len(valid_seq))))
 
-    np.save('/tmp/x', x)
-    np.save('/tmp/y', y)
+    np.save('/tmp/x_{}'.format(class_mode), x)
+    np.save('/tmp/y_{}'.format(class_mode), y)
 
     x_val = np.vstack(x)
-    y_val = (
-        to_categorical(np.array(y)) if frozenset(imap(lambda _: _.shape, y)) ^ frozenset(((32,), (31,))) == frozenset()
-        else np.vstack(y)
-    )
+    y_val = to_categorical(np.array(y)) if class_mode == 'binary' else np.vstack(y)
 
     model.fit_generator(train_seq, validation_data=(x_val, y_val), epochs=epochs, callbacks=callbacks, verbose=1)
     score = model.evaluate_generator(test_seq, verbose=0)
