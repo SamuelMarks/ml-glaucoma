@@ -249,7 +249,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     np.save('/tmp/y_{}'.format(class_mode), y)
 
     x_val = np.vstack(x)
-    y_val = to_categorical(np.array(y)) if class_mode == 'binary' else np.vstack(y)
+    y_val = np.vstack(map(to_categorical, y) if class_mode == 'binary' else y)
 
     model.fit_generator(train_seq, validation_data=(x_val, y_val), epochs=epochs, callbacks=callbacks, verbose=1)
     score = model.evaluate_generator(test_seq, verbose=0)

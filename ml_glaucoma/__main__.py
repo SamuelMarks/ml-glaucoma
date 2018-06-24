@@ -1,8 +1,6 @@
 from argparse import ArgumentParser, FileType
 from sys import modules, stdin
 
-from numpy import float32
-
 from ml_glaucoma import __version__
 from ml_glaucoma.CNN import bmes_cnn
 from ml_glaucoma.download import download
@@ -44,7 +42,7 @@ def _build_parser():
     cnn_parser = subparsers.add_parser('cnn', help='Convolutional Neural Network runner')
     cnn_parser.add_argument('-b', '--batch-size', help='Batch size', default=128, type=int)
     cnn_parser.add_argument('-n', '--num-classes', help='Number of classes', default=2, type=int)
-    cnn_parser.add_argument('-e', '--epochs', help='Number of epochs', type=float32)
+    cnn_parser.add_argument('-e', '--epochs', help='Number of epochs', type=int)
     cnn_parser.add_argument('-m', '--model', help='Filename for h5 trained model file',
                             dest='model_name', required=True)
     cnn_parser.add_argument('-s', '--save', help='Save h5 file of dataset, following preprocessing',
