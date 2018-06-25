@@ -132,7 +132,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
 
     idg = ImageDataGenerator(horizontal_flip=True, vertical_flip=True)
 
-    flow = partial(idg.flow_from_directory,
+    flow = partial(idg.flow_from_directory, color_mode={1: 'grayscale', 3: 'rgb'}[channels],
                    target_size=(pixels, pixels), shuffle=True, class_mode=class_mode, follow_links=True)
 
     train_seq = flow(train_dir)
