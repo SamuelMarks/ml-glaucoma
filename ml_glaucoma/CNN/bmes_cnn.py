@@ -182,6 +182,8 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
 
     model = Sequential()
 
+    num_classes = 1 if class_mode == 'binary' else num_classes
+
     # TODO: Optic-disc segmentation at this point, or run optic-disc segmentation at this point
 
     if transfer_model is not None:
@@ -223,7 +225,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
             model.add(Dense(128, activation='relu'))
             if dropout > 0:
                 model.add(Dropout(.5))
-        model.add(Dense(1 if class_mode == 'binary' else num_classes, activation='softmax'))
+        model.add(Dense(num_classes, activation='softmax'))
 
     if metrics == 'precision_recall':
         metric_fn = BinaryTruePositives()
