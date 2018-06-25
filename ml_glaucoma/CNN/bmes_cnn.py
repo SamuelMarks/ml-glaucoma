@@ -109,6 +109,13 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
                                                                    optimizer=optimizer,
                                                                    loss=loss))
 
+    if class_mode == 'binary':
+        num_classes = 1
+        channels = 1
+    else:
+        num_classes = 2
+        channels = 3
+
     # download(download_dir)
 
     save_dir = path.dirname(preprocess_to)
@@ -159,11 +166,11 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     if K.image_data_format() == 'channels_first':
         #    x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
         #    x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)
-        input_shape = 3, pixels, pixels
+        input_shape = channels, pixels, pixels
     else:
         #    x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
         #    x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
-        input_shape = pixels, pixels, 3
+        input_shape = pixels, pixels, channels
     # input_shape = x_train.shape[1:]
 
     # x_train = x_train.astype('float32')
@@ -181,8 +188,6 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     # resnet_weights_path = path.join(download_dir, 'resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5')
 
     model = Sequential()
-
-    num_classes = 1 if class_mode == 'binary' else num_classes
 
     # TODO: Optic-disc segmentation at this point, or run optic-disc segmentation at this point
 
