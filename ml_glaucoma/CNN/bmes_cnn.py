@@ -112,9 +112,11 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     if class_mode == 'binary':
         num_classes = 1
         channels = 1
+        activation = None
     else:
         num_classes = 2
         channels = 3
+        activation = 'softmax'
 
     # download(download_dir)
 
@@ -166,11 +168,11 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     if K.image_data_format() == 'channels_first':
         #    x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
         #    x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)
-        input_shape = 3, pixels, pixels
+        input_shape = channels, pixels, pixels
     else:
         #    x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
         #    x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
-        input_shape = pixels, pixels, 3
+        input_shape = pixels, pixels, channels
     # input_shape = x_train.shape[1:]
 
     # x_train = x_train.astype('float32')
@@ -203,7 +205,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
                 include_top=False, pooling='avg'
             ))
 
-        model.add(Dense(num_classes, activation='softmax'))
+        model.add(Dense(num_classes, activation=activation))
 
         model.layers[0].trainable = False
     else:
@@ -230,7 +232,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
             model.add(Dense(128, activation='relu'))
             if dropout > 0:
                 model.add(Dropout(.5))
-        model.add(Dense(num_classes, activation='softmax'))
+        model.add(Dense(num_classes, activation=activation))
 
     if metrics == 'precision_recall':
         metric_fn = BinaryTruePositives()
