@@ -224,7 +224,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
             model.add(MaxPooling2D(pool_size=(2, 2)))
             if dropout > 2:
                 model.add(Dropout(.5))
-            model.add(Conv2D(32, (channels, channels), activation='relu', padding='same'))
+            model.add(Conv2D(32, 3, activation='relu', padding='same'))
             model.add(MaxPooling2D(pool_size=(2, 2)))
             if dropout > 1:
                 model.add(Dropout(.5))
