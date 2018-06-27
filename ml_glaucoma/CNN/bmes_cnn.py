@@ -112,7 +112,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     if class_mode == 'binary':
         num_classes = 1
         channels = 1
-        activation = None
+        activation = 'sigmoid'
     else:
         num_classes = 2
         channels = 3
@@ -233,6 +233,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
             if dropout > 0:
                 model.add(Dropout(.5))
         model.add(Dense(num_classes, activation=activation))
+        print('num_classes:', num_classes)
 
     if metrics == 'precision_recall':
         metric_fn = BinaryTruePositives()
