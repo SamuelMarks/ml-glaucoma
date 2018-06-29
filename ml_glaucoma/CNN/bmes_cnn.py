@@ -194,14 +194,13 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     # TODO: Optic-disc segmentation at this point, or run optic-disc segmentation at this point
 
     if transfer_model is not None:
-        transfer_model = transfer_model.lower()
-        if transfer_model.startswith('vgg'):
+        if transfer_model.lower().startswith('vgg'):
             model.add(getattr(keras.applications, transfer_model.upper())(
                 include_top=False, weights='imagenet', pooling='avg'
             ))
 
         else:
-            model.add(getattr(keras.applications, transfer_model.upper())(
+            model.add(getattr(keras.applications, transfer_model)(
                 include_top=False, pooling='avg'
             ))
 
