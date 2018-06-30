@@ -23,7 +23,7 @@ from tensorflow.python.platform import tf_logging
 
 from ml_glaucoma import get_logger, __version__
 from ml_glaucoma.CNN.helpers import output_sensitivity_specificity
-from ml_glaucoma.CNN.loss import w_categorical_crossentropy
+from ml_glaucoma.CNN.loss import weighted_categorical_crossentropy
 from ml_glaucoma.CNN.metrics import BinaryTruePositives, SensitivitySpecificityCallback, Recall, Precision
 from ml_glaucoma.utils.get_data import get_data
 
@@ -233,7 +233,6 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
             if dropout > 0:
                 model.add(Dropout(.5))
         model.add(Dense(num_classes, activation=activation))
-        print('num_classes:', num_classes)
 
     if metrics == 'precision_recall':
         metric_fn = BinaryTruePositives()
@@ -248,8 +247,8 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
             config, custom_objects={'BinaryTruePositives': BinaryTruePositives})
         metrics = ['accuracy', metric_fn]
 
-    if loss == 'weighted_crossentropy':
-        loss = w_categorical_crossentropy(np.ones((num_classes, num_classes)))
+    if loss == 'weighted_categorical_crossentropy':
+        loss = weighted_categorical_crossentropy(np.ones((num_classes, num_classes)))
 
     model.compile(loss=loss if callable(loss) else getattr(keras.losses, loss),
                   optimizer=getattr(keras.optimizers, optimizer)() if optimizer in dir(keras.optimizers) else optimizer,

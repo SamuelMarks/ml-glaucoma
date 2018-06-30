@@ -1,4 +1,3 @@
-from itertools import product
 from platform import python_version_tuple
 
 from keras import backend as K
@@ -7,15 +6,28 @@ if python_version_tuple()[0] == '3':
     xrange = range
 
 
-# From: https://github.com/keras-team/keras/issues/6218
-def w_categorical_crossentropy(weights):
+def weighted_categorical_crossentropy(weights):
+    """
+    A weighted version of keras.objectives.categorical_crossentropy
+
+    Variables:
+        weights: numpy array of shape (C,) where C is the number of classes
+
+    Usage:
+        weights = np.array([0.5,2,10]) # Class one at 0.5, class 2 twice the normal weights, class 3 10x.
+        loss = weighted_categorical_crossentropy(weights)
+        model.compile(loss=loss,optimizer='adam')
+    """
+
+    weights = K.variable(weights)
+
     def loss(y_true, y_pred):
-        nb_cl = len(weights)
-        final_mask = K.zeros_like(y_pred[:, 0])
-        y_pred_max = K.max(y_pred, axis=1, keepdims=True)
-        y_pred_max_mat = K.equal(y_pred, y_pred_max)
-        for c_p, c_t in product(range(nb_cl), range(nb_cl)):
-            final_mask += weights[c_t, c_p] * y_pred_max_mat[:, c_p] * y_true[:, c_t]
-        return K.categorical_crossentropy(y_pred, y_true) * final_mask
+        # scale predictions so that the class probas of each sample sum to 1
+        y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
+        # clip to prevent NaN's and Inf's
+        y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
+        # calc
+        loss = -K.sum(y_true * K.log(y_pred) * weights, -1)
+        return loss
 
     return loss
