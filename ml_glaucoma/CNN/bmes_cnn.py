@@ -24,7 +24,8 @@ from tensorflow.python.platform import tf_logging
 from ml_glaucoma import get_logger, __version__
 from ml_glaucoma.CNN.helpers import output_sensitivity_specificity
 from ml_glaucoma.CNN.loss import weighted_categorical_crossentropy
-from ml_glaucoma.CNN.metrics import BinaryTruePositives, SensitivitySpecificityCallback, Recall, Precision
+from ml_glaucoma.CNN.metrics import BinaryTruePositives, SensitivitySpecificityCallback, Recall, Precision, \
+    binary_segmentation_recall
 from ml_glaucoma.utils.get_data import get_data
 
 if python_version_tuple()[0] == '3':
@@ -249,6 +250,8 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
 
     if loss == 'weighted_categorical_crossentropy':
         loss = weighted_categorical_crossentropy(np.ones((num_classes, num_classes)))
+    elif loss == 'binary_segmentation_recall':
+        loss = binary_segmentation_recall
 
     model.compile(loss=loss if callable(loss) else getattr(keras.losses, loss),
                   optimizer=getattr(keras.optimizers, optimizer)() if optimizer in dir(keras.optimizers) else optimizer,

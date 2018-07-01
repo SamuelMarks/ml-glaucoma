@@ -1,9 +1,4 @@
-from platform import python_version_tuple
-
 from keras import backend as K
-
-if python_version_tuple()[0] == '3':
-    xrange = range
 
 
 def weighted_categorical_crossentropy(weights):
@@ -27,7 +22,6 @@ def weighted_categorical_crossentropy(weights):
         # clip to prevent NaN's and Inf's
         y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
         # calc
-        loss = -K.sum(y_true * K.log(y_pred) * weights, -1)
-        return loss
+        return -K.sum(y_true * K.log(y_pred) * weights, -1)
 
     return loss
