@@ -198,7 +198,8 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     if transfer_model is not None:
         transfer_model_lower = transfer_model.lower()
         if transfer_model_lower.startswith('vgg') or transfer_model_lower.startswith('resnet'):
-            model.add(getattr(keras.applications, transfer_model.upper())(
+            model.add(getattr(keras.applications,
+                              transfer_model.upper() if transfer_model_lower.startswith('vgg') else transfer_model)(
                 include_top=False, weights='imagenet', pooling='avg'
             ))
 
