@@ -62,6 +62,7 @@ def _build_parser():
     cnn_parser.add_argument('--bmes123-pardir', help='Parent folder of BMES123 folder')
     cnn_parser.add_argument('--class-mode', help='Determines the type of label arrays that are returned',
                             choices=('categorical', 'binary', 'sparse'), default='categorical')
+    cnn_parser.add_argument('--lr', '--learning-rate', help='Learning rate of optimiser', type=float, dest='lr')
 
     post_parser = subparsers.add_parser('parser',
                                         help='Show metrics from output. Default: per epoch sensitivity & specificity.')
@@ -84,7 +85,7 @@ if __name__ == '__main__':
         raise ReferenceError('You must specify a command. Append `--help` for details.')
 
     ({  # 'data': prepare_data,
-      'download': download,
-      'cnn': bmes_cnn.run,
-      'parser': parser
-      }[command])(**kwargs)
+        'download': download,
+        'cnn': bmes_cnn.run,
+        'parser': parser
+    }[command])(**kwargs)

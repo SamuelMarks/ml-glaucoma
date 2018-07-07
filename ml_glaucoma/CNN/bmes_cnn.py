@@ -103,7 +103,7 @@ def get_unet_light_for_fold0(img_rows, img_cols):
 
 def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, epochs,
         transfer_model, model_name, dropout, pixels, tensorboard_log_dir,
-        optimizer, loss, architecture, metrics, split_dir, class_mode):
+        optimizer, loss, architecture, metrics, split_dir, class_mode, lr):
     print('\n============================\nml_glaucoma {version} with transfer of {transfer_model} (dropout: {dropout}.'
           ' Uses optimiser: {optimizer} with loss: {loss})'.format(version=__version__,
                                                                    transfer_model=transfer_model,
@@ -256,7 +256,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
         loss = binary_segmentation_recall
 
     model.compile(loss=loss if callable(loss) else getattr(keras.losses, loss),
-                  optimizer=getattr(keras.optimizers, optimizer)() if optimizer in dir(keras.optimizers) else optimizer,
+                  optimizer=getattr(keras.optimizers, optimizer)(**({} if lr is None else {'lr': lr})),
                   metrics=metrics)
 
     # x_val, y_val = izip(*(np.vstack(valid_seq[i]) for i in xrange(len(valid_seq))))
