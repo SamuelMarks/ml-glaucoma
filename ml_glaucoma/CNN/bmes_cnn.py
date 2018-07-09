@@ -13,7 +13,7 @@ import numpy as np
 import tensorflow as tf
 from keras import backend as K, Input, Model
 from keras.callbacks import TensorBoard
-from keras.layers import Dense, Dropout, Flatten, merge
+from keras.layers import Dense, Dropout, Flatten, merge, Activation
 from keras.layers import MaxPooling2D, Conv2D, UpSampling2D
 from keras.models import Sequential
 from keras.utils import to_categorical
@@ -113,7 +113,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
 
     if class_mode == 'binary':
         num_classes = 1
-        channels = 1
+        channels = 3
         activation = 'sigmoid'
     else:
         num_classes = 2
@@ -214,6 +214,23 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     else:
         if architecture == 'unet':
             model = get_unet_light_for_fold0(pixels, pixels)
+        elif architecture == 'dc0':
+            model.add(Conv2D(32, (3, 3), input_shape=input_shape))
+            model.add(Activation('relu'))
+            model.add(MaxPooling2D(pool_size=(2, 2)))
+
+            model.add(Conv2D(32, (3, 3)))
+            model.add(Activation('relu'))
+            model.add(MaxPooling2D(pool_size=(2, 2)))
+
+            model.add(Conv2D(64, (3, 3)))
+            model.add(Activation('relu'))
+            model.add(MaxPooling2D(pool_size=(2, 2)))
+
+            model.add(Flatten())
+            model.add(Dense(64))
+            model.add(Activation('relu'))
+            model.add(Dropout(0.5))
         else:
             model.add(Conv2D(32,
                              kernel_size=(7, 7),
