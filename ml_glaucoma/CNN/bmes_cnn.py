@@ -227,8 +227,10 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
             model.add(Activation('relu'))
             model.add(MaxPooling2D(pool_size=(2, 2)))
 
-            model.add(Flatten())
-            model.add(Dense(64))
+            # this converts our 3D feature maps to 1D feature vectors
+            model.add(Flatten(data_format=K.image_data_format()))
+
+            model.add(Dense(64))  # we now have numbers not 'images'
             model.add(Activation('relu'))
             model.add(Dropout(0.5))
         else:
@@ -252,7 +254,8 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
             model.add(Dense(128, activation='relu'))
             if dropout > 0:
                 model.add(Dropout(.5))
-        model.add(Dense(num_classes, activation=activation))
+        model.add(Dense(num_classes))
+        model.add(Activation(activation))
 
     if metrics == 'precision_recall':
         metric_fn = BinaryTruePositives()
