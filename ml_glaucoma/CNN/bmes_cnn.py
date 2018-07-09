@@ -114,7 +114,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     if class_mode == 'binary':
         num_classes = 1
         channels = 3
-        activation = 'sigmoid'
+        activation = 'softmax'
     else:
         num_classes = 2
         channels = 3
