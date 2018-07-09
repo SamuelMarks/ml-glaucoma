@@ -278,6 +278,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     model.compile(loss=loss if callable(loss) else getattr(keras.losses, loss),
                   optimizer=getattr(keras.optimizers, optimizer)(**({} if lr is None else {'lr': lr})),
                   metrics=metrics)
+    print(model.summary)
 
     # x_val, y_val = izip(*(np.vstack(valid_seq[i]) for i in xrange(len(valid_seq))))
     x, y = izip(*(valid_seq[i] for i in xrange(len(valid_seq))))
