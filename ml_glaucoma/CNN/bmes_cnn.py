@@ -283,23 +283,27 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     # x_val, y_val = izip(*(np.vstack(valid_seq[i]) for i in xrange(len(valid_seq))))
     x, y = izip(*(valid_seq[i] for i in xrange(len(valid_seq))))
 
+    '''
     np.save('/tmp/x_{}'.format(class_mode), x)
     np.save('/tmp/y_{}'.format(class_mode), y)
+    '''
 
     x_val = np.vstack(x)
-    y_val = np.vstack(imap(to_categorical, y) if class_mode == 'binary' else y)
+    y_val = np.vstack(imap(to_categorical, y))[:, 0] if class_mode == 'binary' else y
 
     model.fit_generator(train_seq, validation_data=(x_val, y_val), epochs=epochs, callbacks=callbacks, verbose=1)
     score = model.evaluate_generator(test_seq, verbose=0)
 
-    '''model.fit(x_train, y_train,
+    '''
+    model.fit(x_train, y_train,
               batch_size=batch_size,
               epochs=epochs,
               verbose=1,
               shuffle='batch',
               validation_data=(x_test, y_test),
               callbacks=callbacks)
-    score = model.evaluate(x_test, y_test, verbose=0)'''
+    score = model.evaluate(x_test, y_test, verbose=0)
+    '''
 
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
@@ -322,18 +326,18 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
 
     predictions = np.argmax(predictions, axis=-1)
     confusion = confusion_matrix(y_test, predictions)
-    print("Confusion matrix:")
+    print('Confusion matrix:')
     print(confusion)
     c = confusion
-    print("sensitivity = ", c[0, 0] / (c[0, 1] + c[0, 0]))
-    print("specificity = ", c[1, 1] / (c[1, 1] + c[1, 0]))
+    print('sensitivity =', c[0, 0] / (c[0, 1] + c[0, 0]))
+    print('specificity =', c[1, 1] / (c[1, 1] + c[1, 0]))
 
     confusion = tf.confusion_matrix(y_test, predictions)
-    print("Confusion matrix:")
+    print('Confusion matrix:')
     print(confusion)
     c = confusion
-    print("sensitivity = ", c[0, 0] / (c[0, 1] + c[0, 0]))
+    print('sensitivity =', c[0, 0] / (c[0, 1] + c[0, 0]))
 
-    print("specificity = ", c[1, 1] / (c[1, 1] + c[1, 0]))
+    print('specificity =', c[1, 1] / (c[1, 1] + c[1, 0]))
 
     output_sensitivity_specificity(epochs, predictions, y_test)
