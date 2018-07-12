@@ -65,6 +65,17 @@ class SensitivitySpecificityCallback(Callback):
 
             x_test, y_test = self.validation_data[0], self.validation_data[1]
             predictions = self.model.predict(x_test)
+
+            import numpy as np
+
+            print('x_test =', x_test, ';')
+            print('y_test =', y_test, ';')
+            print('predictions =', predictions, ';')
+
+            np.save('/tmp/x_test', x_test)
+            np.save('/tmp/y_test', y_test)
+            np.save('/tmp/predictions', predictions)
+
             output_sensitivity_specificity(epoch, predictions, y_test)
 
 
