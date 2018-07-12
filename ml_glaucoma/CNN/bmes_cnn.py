@@ -141,7 +141,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     valid_seq = flow(validation_dir)
     test_seq = flow(test_dir)
 
-    callbacks = [SensitivitySpecificityCallback(validation_data=valid_seq)]
+    callbacks = [SensitivitySpecificityCallback(validation_data=valid_seq, class_mode=class_mode)]
     if tensorboard_log_dir:
         if not path.isdir(tensorboard_log_dir):
             makedirs(tensorboard_log_dir)
@@ -340,4 +340,4 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
 
     print('specificity =', c[1, 1] / (c[1, 1] + c[1, 0]))
 
-    output_sensitivity_specificity(epochs, predictions, y_test)
+    output_sensitivity_specificity(epochs, predictions, y_test, class_mode=class_mode)

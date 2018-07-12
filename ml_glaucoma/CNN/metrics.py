@@ -51,11 +51,13 @@ class SensitivitySpecificityCallback(TensorBoard):
 
 class SensitivitySpecificityCallback(Callback):
     validation_data_explicit = None
+    class_mode = None
 
-    def __init__(self, validation_data):
+    def __init__(self, validation_data, class_mode):
         super(SensitivitySpecificityCallback, self).__init__()
         if self.validation_data is None:
             self.validation_data_explicit = validation_data
+        self.class_mode = class_mode
 
     def on_epoch_end(self, epoch, logs=None):
         if epoch:
@@ -76,7 +78,8 @@ class SensitivitySpecificityCallback(Callback):
             np.save('/tmp/y_test', y_test)
             np.save('/tmp/predictions', predictions)
 
-            output_sensitivity_specificity(epoch, predictions, y_test)
+            output_sensitivity_specificity(epoch, predictions, y_test,
+                                           class_mode=self.class_mode)
 
 
 # from: https://stackoverflow.com/a/48720556
