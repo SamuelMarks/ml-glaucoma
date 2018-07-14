@@ -6,7 +6,7 @@ def output_sensitivity_specificity(epoch, predictions, y_test, class_mode='binar
     if class_mode == 'binary':
         # determine positive class predictions
         idx = predictions >= 0.5
-        predictions = np.zeros((predictions.shape[0],))
+        predictions = np.zeros(predictions.shape)
         predictions[idx] = 1
         # no need to modify y_test since it consists of zeros and ones already
     else:
