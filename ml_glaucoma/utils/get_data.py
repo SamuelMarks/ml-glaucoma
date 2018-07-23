@@ -418,8 +418,8 @@ def link_distribute_dataset(train_ratio, test_ratio, train_positive_ratio, test_
     glaucoma_fnames = tuple(pickled_cache['glaucoma_fnames'])
     bmes1_no_glaucoma_fnames = tuple(pickled_cache['bmes1_no_glaucoma_fnames'])
 
-    len_glaucoma_fnames = len(glaucoma_fnames)[:50]
-    len_no_glaucoma_fnames = len(bmes1_no_glaucoma_fnames)[:50]
+    len_glaucoma_fnames = 50  # len(glaucoma_fnames)
+    len_no_glaucoma_fnames = 50  # len(bmes1_no_glaucoma_fnames)
 
     rand_glaucoma = rand_cache['0-{:d}'.format(len_glaucoma_fnames)]
     rand_no_glaucoma = rand_cache['0-{:d}'.format(len_no_glaucoma_fnames)]
