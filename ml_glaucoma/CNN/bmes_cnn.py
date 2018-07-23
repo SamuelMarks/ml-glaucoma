@@ -103,7 +103,7 @@ def get_unet_light_for_fold0(img_rows, img_cols):
 
 def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, epochs,
         transfer_model, model_name, dropout, pixels, tensorboard_log_dir,
-        optimizer, loss, architecture, metrics, split_dir, class_mode, lr):
+        optimizer, loss, architecture, metrics, split_dir, class_mode, lr, max_imgs):
     print('\n============================\nml_glaucoma {version} with transfer of {transfer_model} (dropout: {dropout}.'
           ' Uses optimiser: {optimizer} with loss: {loss})'.format(version=__version__,
                                                                    transfer_model=transfer_model,
@@ -130,7 +130,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
         model_name=model_name, preprocess_to=preprocess_to
     )
 
-    test_dir, train_dir, validation_dir = get_data(base_dir=bmes123_pardir, split_dir=split_dir)
+    test_dir, train_dir, validation_dir = get_data(base_dir=bmes123_pardir, split_dir=split_dir, max_imgs=max_imgs)
 
     idg = ImageDataGenerator(horizontal_flip=True, vertical_flip=True)
 

@@ -408,7 +408,8 @@ return train, validation, test
 Data = namedtuple('Data', ('tbl', 'datasets', 'features', 'feature_names', 'pickled_cache'))
 
 
-def link_distribute_dataset(train_ratio, test_ratio, train_positive_ratio, test_positive_ratio, split_dir):
+def link_distribute_dataset(train_ratio, test_ratio, train_positive_ratio, test_positive_ratio, split_dir,
+                            max_imgs=None):
     global rand_cache, pickled_cache
 
     train_dir = path.join(split_dir, 'train')
@@ -418,8 +419,8 @@ def link_distribute_dataset(train_ratio, test_ratio, train_positive_ratio, test_
     glaucoma_fnames = tuple(pickled_cache['glaucoma_fnames'])
     bmes1_no_glaucoma_fnames = tuple(pickled_cache['bmes1_no_glaucoma_fnames'])
 
-    len_glaucoma_fnames = 50  # len(glaucoma_fnames)
-    len_no_glaucoma_fnames = 50  # len(bmes1_no_glaucoma_fnames)
+    len_glaucoma_fnames = len(glaucoma_fnames)
+    len_no_glaucoma_fnames = len(bmes1_no_glaucoma_fnames)
 
     rand_glaucoma = rand_cache['0-{:d}'.format(len_glaucoma_fnames)]
     rand_no_glaucoma = rand_cache['0-{:d}'.format(len_no_glaucoma_fnames)]
@@ -443,6 +444,9 @@ def link_distribute_dataset(train_ratio, test_ratio, train_positive_ratio, test_
 
     train_glaucoma_fnames = idx_to_tuple(glaucoma_fnames, rand_glaucoma[:train_glaucoma_n])
     train_no_glaucoma_fnames = idx_to_tuple(bmes1_no_glaucoma_fnames, rand_no_glaucoma[:train_no_glaucoma_n])
+    if max_imgs:
+        train_glaucoma_fnames = train_glaucoma_fnames[:max_imgs]
+        train_no_glaucoma_fnames = train_no_glaucoma_fnames[:max_imgs]
 
     make_symlinks(path.join(train_dir, 'glaucoma'), filenames=train_glaucoma_fnames, clean_dir=True)
     make_symlinks(path.join(train_dir, 'no_glaucoma'), filenames=train_no_glaucoma_fnames, clean_dir=True)
@@ -453,12 +457,21 @@ def link_distribute_dataset(train_ratio, test_ratio, train_positive_ratio, test_
                                            rand_no_glaucoma[
                                            train_no_glaucoma_n:train_no_glaucoma_n + test_no_glaucoma_n])
 
+    if max_imgs:
+        test_glaucoma_fnames = test_glaucoma_fnames[:max_imgs]
+        test_no_glaucoma_fnames = test_no_glaucoma_fnames[:max_imgs]
+
+
     make_symlinks(path.join(test_dir, 'glaucoma'), filenames=test_glaucoma_fnames, clean_dir=True)
     make_symlinks(path.join(test_dir, 'no_glaucoma'), filenames=test_no_glaucoma_fnames, clean_dir=True)
 
     valid_glaucoma_fnames = idx_to_tuple(glaucoma_fnames, rand_glaucoma[train_glaucoma_n + test_glaucoma_n:])
     valid_no_glaucoma_fnames = idx_to_tuple(bmes1_no_glaucoma_fnames,
                                             rand_no_glaucoma[train_no_glaucoma_n + test_no_glaucoma_n:])
+
+    if max_imgs:
+        valid_glaucoma_fnames = valid_glaucoma_fnames[:max_imgs]
+        valid_no_glaucoma_fnames = valid_no_glaucoma_fnames[:max_imgs]
 
     make_symlinks(path.join(valid_dir, 'glaucoma'), filenames=valid_glaucoma_fnames, clean_dir=True)
     make_symlinks(path.join(valid_dir, 'no_glaucoma'), filenames=valid_no_glaucoma_fnames, clean_dir=True)
@@ -469,7 +482,7 @@ def link_distribute_dataset(train_ratio, test_ratio, train_positive_ratio, test_
 @run_once
 def get_data(base_dir, split_dir,
              train_ratio=.8, test_ratio=.1, train_positive_ratio=.8, test_positive_ratio=.1,
-             skip_save=True, cache_fname=None,
+             skip_save=True, cache_fname=None, max_imgs=None,
              invalidate=False):  # still saves once
     """
     Gets and optionally caches data, using SAS | XLSX files as index, and BMES root as files
@@ -559,7 +572,7 @@ def get_data(base_dir, split_dir,
 
     return link_distribute_dataset(train_ratio=train_ratio, test_ratio=test_ratio,
                                    train_positive_ratio=train_positive_ratio, test_positive_ratio=test_positive_ratio,
-                                   split_dir=split_dir)
+                                   split_dir=split_dir, max_imgs=max_imgs)
 
 
 def old(no_oags, oags, skip_save):

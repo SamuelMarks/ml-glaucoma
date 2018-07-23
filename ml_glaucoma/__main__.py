@@ -53,7 +53,7 @@ def _build_parser():
     cnn_parser.add_argument('--dropout', help='Dropout (0,1,2,3 or 4)', default=4, type=int)
     cnn_parser.add_argument('-p', '--pixels', help='Pixels. E.g.: 400 for 400px * 400px',
                             type=int, default=400)
-    cnn_parser.add_argument('--tensorboard-log-dir', help='Enabled Tensorboard integration and sets its log dir')
+    cnn_parser.add_argument('--tensorboard-log-dir', help='Enables Tensorboard integration and sets its log dir')
     cnn_parser.add_argument('--optimizer', default='Adadelta')
     cnn_parser.add_argument('--loss', default='categorical_crossentropy')
     cnn_parser.add_argument('--architecture', help='Current options: unet; for U-Net architecture')
@@ -63,6 +63,8 @@ def _build_parser():
     cnn_parser.add_argument('--class-mode', help='Determines the type of label arrays that are returned',
                             choices=('categorical', 'binary', 'sparse'), default='categorical')
     cnn_parser.add_argument('--lr', '--learning-rate', help='Learning rate of optimiser', type=float, dest='lr')
+    cnn_parser.add_argument('--max-imgs', help='max_imgs', type=int)
+
 
     post_parser = subparsers.add_parser('parser',
                                         help='Show metrics from output. Default: per epoch sensitivity & specificity.')
