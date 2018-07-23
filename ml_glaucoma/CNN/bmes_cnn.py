@@ -132,7 +132,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
 
     test_dir, train_dir, validation_dir = get_data(base_dir=bmes123_pardir, split_dir=split_dir, max_imgs=max_imgs)
 
-    idg = ImageDataGenerator(horizontal_flip=True, vertical_flip=True)
+    idg = ImageDataGenerator()  # (horizontal_flip=True, vertical_flip=True)
 
     flow = partial(idg.flow_from_directory, color_mode={1: 'grayscale', 3: 'rgb'}[channels],
                    target_size=(pixels, pixels), shuffle=True, class_mode=class_mode, follow_links=True)
