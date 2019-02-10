@@ -17,9 +17,9 @@ from keras.layers import Dense, Dropout, Flatten, merge, Activation
 from keras.layers import MaxPooling2D, Conv2D, UpSampling2D
 from keras.models import Sequential
 from keras.utils import to_categorical
-from keras_preprocessing.image import ImageDataGenerator
+from keras.preprocessing.image import ImageDataGenerator
 from sklearn.metrics import confusion_matrix
-from tensorflow.python.platform import tf_logging
+# from tensorflow.python.platform import tf_logging
 
 from ml_glaucoma import get_logger, __version__
 from ml_glaucoma.CNN.helpers import output_sensitivity_specificity
@@ -39,7 +39,7 @@ K.set_image_data_format('channels_last')
 
 logger = get_logger(__file__.partition('.')[0])
 logger.setLevel(logging.CRITICAL)
-tf_logging._get_logger().setLevel(logging.CRITICAL)
+#tf_logging._get_logger().setLevel(logging.CRITICAL)
 logging.getLogger('matplotlib').setLevel(logging.CRITICAL)
 
 
@@ -140,6 +140,11 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     train_seq = flow(train_dir)
     valid_seq = flow(validation_dir)
     test_seq = flow(test_dir)
+
+    # train_dataset = tf.data.Dataset.from_generator(ImageDataGenerator().flow_from_directory(train_dir), (tf.float32, tf.float32))
+
+    # dataset = tf.data.Dataset.from_generator(train_seq)
+    # print('dataset:', dataset)
 
     callbacks = [SensitivitySpecificityCallback(validation_data=valid_seq, class_mode=class_mode)]
     if tensorboard_log_dir:
@@ -291,7 +296,9 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     x_val = np.vstack(x)
     y_val = np.vstack(imap(to_categorical, y))[:, 0] if class_mode == 'binary' else y
 
-    model.fit_generator(train_seq, validation_data=(x_val, y_val), epochs=epochs, callbacks=callbacks, verbose=1)
+    model.fit_generator(train_seq, validation_data=(x_val, y_val),
+                        epochs=epochs,  # steps_per_epoch=train_seq.n / batch_size,
+                        callbacks=callbacks, verbose=1)
     score = model.evaluate_generator(test_seq, verbose=0)
 
     '''
