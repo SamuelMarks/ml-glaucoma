@@ -39,7 +39,7 @@ K.set_image_data_format('channels_last')
 
 logger = get_logger(__file__.partition('.')[0])
 logger.setLevel(logging.CRITICAL)
-#tf_logging._get_logger().setLevel(logging.CRITICAL)
+# tf_logging._get_logger().setLevel(logging.CRITICAL)
 logging.getLogger('matplotlib').setLevel(logging.CRITICAL)
 
 
@@ -104,6 +104,67 @@ def get_unet_light_for_fold0(img_rows, img_cols):
 def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, epochs,
         transfer_model, model_name, dropout, pixels, tensorboard_log_dir,
         optimizer, loss, architecture, metrics, split_dir, class_mode, lr, max_imgs):
+    """
+
+    :param download_dir:
+    :type  download_dir: ``str``
+
+    :param bmes123_pardir:
+    :type  bmes123_pardir: ``str``
+
+    :param preprocess_to:
+    :type  preprocess_to: ``str``
+
+    :param batch_size:
+    :type  batch_size: ``int``
+
+    :param num_classes:
+    :type  num_classes: ``int``
+
+    :param epochs:
+    :type  epochs: ``int``
+
+    :param transfer_model:
+    :type  transfer_model: ``str``
+
+    :param model_name:
+    :type  model_name: ``str``
+
+    :param dropout:
+    :type  dropout: ``int``
+
+    :param pixels:
+    :type  pixels: ``int``
+
+    :param tensorboard_log_dir:
+    :type  tensorboard_log_dir: ``str``
+
+    :param optimizer:
+    :type  optimizer: ``str``
+
+    :param loss:
+    :type  loss: ``str``
+
+    :param architecture:
+    :type  architecture: ``str``
+
+    :param metrics:
+    :type  metrics: ``str``
+
+    :param split_dir:
+    :type  split_dir: ``str``
+
+    :param class_mode:
+    :type  class_mode: ``str``
+
+    :param lr: Loss rate
+    :type  lr: ``int``
+
+    :param max_imgs:
+    :type  max_imgs: ``int``
+
+    :return:
+    """
     print('\n============================\nml_glaucoma {version} with transfer of {transfer_model} (dropout: {dropout}.'
           ' Uses optimiser: {optimizer} with loss: {loss})'.format(version=__version__,
                                                                    transfer_model=transfer_model,
@@ -137,11 +198,18 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     flow = partial(idg.flow_from_directory, color_mode={1: 'grayscale', 3: 'rgb'}[channels],
                    target_size=(pixels, pixels), shuffle=True, class_mode=class_mode, follow_links=True)
 
-    train_seq = flow(train_dir)
-    valid_seq = flow(validation_dir)
-    test_seq = flow(test_dir)
+    train_seq = flow(train_dir)  # type: keras.preprocessing.image.DirectoryIterator
+    valid_seq = flow(validation_dir)  # type: keras.preprocessing.image.DirectoryIterator
+    test_seq = flow(test_dir)  # type: keras.preprocessing.image.DirectoryIterator
 
-    # train_dataset = tf.data.Dataset.from_generator(ImageDataGenerator().flow_from_directory(train_dir), (tf.float32, tf.float32))
+    mk_dataset = lambda seq: tf.data.Dataset.from_generator(lambda: seq, (tf.float32, tf.float32))
+    ## type: (ImageDataGenerator) => tf.data.Dataset
+
+    train_dataset = mk_dataset(train_seq)  # type: tf.data.Dataset
+    valid_dataset = mk_dataset(valid_seq)  # type: tf.data.Dataset
+    test_dataset = mk_dataset(test_seq)  # type: tf.data.Dataset
+
+    print('train_dataset:', train_dataset, ';')
 
     # dataset = tf.data.Dataset.from_generator(train_seq)
     # print('dataset:', dataset)
@@ -300,6 +368,11 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
                         epochs=epochs,  # steps_per_epoch=train_seq.n / batch_size,
                         callbacks=callbacks, verbose=1)
     score = model.evaluate_generator(test_seq, verbose=0)
+
+    '''model.fit_generator(train_dataset, validation_data=(x_val, y_val), # validation_data=valid_dataset,
+                        epochs=epochs, steps_per_epoch=batch_size,
+                        callbacks=callbacks, verbose=1)
+    score = model.evaluate_generator(test_dataset, verbose=0)'''
 
     '''
     model.fit(x_train, y_train,
