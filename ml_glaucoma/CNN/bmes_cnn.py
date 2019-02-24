@@ -5,7 +5,8 @@ from __future__ import print_function
 
 import logging
 from functools import partial
-from os import path, makedirs
+from itertools import chain
+from os import path, makedirs, listdir
 from platform import python_version_tuple
 
 import keras
@@ -26,12 +27,15 @@ from ml_glaucoma.CNN.helpers import output_sensitivity_specificity
 from ml_glaucoma.CNN.loss import weighted_categorical_crossentropy
 from ml_glaucoma.CNN.metrics import BinaryTruePositives, SensitivitySpecificityCallback, Recall, Precision, \
     binary_segmentation_recall
+from ml_glaucoma.CNN.test0 import test0
+from ml_glaucoma.CNN.directories2tfrecords import convert_to_tfrecord
 from ml_glaucoma.utils.get_data import get_data
 
 if python_version_tuple()[0] == '3':
     xrange = range
     izip = zip
     imap = map
+    basestring = str
 else:
     from itertools import izip, imap
 
@@ -106,37 +110,37 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
         optimizer, loss, architecture, metrics, split_dir, class_mode, lr, max_imgs):
     """
 
-    :param download_dir:
+    :param download_dir: Directory to store precompiled CNN nets
     :type  download_dir: ``str``
 
-    :param bmes123_pardir:
+    :param bmes123_pardir: Parent folder of BMES123 folder
     :type  bmes123_pardir: ``str``
 
-    :param preprocess_to:
+    :param preprocess_to: Save h5 file of dataset, following preprocessing
     :type  preprocess_to: ``str``
 
-    :param batch_size:
+    :param batch_size: Batch size
     :type  batch_size: ``int``
 
-    :param num_classes:
+    :param num_classes: Number of classes
     :type  num_classes: ``int``
 
-    :param epochs:
+    :param epochs: Number of epochs
     :type  epochs: ``int``
 
-    :param transfer_model:
+    :param transfer_model: Transfer model. Currently any one of: `keras.application`, e.g.: "vgg16"; "resnet50"
     :type  transfer_model: ``str``
 
-    :param model_name:
+    :param model_name: Filename for h5 trained model file
     :type  model_name: ``str``
 
-    :param dropout:
+    :param dropout: Dropout (0,1,2,3 or 4)
     :type  dropout: ``int``
 
-    :param pixels:
+    :param pixels: Pixels. E.g.: 400 for 400px * 400px
     :type  pixels: ``int``
 
-    :param tensorboard_log_dir:
+    :param tensorboard_log_dir: Enables Tensorboard integration and sets its log dir
     :type  tensorboard_log_dir: ``str``
 
     :param optimizer:
@@ -145,19 +149,19 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     :param loss:
     :type  loss: ``str``
 
-    :param architecture:
+    :param architecture: Current options: unet; for U-Net architecture
     :type  architecture: ``str``
 
-    :param metrics:
+    :param metrics: precision_recall or btp
     :type  metrics: ``str``
 
-    :param split_dir:
+    :param split_dir: Place to create symbolic links for train, test, validation split
     :type  split_dir: ``str``
 
-    :param class_mode:
+    :param class_mode: Determines the type of label arrays that are returned
     :type  class_mode: ``str``
 
-    :param lr: Loss rate
+    :param lr: Learning rate of optimiser
     :type  lr: ``int``
 
     :param max_imgs:
@@ -192,15 +196,54 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     )
 
     test_dir, train_dir, validation_dir = get_data(base_dir=bmes123_pardir, split_dir=split_dir, max_imgs=max_imgs)
+    partitions = 'test', 'train', 'validation'
+
+    class_names = listdir(train_dir)  # Get names of classes
+    class_name2id = {label: index for index, label in enumerate(class_names)}  # Map class names to integer labels
+
+    tfrecords_dir = path.join(path.dirname(split_dir), 'tfrecords')
+    if not path.isdir(tfrecords_dir):
+        makedirs(tfrecords_dir)
+
+    get_files = lambda directory: tuple(chain(
+        imap(lambda cls: imap(lambda p: path.join(directory, cls, p), listdir(path.join(directory, cls))), class_names)
+    ))
+
+    tfrecord_fn = lambda partition, partition_seq: convert_to_tfrecord(
+        dataset_name=partition_seq,
+        data_directory=path.join(tfrecords_dir, partition),
+        files=get_files(partition_seq),
+        class_map=class_name2id,
+        directories_as_labels=True, pixels=pixels
+    )
+
+    for partition in partitions:
+        tfrecord_fn(partition, locals()['{}_dir'.format(partition)])
+
+    exit(5)
 
     idg = ImageDataGenerator()  # (horizontal_flip=True, vertical_flip=True)
 
     flow = partial(idg.flow_from_directory, color_mode={1: 'grayscale', 3: 'rgb'}[channels],
                    target_size=(pixels, pixels), shuffle=True, class_mode=class_mode, follow_links=True)
 
-    train_seq = flow(train_dir)  # type: keras.preprocessing.image.DirectoryIterator
-    valid_seq = flow(validation_dir)  # type: keras.preprocessing.image.DirectoryIterator
-    test_seq = flow(test_dir)  # type: keras.preprocessing.image.DirectoryIterator
+    test0(train_dir=train_dir, validation_dir=validation_dir, test_dir=test_dir, pixels=pixels)
+
+    # train_generator = idg.flow_from_directory(train_dir, color_mode={1: 'grayscale', 3: 'rgb'} [channels],
+    #                                          target_size=(pixels, pixels), shuffle = True, class_mode=class_mode,
+    #                                          follow_links=True)
+
+    # flow(directory=train_dir)
+    train_seq = ImageDataGenerator(
+        rescale=1. / 255,
+        horizontal_flip=True,
+        vertical_flip=True,
+        samplewise_std_normalization=True
+    )
+    # type: keras.preprocessing.image.DirectoryIterator
+    valid_seq = flow(directory=validation_dir)
+    # type: keras.preprocessing.image.DirectoryIterator
+    test_seq = flow(directory=test_dir)  # type: keras.preprocessing.image.DirectoryIterator
 
     mk_dataset = lambda seq: tf.data.Dataset.from_generator(lambda: seq, (tf.float32, tf.float32))
     ## type: (ImageDataGenerator) => tf.data.Dataset
@@ -214,7 +257,11 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     # dataset = tf.data.Dataset.from_generator(train_seq)
     # print('dataset:', dataset)
 
-    callbacks = [SensitivitySpecificityCallback(validation_data=valid_seq, class_mode=class_mode)]
+    callbacks = [
+        # SensitivitySpecificityCallback(validation_data=valid_seq, class_mode=class_mode)]
+    ]
+    # tf.metrics.auc(num_thresholds=3)
+
     if tensorboard_log_dir:
         if not path.isdir(tensorboard_log_dir):
             makedirs(tensorboard_log_dir)
@@ -356,6 +403,8 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     # x_val, y_val = izip(*(np.vstack(valid_seq[i]) for i in xrange(len(valid_seq))))
     x, y = izip(*(valid_seq[i] for i in xrange(len(valid_seq))))
 
+    train_x, train_y = izip(*(train_seq[i] for i in xrange(len(train_seq))))
+
     '''
     np.save('/tmp/x_{}'.format(class_mode), x)
     np.save('/tmp/y_{}'.format(class_mode), y)
@@ -364,8 +413,30 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     x_val = np.vstack(x)
     y_val = np.vstack(imap(to_categorical, y))[:, 0] if class_mode == 'binary' else y
 
-    model.fit_generator(train_seq, validation_data=(x_val, y_val),
-                        epochs=epochs,  # steps_per_epoch=train_seq.n / batch_size,
+    print(type(y_val), y_val)
+
+    metrics = [tf.metrics.auc(labels=x_val, predictions=y_val)]
+
+    # x_train_val = np.stack(train_x)
+    # y_train_val = np.vstack(imap(to_categorical, y))[:, 0] if class_mode == 'binary' else y
+
+    print('x_val:', x_val, ';')
+    print('y_cal:', y_val, ';')
+
+    if train_seq.batch_size > train_seq.n:
+        raise TypeError('train_seq.batch_size > train_seq.n')
+
+    STEP_SIZE_TRAIN = train_seq.n // train_seq.batch_size
+
+    if valid_seq.batch_size > valid_seq.n:
+        raise TypeError('train_seq.batch_size > train_seq.n')
+
+    STEP_SIZE_VALID = valid_seq.n // valid_seq.batch_size
+
+    model.fit_generator(train_seq, validation_data=valid_seq,  # valid_generator,
+                        epochs=epochs,
+                        steps_per_epoch=STEP_SIZE_TRAIN,
+                        validation_steps=STEP_SIZE_VALID,
                         callbacks=callbacks, verbose=1)
     score = model.evaluate_generator(test_seq, verbose=0)
 

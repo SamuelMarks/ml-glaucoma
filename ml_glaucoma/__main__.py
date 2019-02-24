@@ -63,7 +63,7 @@ def _build_parser():
     cnn_parser.add_argument('--class-mode', help='Determines the type of label arrays that are returned',
                             choices=('categorical', 'binary', 'sparse'), default='categorical')
     cnn_parser.add_argument('--lr', '--learning-rate', help='Learning rate of optimiser', type=float, dest='lr')
-    cnn_parser.add_argument('--max-imgs', help='max_imgs', type=int)
+    cnn_parser.add_argument('--max-imgs', type=int)
 
 
     post_parser = subparsers.add_parser('parser',
