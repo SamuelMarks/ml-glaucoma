@@ -1,0 +1,25 @@
+import ml_glaucoma.gin_keras
+import ml_glaucoma.callbacks
+import ml_glaucoma.problems
+import ml_glaucoma.runners
+
+train.problem = %problem
+train.batch_size = %batch_size
+train.epochs = %epochs
+train.model_fn = %model_fn
+train.optimizer = %optimizer
+train.model_dir = %model_dir
+
+evaluate.problem = %problem
+evaluate.batch_size = %batch_size
+evaluate.model_fn = %model_fn
+evaluate.optimizer = %optimizer
+evaluate.model_dir = %model_dir
+
+problem = @TfdsProblem()
+optimizer = @tf.keras.optimizers.Adam()
+batch_size = 32
+epochs = 20
+
+model_fn = None
+model_dir = @default_model_dir()

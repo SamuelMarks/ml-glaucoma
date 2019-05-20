@@ -1,0 +1,3 @@
+import ml_glaucoma.models.dc
+include 'refuge_cls/base.gin'
+model_fn = @dc0

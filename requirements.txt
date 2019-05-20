@@ -15,3 +15,6 @@ scikit-learn
 urllib3[secure]
 numpy
 quantumrandom
+tensorflow_datasets
+xlrd
+git+git://github.com/jackd/gin-config@tf2
