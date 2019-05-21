@@ -9,10 +9,9 @@ from ml_glaucoma.tfds_builders import refuge as _r
 
 @gin.configurable
 def RefugeConfig(resolution=(256, 256)):
-    if resolution == (256, 256):
-        return 'r256-256'
-    else:
-        return _r.RefugeConfig(resolution=resolution)
+    if resolution is None:
+        return _r.base_config
+    return _r.RefugeConfig(resolution=resolution)
 
 
 @gin.configurable

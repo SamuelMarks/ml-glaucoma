@@ -22,6 +22,7 @@ import tensorflow_datasets as tfds
 import gin
 
 InputSpec = tf.keras.layers.InputSpec
+DownloadConfig = gin.config.external_configurable(tfds.download.DownloadConfig)
 
 
 def dataset_spec(dataset, has_batch_dim=False):
@@ -96,6 +97,8 @@ class TfdsProblem(Problem):
         self._shuffle_buffer = shuffle_buffer
         self._use_inverse_freq_weights = use_inverse_freq_weights
         self._download_dir = download_dir
+        if download_config is None:
+            download_config = DownloadConfig()
         self._download_config = download_config
         self._class_counts = None
 

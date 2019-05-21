@@ -1,0 +1,5 @@
+import ml_glaucoma.problems.bmes
+include 'binary_cls.gin'
+
+TfdsProblem.builder = @Bmes()
+BmesConfig.resolution = (256, 256)
