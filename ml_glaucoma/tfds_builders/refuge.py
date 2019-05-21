@@ -50,7 +50,7 @@ def _load_fovea(archive, subpath):
 
 def _seg_to_label(seg):
     out = np.zeros(shape=seg.shape[:2] + (1,), dtype=np.uint8)
-    out[seg == 128] == 1
+    out[seg == 128] = 1
     out[seg == 0] = 2
     return out
 
