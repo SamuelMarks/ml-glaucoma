@@ -22,12 +22,17 @@ if not (is_v1 or is_v2):
 if is_v1:
     def dim_value(dimension):
         return dimension.value
-    from tensorflow.python.keras.losses import Loss
-    from tensorflow.python.ops.losses import losses_impl
-    tf.keras.losses.Loss = Loss
-    tf.keras.losses.Reduction = losses_impl.ReductionV2
-    del Loss
-    del losses_impl
+    if tf_version.version[1] == 13:
+        from tensorflow.python.keras.losses import Loss
+        from tensorflow.python.ops.losses import losses_impl
+        tf.keras.losses.Loss = Loss
+        tf.keras.losses.Reduction = losses_impl.ReductionV2
+        del losses_impl
+        del Loss
+    elif tf_version.version[1] == 14:
+        from tensorflow.python.keras.utils import losses_utils
+        tf.keras.losses.Reduction = losses_utils.ReductionV2
+        del losses_utils
 else:
     def dim_value(dimension):
         return dimension

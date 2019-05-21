@@ -48,7 +48,8 @@ def train(
         lambda split: problem.get_dataset(split, batch_size, repeat=True),
         ('train', 'validation'))
     inputs = tf.nest.map_structure(
-        lambda spec: tf.keras.layers.Input(shape=spec.shape, dtype=spec.dtype),
+        lambda spec: tf.keras.layers.Input(
+            shape=spec.shape, dtype=spec.dtype),
         problem.input_spec())
     model = model_fn(inputs, problem.output_spec())
     model.compile(
@@ -56,7 +57,8 @@ def train(
         loss=problem.loss,
         metrics=problem.metrics)
 
-    train_steps = batch_steps(problem.examples_per_epoch('train'), batch_size)
+    train_steps = batch_steps(
+        problem.examples_per_epoch('train'), batch_size)
     validation_steps = batch_steps(
         problem.examples_per_epoch('validation'), batch_size)
 
@@ -93,23 +95,29 @@ def evaluate(problem, batch_size, model_fn, optimizer, model_dir=None):
         model_dir = os.path.expanduser(model_dir)
     if not os.path.isdir(model_dir):
         raise RuntimeError('model_dir does not exist: %s' % model_dir)
-    val_ds = problem.get_dataset('validation', batch_size, repeat=False)
-    inputs = tf.nest.map_structure(
-        lambda spec: tf.keras.layers.Input(shape=spec.shape, dtype=spec.dtype),
-        problem.input_spec())
-    model = model_fn(inputs, problem.output_spec())
-    model.compile(
-        optimizer=optimizer,
-        loss=problem.loss,
-        metrics=problem.metrics)
 
-    checkpoint = tf.train.Checkpoint(model=model)
-    manager_cb = cb.CheckpointManagerCallback(
-        model_dir=model_dir, period=1, max_to_keep=5)
-    manager_cb.set_model(model)
-    manager_cb.restore()
+    # required for 1.14 checkpoint manager usage?
+    # makes tensorflow.python.framework.ops.get_default_session not None
+    with tf.compat.v1.keras.backend.get_session():
 
-    validation_steps = batch_steps(
-        problem.examples_per_epoch('validation'), batch_size)
+        val_ds = problem.get_dataset('validation', batch_size, repeat=False)
+        inputs = tf.nest.map_structure(
+            lambda spec: tf.keras.layers.Input(
+                shape=spec.shape, dtype=spec.dtype),
+            problem.input_spec())
+        model = model_fn(inputs, problem.output_spec())
+        model.compile(
+            optimizer=optimizer,
+            loss=problem.loss,
+            metrics=problem.metrics)
 
-    model.evaluate(val_ds, steps=validation_steps)
+        checkpoint = tf.train.Checkpoint(model=model)
+        manager_cb = cb.CheckpointManagerCallback(
+            model_dir=model_dir, period=1, max_to_keep=5)
+        manager_cb.set_model(model)
+        manager_cb.restore()
+
+        validation_steps = batch_steps(
+            problem.examples_per_epoch('validation'), batch_size)
+
+        model.evaluate(val_ds, steps=validation_steps)
