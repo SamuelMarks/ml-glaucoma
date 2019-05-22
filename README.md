@@ -126,8 +126,18 @@ Training/validation scripts are provided in `bin` and each call a function defin
 
 ```bash
 cd ml-glaucoma
-python __main__.py vis --dataset=refuge
-python __main__.py train --model_file='../model_configs/dc.gin' --model_dir=/tmp/ml_glaucoma/dc0 -m BinaryAccuracy AUC -pt 0.1 0.2 0.5 -rt 0.1 0.2 0.5 --use_inverse_freq_weights
+python bin/__main__.py vis --dataset=refuge
+python bin/__main__.py train \
+  --model_file 'model_configs/dc.gin' \  # uncompiled model config
+  --model_param \                        # custom CL model modifications
+    'dc0.kernel_regularizer=@tf.keras.regularizers.l2()' \
+    'tf.keras.reguarlizers.l2.l = 1e-2' \
+  --model_dir=/tmp/ml_glaucoma/dc0-reg \ # location of saved weights/logs
+  -m BinaryAccuracy AUC \                # metrics
+  -pt 0.1 0.2 0.5 -rt 0.1 0.2 0.5 \      # precision/recall thresholds
+  --use_inverse_freq_weights
+# ...
+tensorboard --logdir=/tmp/ml_glaucoma
 ```
 
 ## Tensorflow Datasets

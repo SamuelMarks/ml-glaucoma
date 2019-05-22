@@ -1,0 +1,5 @@
+https://aipe-broad-dataset.cdn.bcebos.com/gno/Annotation-Training400.zip 348137626 5dc4b16c5e4c3f7c30106b0f22f0b44b7d4bdc18f12d3a0d2e0cadc41fd8e92b
+https://aipe-broad-dataset.cdn.bcebos.com/gno/REFUGE-Test400.zip 360832658 ff8a2f14ec94812186310cbf490a69c6deed9d9377c1f9dd5ba05ee0ff1a99cb
+https://aipe-broad-dataset.cdn.bcebos.com/gno/REFUGE-Training400.zip 716807624 c6d4f8cd66b0b558f8f63245803cba53e774ab6c5de9dfb7bd113a6e30fb183a
+https://aipe-broad-dataset.cdn.bcebos.com/gno/REFUGE-Validation400-GT.zip 5320597 e535a7bf0ad7bc6e94ffa68f8bda5e4965be0972d31c44f610c60beb3e1a9e84
+https://aipe-broad-dataset.cdn.bcebos.com/gno/REFUGE-Validation400.zip 360709102 c47e0fc74c8499bba263b65afe3bbcb66de0d7513c2da1f2118d283c424f48ca
