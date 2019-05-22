@@ -1,6 +1,0 @@
-import ml_glaucoma.problems.refuge
-include 'binary_cls.gin'
-
-TfdsProblem.builder = @Refuge()
-TfdsProblem.class_counts = (360, 40)
-RefugeConfig.resolution = (256, 256)

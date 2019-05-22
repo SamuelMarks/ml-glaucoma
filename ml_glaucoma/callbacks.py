@@ -4,20 +4,15 @@ from __future__ import print_function
 
 from absl import logging
 import tensorflow as tf
-import gin.tf
 import os
 from ml_glaucoma.tf_compat import is_v1
-
-
-GinConfigSaverCallback = gin.config.external_configurable(
-    gin.tf.GinConfigSaverCallback)
 
 
 class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
     """ModelCheckpoint modified to automatically restore model."""
     def __init__(self, model_dir, **kwargs):
         self._model_dir = model_dir
-        self._filename='model-{epoch:04d}.h5'
+        self._filename = 'model-{epoch:04d}.h5'
         super(LoadingModelCheckpoint, self).__init__(
             filepath=os.path.join(self._model_dir, self._filename), **kwargs)
         self._restored = False
@@ -56,7 +51,6 @@ class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
         self.restore()
 
 
-@gin.configurable
 def exponential_decay_lr_schedule(lr0, factor):
     def f(epoch):
         return lr0 * (factor ** epoch)
@@ -69,11 +63,13 @@ def get_callbacks(
         callbacks=None,
         checkpoint_freq=5,
         summary_freq=10,
-        save_config=True,
+        save_gin_config=False,
         model_dir=None,
         train_steps_per_epoch=None,
         val_steps_per_epoch=None,
         lr_schedule=None,
+        tensorboard_log_dir=None,
+        write_images=False,
     ):
     if callbacks is None:
         callbacks = []
@@ -90,9 +86,11 @@ def get_callbacks(
         callbacks.append(saver_callback)
 
     if summary_freq:
-        kwargs = dict(
-            write_graph=False, log_dir=model_dir, update_freq=summary_freq)
-        tb_callback = tf.keras.callbacks.TensorBoard(**kwargs)
+        tb_callback = tf.keras.callbacks.TensorBoard(
+            write_graph=False,
+            log_dir=tensorboard_log_dir or model_dir,
+            update_freq=summary_freq,
+            write_images=write_images)
 
         # These hacks involve private members - will probably break
         if train_steps_per_epoch is not None and initial_epoch > 0:
@@ -113,7 +111,7 @@ def get_callbacks(
     if lr_schedule is not None:
         callbacks.append(tf.keras.callbacks.LearningRateScheduler(lr_schedule))
 
-    if save_config:
+    if save_gin_config:
         callbacks.append(GinConfigSaverCallback(model_dir))
 
     return callbacks, initial_epoch

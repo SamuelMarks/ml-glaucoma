@@ -31,7 +31,6 @@ class RefugeTask(object):
                 % (task, str(cls.all())))
 
 
-
 def _load_fovea(archive, subpath):
     import xlrd
     # I struggled to get openpyxl to read already opened zip files
@@ -59,12 +58,14 @@ def _load_image(image_fp):
     return np.array(tfds.core.lazy_imports.PIL_Image.open(image_fp))
 
 
-def RefugeConfig(resolution):
+def RefugeConfig(resolution, rgb=True):
     return transformer.ImageTransformerConfig(
-        description="Refuge grand-challenge dataset", resolution=resolution)
+        description="Refuge grand-challenge dataset", resolution=resolution,
+        rgb=rgb)
 
 
-base_config = RefugeConfig(None)
+base_rgb = RefugeConfig(None)
+base_gray = RefugeConfig(None, rgb=False)
 
 
 class Refuge(tfds.core.GeneratorBasedBuilder):
@@ -78,7 +79,7 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
     different tasks.
     """
 
-    BUILDER_CONFIGS = [base_config]
+    BUILDER_CONFIGS = [base_rgb, base_gray]
 
     URL = "http://refuge.grand-challenge.org"
 
@@ -89,6 +90,7 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
 
     def _info(self):
         resolution = self.builder_config.resolution
+        num_channels = 3 if self.builder_config.rgb else 1
         if resolution is None:
             h, w = None, None
         else:
@@ -103,7 +105,7 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
             builder=self,
             description=self.builder_config.description,
             features=tfds.features.FeaturesDict({
-                "fundus": tfds.features.Image(shape=(h, w, 3)),
+                "fundus": tfds.features.Image(shape=(h, w, num_channels)),
                 "segmentation": tfds.features.Image(shape=(h, w, 1)),
                 "label": tfds.features.Tensor(dtype=tf.bool, shape=()),
                 "macular_center": tfds.features.Tensor(

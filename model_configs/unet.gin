@@ -1,0 +1,4 @@
+import ml_glaucoma.models.unet
+model_fn = @unet
+unet.final_activation = %final_activation
+final_activation = 'default'

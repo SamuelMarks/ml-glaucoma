@@ -7,15 +7,13 @@ import gin
 from ml_glaucoma.tfds_builders import bmes as _b
 
 
-@gin.configurable
 def BmesConfig(resolution=(256, 256)):
     if resolution is None:
         return _b.Bmes.base_config
-    return _r.BmesConfig(resolution=resolution)
+    return _b.BmesConfig(resolution=resolution)
 
 
-@gin.configurable
-def Bmes(config=None):
+def Bmes(config=None, data_dir=None):
     if config is None:
         config = RefugeConfig()
-    return _b.Bmes(config=config)
+    return _b.Bmes(config=config, data_dir=data_dir)

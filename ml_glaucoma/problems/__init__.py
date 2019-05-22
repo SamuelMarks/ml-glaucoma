@@ -19,10 +19,7 @@ import six
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
-import gin
-
 InputSpec = tf.keras.layers.InputSpec
-DownloadConfig = gin.config.external_configurable(tfds.download.DownloadConfig)
 
 
 def dataset_spec(dataset, has_batch_dim=False):
@@ -72,34 +69,34 @@ class Problem(object):
         return self.dataset_spec()[1]
 
 
-@gin.configurable(module='problems')
+def download_and_prepare(builder, download_config=None, download_dir=None):
+    if download_config is None:
+        download_config = DownloadConfig()
+    download_config = download_config
+    builder.download_and_prepare(
+        download_dir=download_dir, download_config=download_config)
+
+
 class TfdsProblem(Problem):
     def __init__(
             self, builder, loss, metrics=None, output_spec=None, map_fn=None,
             as_supervised=True, shuffle_buffer=1024,
-            download_and_prepare=True, use_inverse_freq_weights=False,
-            download_dir=None, download_config=None, class_counts=None):
+            use_inverse_freq_weights=False,
+            class_counts=None):
         if map_fn is not None:
             assert(callable(map_fn) or
                    isinstance(map_fn, dict) and
                    all(v is None or callable(v) for v in map_fn.values()))
-        if isinstance(builder, six.string_types):
-            builder = tfds.builder(builder)
         self._builder = builder
         self._loss = loss
         self._metrics = metrics
         self._output_spec = output_spec
         self._map_fn = map_fn
         self._as_supervised = as_supervised
-        self._download_and_prepare = download_and_prepare
         if shuffle_buffer is None:
             shuffle_buffer = self.examples_per_epoch('train')
         self._shuffle_buffer = shuffle_buffer
         self._use_inverse_freq_weights = use_inverse_freq_weights
-        self._download_dir = download_dir
-        if download_config is None:
-            download_config = DownloadConfig()
-        self._download_config = download_config
         self._class_counts = None
 
     @property
@@ -156,10 +153,6 @@ class TfdsProblem(Problem):
         return self._builder
 
     def get_dataset(self, split, batch_size=None, repeat=False, prefetch=True):
-        if self._download_and_prepare:
-            self._builder.download_and_prepare(
-                download_dir=self._download_dir,
-                download_config=self._download_config)
         dataset = self.builder.as_dataset(
             batch_size=1, split=self._split(split),
             as_supervised=self._as_supervised, shuffle_files=True)
@@ -226,7 +219,6 @@ class TfdsProblem(Problem):
         return dataset
 
 
-@gin.configurable(whitelist=['counts'])
 def with_inverse_freq_weights(dataset, counts):
     counts = tf.constant(counts, tf.float32)
     class_weights = tf.reduce_mean(counts, keepdims=True) / counts
@@ -248,7 +240,6 @@ def _maybe_apply(image, labels, fn, apply_to_labels, prob=0.5):
         return tf.cond(apply, lambda: fn(image), lambda: image), labels
 
 
-@gin.configurable
 def preprocess_example(
         image, labels,
         use_rgb=True,  # grayscale if False

@@ -1,7 +1,0 @@
-import ml_glaucoma.models.dc
-include 'refuge_cls/base.gin'
-model_fn = @dc0
-
-TfdsProblem.use_inverse_freq_weights = True
-dc0.kernel_regularizer = @tf.keras.regularizers.l2()
-tf.keras.regularizers.l2.l = 0.01

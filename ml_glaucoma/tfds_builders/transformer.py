@@ -8,7 +8,7 @@ import tensorflow_datasets.public_api as tfds
 
 
 class Transformer(object):
-    def __init__(self, initial_res, target_res):
+    def __init__(self, initial_res, target_res, rgb):
         th, tw = target_res
         ih, iw = initial_res
         tr = tw / th
@@ -41,6 +41,7 @@ class Transformer(object):
         self.padding = padding
         self.delta = delta
         self.target_res = target_res
+        self.rgb = rgb
 
     def transform_image(self, image, interp=tf.image.ResizeMethod.BILINEAR):
         Image = tfds.core.lazy_imports.PIL_Image
@@ -58,6 +59,8 @@ class Transformer(object):
             image = np.array(image.resize(self.target_res, resample=resample))
             if len(image.shape) == 2:
                 image = np.expand_dims(image, axis=-1)
+        if not self.rgb and image.shape[-1] == 3:
+            image = np.mean(image, axis=-1, keepdims=True)
         return image
 
     def transform_point(self, xy):
@@ -72,21 +75,28 @@ class Transformer(object):
 
 class ImageTransformerConfig(tfds.core.BuilderConfig):
     def __init__(
-            self, description, name=None, resolution=None,
+            self, description, name=None, resolution=None, rgb=True,
             version=tfds.core.Version("0.0.1")):
+        color_suffix = 'rgb' if rgb else 'gray'
         if resolution is None:
             self.resolution = None
             if name is None:
-                name = 'raw'
-            desc_suffix = ''
+                name = 'raw-%s' % color_suffix
+            desc_suffix = ' (%s)' % color_suffix
         else:
-            resolution = tuple(resolution)
+            if isinstance(resolution, int):
+                resolution = (resolution,)*2
+            else:
+                resolution = tuple(resolution)
             if not all(isinstance(r, int) for r in resolution):
-                raise ValueError("All resolutions must be ints")
+                raise ValueError(
+                    "`resolution`s must be `None` or all `int`s, got %s"
+                    % str(resolution))
             self.resolution = resolution
             if name is None:
-                name = 'r%d-%d' % resolution
-            desc_suffix = " (%d x %d)" % resolution
+                name = 'r%d-%d-%s' % (resolution + (color_suffix,))
+            desc_suffix = " (%d x %d, %s)" % (resolution + (color_suffix,))
+        self.rgb = rgb
 
         super(ImageTransformerConfig, self).__init__(
             name=name,
@@ -98,4 +108,4 @@ class ImageTransformerConfig(tfds.core.BuilderConfig):
         if self.resolution is None or image_resolution == self.resolution:
             return None
         else:
-            return Transformer(image_resolution, self.resolution)
+            return Transformer(image_resolution, self.resolution, self.rgb)
