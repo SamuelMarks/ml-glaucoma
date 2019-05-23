@@ -4,7 +4,6 @@ from __future__ import print_function
 
 import abc
 import functools
-import numpy as np
 import tensorflow as tf
 from ml_glaucoma import problems as p
 from ml_glaucoma import runners
@@ -69,62 +68,97 @@ class MappedConfigurable(Configurable):
         return self.fn(base)
 
 
-
-class ConfigurableBuilder(Configurable):
+class ConfigurableBuilders(Configurable):
     def __init__(self):
-        super(ConfigurableBuilder, self).__init__()
+        super(ConfigurableBuilders, self).__init__()
 
     def fill_self(self, parser):
         parser.add_argument(
-            '-ds', '--dataset', help='dataset key', choices=('bmes', 'refuge'), default='refuge')
+            '-ds', '--dataset', choices=('bmes', 'refuge'), default=['refuge'],
+            nargs='+',
+            help='dataset key', )
         parser.add_argument(
-            '--data_dir', help='root directory to store processed tfds records')
+            '--data_dir',
+            help='root directory to store processed tfds records')
         parser.add_argument(
             '--download_dir', help='directory to store downloaded files')
         parser.add_argument(
             '--extract_dir', help='directory where extracted files are stored')
         parser.add_argument(
-            '--manual_dir', help='directory where manually downloaded files are saved')
+            '--manual_dir',
+            help='directory where manually downloaded files are saved')
         parser.add_argument(
-            '--download_mode', help='tfds.GenerateMode', choices=('reuse_dataset_if_exists', 'reuse_cache_if_exists', 'force_redownload'))
+            '--download_mode',
+            choices=(
+                'reuse_dataset_if_exists',
+                'reuse_cache_if_exists',
+                'force_redownload'),
+            help='tfds.GenerateMode')
         parser.add_argument(
-            '-r', '--resolution', help='image resolution', nargs=2, default=(256, 256), type=int)
+            '-r', '--resolution', nargs=2, default=(256, 256), type=int,
+            help='image resolution')
         parser.add_argument(
-            '--gray_on_disk', help='whether or not to save data as grayscale on disk', action='store_true')
+            '--gray_on_disk', action='store_true',
+            help='whether or not to save data as grayscale on disk')
+        parser.add_argument(
+            '--bmes_init', action='store_true', help='initial bmes get_data')
+        parser.add_argument(
+            '--bmes_parent_dir', help='parent directory of bmes data')
 
     def build_self(
             self, dataset, data_dir, download_dir, extract_dir, manual_dir,
-            download_mode, resolution, gray_on_disk, **kwargs):
+            download_mode, resolution, gray_on_disk, bmes_init,
+            bmes_parent_dir, **kwargs):
         import tensorflow_datasets as tfds
-        if dataset == 'bmes':
-            from ml_glaucoma.tfds_builder import bmes
-            builder_factory = refuge.get_bmes_builder
-        elif dataset == 'refuge':
-            from ml_glaucoma.tfds_builders import refuge
-            builder_factory = refuge.get_refuge_builder
+        builders = []
+        for ds in set(dataset):  # remove duplicates
+            if ds == 'bmes':
+                from ml_glaucoma.tfds_builders import bmes
+                builder_factory = bmes.get_bmes_builder
+                if bmes_init:
+                    from ml_glaucoma.utils.get_data import get_data
+                    if manual_dir is None:
+                        raise ValueError(
+                            '`manual_dir` must be provided if doing bmes_init')
+                    if bmes_parent_dir is None:
+                        raise ValueError(
+                            '`bmes_parent_dir` must be provided if doing '
+                            'bmes_init')
+                    get_data(bmes_parent_dir, manual_dir)
 
-        builder = builder_factory(
-            resolution=resolution, rgb=not gray_on_disk, data_dir=data_dir)
+            elif ds == 'refuge':
+                from ml_glaucoma.tfds_builders import refuge
+                builder_factory = refuge.get_refuge_builder
 
-        p.download_and_prepare(
-            builder=builder,
-            download_config=tfds.download.DownloadConfig(
-                extract_dir=extract_dir, manual_dir=manual_dir,
-                download_mode=download_mode),
-            download_dir=download_dir)
-        return builder
+            builder = builder_factory(
+                resolution=resolution,
+                rgb=not gray_on_disk,
+                data_dir=data_dir)
+
+            p.download_and_prepare(
+                builder=builder,
+                download_config=tfds.download.DownloadConfig(
+                    extract_dir=extract_dir, manual_dir=manual_dir,
+                    download_mode=download_mode),
+                download_dir=download_dir)
+            builders.append(builder)
+
+        return builders
 
 
 class ConfigurableMapFn(Configurable):
     def fill_self(self, parser):
         parser.add_argument(
-            '-fv', '--maybe_vertical_flip', help='randomly flip training input vertically', action='store_true')
+            '-fv', '--maybe_vertical_flip', action='store_true',
+            help='randomly flip training input vertically')
         parser.add_argument(
-            '-fh', '--maybe_horizontal_flip', help='randomly flip training input horizontally', action='store_true')
+            '-fh', '--maybe_horizontal_flip', action='store_true',
+            help='randomly flip training input horizontally')
         parser.add_argument(
             '--gray', help='use grayscale', action='store_true')
 
-    def build_self(self, gray, maybe_horizontal_flip, maybe_vertical_flip, **kwargs):
+    def build_self(
+            self, gray, maybe_horizontal_flip, maybe_vertical_flip, **kwargs):
         val_map_fn = functools.partial(
             p.preprocess_example,
             use_rgb=not gray,
@@ -143,28 +177,37 @@ class ConfigurableMapFn(Configurable):
 
 
 class ConfigurableProblem(Configurable):
-    def __init__(self, builder, map_fn=None):
+    def __init__(self, builders, map_fn=None):
         if map_fn is None:
             map_fn = ConfigurableMapFn()
         super(ConfigurableProblem, self).__init__(
-            builder=builder, map_fn=map_fn)
+            builders=builders, map_fn=map_fn)
 
     def fill_self(self, parser):
         parser.add_argument(
-            '-l', '--loss', help='loss function to use', choices=SUPPORTED_LOSSES, default='BinaryCrossentropy')
+            '-l', '--loss', choices=SUPPORTED_LOSSES,
+            default='BinaryCrossentropy',
+            help='loss function to use')
         parser.add_argument(
-            '-m', '--metrics', nargs='*', help='metric functions to use', choices=SUPPORTED_METRICS, default=['AUC'])
+            '-m', '--metrics', nargs='*',
+            choices=SUPPORTED_METRICS, default=['AUC'],
+            help='metric functions to use')
         parser.add_argument(
-            '-pt', '--precision_thresholds', help='precision thresholds', default=[0.5], type=float, nargs='*')
+            '-pt', '--precision_thresholds',
+            default=[0.5], type=float, nargs='*',
+            help='precision thresholds', )
         parser.add_argument(
-            '-rt', '--recall_thresholds', help='recall thresholds', default=[0.5], type=float, nargs='*')
+            '-rt', '--recall_thresholds', default=[0.5], type=float, nargs='*',
+            help='recall thresholds')
         parser.add_argument(
-            '--shuffle_buffer', help='buffer used in tf.data.Dataset.shuffle', default=1024, type=int)
+            '--shuffle_buffer', default=1024, type=int,
+            help='buffer used in tf.data.Dataset.shuffle')
         parser.add_argument(
-            '--use_inverse_freq_weights', help='weight loss according to inverse class frequency', action='store_true')
+            '--use_inverse_freq_weights', action='store_true',
+            help='weight loss according to inverse class frequency')
 
     def build_self(
-            self, builder, map_fn, loss, metrics,
+            self, builders, map_fn, loss, metrics,
             precision_thresholds, recall_thresholds,
             shuffle_buffer, use_inverse_freq_weights,
             **kwargs):
@@ -184,13 +227,16 @@ class ConfigurableProblem(Configurable):
                 name='recall%d' % (int(100*r)))
              for r in recall_thresholds])
 
-        return p.TfdsProblem(
-            builder=builder,
+        kwargs = dict(
             loss=tf.keras.losses.deserialize(dict(class_name=loss, config={})),
             metrics=metrics,
             map_fn=map_fn,
             shuffle_buffer=shuffle_buffer,
             use_inverse_freq_weights=use_inverse_freq_weights)
+        if len(builders) == 1:
+            return p.TfdsProblem(builder=builders[0], **kwargs)
+        else:
+            return p.TfdsMultiProblem(builders=builders, **kwargs)
 
 
 class ConfigurableModelFn(Configurable):
@@ -198,10 +244,14 @@ class ConfigurableModelFn(Configurable):
         super(ConfigurableModelFn, self).__init__()
 
     def fill_self(self, parser):
-        import gin
-        parser.add_argument('--model_file', nargs='*', help='gin files for model definition. Should define `model_fn` macro either here or in --gin_param')
-        parser.add_argument('--model_param', nargs='*', help='gin_params for model definition. Should define `model_fn` macro either here or in --gin_file')
-
+        parser.add_argument(
+            '--model_file', nargs='*',
+            help='gin files for model definition. Should define `model_fn` '
+            'macro either here or in --gin_param')
+        parser.add_argument(
+            '--model_param', nargs='*',
+            help='gin_params for model definition. Should define `model_fn` '
+            'macro either here or in --gin_file')
 
     def build_self(self, model_file, model_param, **kwargs):
         import gin
@@ -214,8 +264,12 @@ class ConfigurableOptimizer(Configurable):
         super(ConfigurableOptimizer, self).__init__()
 
     def fill_self(self, parser):
-        parser.add_argument('-o', '--optimizer', default='Adam', choices=SUPPORTED_OPTIMIZERS, help='class name of optimizer to use')
-        parser.add_argument('-lr', '--learning_rate', default=1e-3, help='base optimizer learning rate', type=float)
+        parser.add_argument(
+            '-o', '--optimizer', default='Adam', choices=SUPPORTED_OPTIMIZERS,
+            help='class name of optimizer to use')
+        parser.add_argument(
+            '-lr', '--learning_rate', default=1e-3, type=float,
+            help='base optimizer learning rate')
 
     def build(self, optimizer, learning_rate, **kwargs):
         return getattr(tf.keras.optimizers, optimizer)(lr=learning_rate)
@@ -226,7 +280,10 @@ class ConfigurableExponentialDecayLrSchedule(Configurable):
         super(ConfigurableExponentialDecayLrSchedule, self).__init__()
 
     def fill_self(self, parser):
-        parser.add_argument('--exp_lr_decay', help='exponential learning rate decay factor applied per epoch, e.g. 0.98. None is interpreted as no decay', default=None)
+        parser.add_argument(
+            '--exp_lr_decay', default=None,
+            help='exponential learning rate decay factor applied per epoch, '
+                 'e.g. 0.98. None is interpreted as no decay')
 
     def build_self(self, learning_rate, exp_lr_decay, **kwargs):
         if exp_lr_decay is None:
@@ -239,25 +296,39 @@ class ConfigurableExponentialDecayLrSchedule(Configurable):
 class ConfigurableTrain(Configurable):
     def __init__(self, problem, model_fn, optimizer, lr_schedule=None):
         super(ConfigurableTrain, self).__init__(
-            problem=problem, model_fn=model_fn, optimizer=optimizer, lr_schedule=lr_schedule)
+            problem=problem,
+            model_fn=model_fn,
+            optimizer=optimizer,
+            lr_schedule=lr_schedule)
 
     def fill_self(self, parser):
         parser.add_argument(
-            '-b', '--batch_size', default=32, type=int, help='size of each batch')
+            '-b', '--batch_size', default=32, type=int,
+            help='size of each batch')
         parser.add_argument(
-            '-e', '--epochs', default=20, type=int, help='number of epochs to run training from')
+            '-e', '--epochs', default=20, type=int,
+            help='number of epochs to run training from')
         parser.add_argument(
-            '--model_dir', help='model directory in which to save weights and tensorboard summaries')
+            '--model_dir',
+            help='model directory in which to save weights and '
+                 'tensorboard summaries')
         parser.add_argument(
-            '-c', '--checkpoint_freq', type=int, help='epoch frequency at which to save model weights', default=5)
+            '-c', '--checkpoint_freq', type=int, default=5,
+            help='epoch frequency at which to save model weights')
         parser.add_argument(
-            '--summary_freq', type=int, help='batch frequency at which to save tensorboard summaries', default=10)
+            '--summary_freq', type=int, default=10,
+            help='batch frequency at which to save tensorboard summaries')
         parser.add_argument(
-            '-tb', '--tb_log_dir', help='tensorboard_log_dir (defaults to model_dir)')
+            '-tb', '--tb_log_dir',
+            help='tensorboard_log_dir (defaults to model_dir)')
         parser.add_argument(
-            '--write_images', action='store_true', help='whether or not to write images to tensorboard')
+            '--write_images', action='store_true',
+            help='whether or not to write images to tensorboard')
 
-    def build_self(self, problem, batch_size, epochs, model_fn, optimizer, model_dir, checkpoint_freq, summary_freq, lr_schedule, tb_log_dir, write_images, **kwargs):
+    def build_self(
+            self, problem, batch_size, epochs, model_fn, optimizer, model_dir,
+            checkpoint_freq, summary_freq, lr_schedule, tb_log_dir,
+            write_images, **kwargs):
         return runners.train(
             problem=problem,
             batch_size=batch_size,
@@ -280,11 +351,16 @@ class ConfigurableEvaluate(Configurable):
 
     def fill_self(self, parser):
         parser.add_argument(
-            '-b', '--batch_size', default=32, type=int, help='size of each batch')
+            '-b', '--batch_size', default=32, type=int,
+            help='size of each batch')
         parser.add_argument(
-            '--model_dir', help='model directory in which to save weights and tensorboard summaries')
+            '--model_dir',
+            help='model directory in which to save weights and tensorboard '
+                 'summaries')
 
-    def build_self(self, porblem, batch_size, model_fn, optimizer, model_dir, **kwargs):
+    def build_self(
+            self, problem, batch_size, model_fn, optimizer, model_dir,
+            **kwargs):
         from ml_glaucoma import runners
         return runners.evaluate(
             problem=problem,
@@ -298,13 +374,12 @@ class ConfigurableEvaluate(Configurable):
 def main():
     from argparse import ArgumentParser
     commands = {}
-    parser = ArgumentParser(
-        description='CLI for a Glaucoma diagnosing CNN and preparing data for such')
+    parser = ArgumentParser(description='CLI for a Glaucoma diagnosing CNN')
     subparsers = parser.add_subparsers(dest='command')
 
-    builder = ConfigurableBuilder()
+    builders = ConfigurableBuilders()
     map_fn = ConfigurableMapFn()
-    problem = ConfigurableProblem(builder, map_fn)
+    problem = ConfigurableProblem(builders, map_fn)
     model_fn = ConfigurableModelFn()
     optimizer = ConfigurableOptimizer()
     lr_schedule = ConfigurableExponentialDecayLrSchedule()
@@ -315,8 +390,8 @@ def main():
     # DOWNLOAD
     download_parser = subparsers.add_parser(
         'download', help='Download and prepare required data')
-    builder.fill(download_parser)
-    commands['download'] = builder
+    builders.fill(download_parser)
+    commands['download'] = builders
 
     vis_parser = subparsers.add_parser(
         'vis', help='Download and prepare required data')

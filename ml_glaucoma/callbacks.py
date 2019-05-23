@@ -2,23 +2,42 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from absl import logging
 import tensorflow as tf
 import os
 from ml_glaucoma.tf_compat import is_v1
 
 
 class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
-    """ModelCheckpoint modified to automatically restore model."""
+    """
+    ModelCheckpoint modified to automatically restore model.
+
+    Weight restoration can be done manually using `self.restore`.
+
+    Restoration only happens once by default, but you can force subsequent
+    restorations using `self.restore(force_restore=True)`.
+    """
     def __init__(self, model_dir, **kwargs):
+        """
+        Args:
+            model_dir: directory to save weights. Files will have format
+                '{model_dir}/{epoch:04d}.h5'.
+            **kwargs: passed to `ModelCheckpoint.__init__`.
+                All keys valid except `filepath`.
+        """
         self._model_dir = model_dir
         self._filename = 'model-{epoch:04d}.h5'
         super(LoadingModelCheckpoint, self).__init__(
             filepath=os.path.join(self._model_dir, self._filename), **kwargs)
         self._restored = False
 
-    def restore(self, save_path=None):
-        if not self._restored:
+    def restore(self, save_path=None, force_restore=False):
+        """
+        Restore weights at path, or latest in model directory.
+
+        Does nothing if the model has already been restored by this loader
+        unless `force_restore` is True.
+        """
+        if not self._restored or force_restore:
             if save_path is None:
                 save_path = self.latest_checkpoint
             if save_path is not None:
@@ -27,6 +46,7 @@ class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
 
     @property
     def latest_checkpoint(self):
+        """Get the full path to the latest weights file."""
         filenames = tuple(fn for fn in os.listdir(self._model_dir)
                           if fn.startswith('model'))
         if len(filenames) == 0:
@@ -35,6 +55,7 @@ class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
         return os.path.join(self._model_dir, latest)
 
     def filename_epoch(self, filename):
+        """Get the epoch of the given file/path."""
         assert(filename.endswith('.h5'))
         return int(filename[-7:-3])
 
@@ -52,29 +73,55 @@ class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
 
 
 def exponential_decay_lr_schedule(lr0, factor):
-    def f(epoch):
-        return lr0 * (factor ** epoch)
-    return f
+    """
+    lambda epoch: lr0 * (factor ** epoch)
+
+    The returned callback can be used in
+    `tf.keras.callbacks.LearningRateScheduler`.
+    """
+    return lambda epoch: lr0 * (factor ** epoch)
 
 
 def get_callbacks(
         model,
         batch_size,
-        callbacks=None,
         checkpoint_freq=5,
         summary_freq=10,
-        save_gin_config=False,
         model_dir=None,
         train_steps_per_epoch=None,
         val_steps_per_epoch=None,
         lr_schedule=None,
         tensorboard_log_dir=None,
         write_images=False,
-    ):
-    if callbacks is None:
-        callbacks = []
-    else:
-        callbacks = list(callbacks)
+        ):
+    """
+    Get common callbacks used in training.
+
+    Args:
+        model: `tf.keras.models.Model` to be used.
+        batch_size: size of each batch - used to correct tensorboard initial
+            step.
+        checkpoint_freq: if not None, adds a `LoadingModelCheckpoint` which
+            extends `ModelCheckpoint` to restore weights on fit/evaluate start
+            and saves at this epoch frequency.
+        summary_freq: if given, adds a `TensorBoard` callback that logs at this
+            batch frequency.
+        model_dir: directory in which to save weights
+        train_steps_per_epoch: number of training steps per epoch. Necessary
+            for initializing `TensorBoard` correctly when resuming training.
+        val_steps_per_epoch: number of validation steps per epoch.
+        lr_schedule: if provided, adds a `LearningRateScheduler` with this
+            schedule.
+        tensorboard_log_dir: if given, logs are written here. It not,
+            `model_dir` is used
+        write_images: passed to `TensorBoard`
+
+    Returns:
+        (callbacks, initial_epoch), where callbacks is a list of
+        `tf.keras.callbacks.Callback` and `initial_epoch` corresponds to the
+        epoch count of the weights loaded.
+    """
+    callbacks = []
 
     initial_epoch = 0
     if checkpoint_freq is not None:
@@ -110,8 +157,5 @@ def get_callbacks(
 
     if lr_schedule is not None:
         callbacks.append(tf.keras.callbacks.LearningRateScheduler(lr_schedule))
-
-    if save_gin_config:
-        callbacks.append(GinConfigSaverCallback(model_dir))
 
     return callbacks, initial_epoch

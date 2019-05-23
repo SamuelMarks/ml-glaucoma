@@ -132,7 +132,7 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                 "fundi": "REFUGE-Test400.zip",
             }
         }
-        urls = tf.nest.map_structure( # pylint: disable=no-member
+        urls = tf.nest.map_structure(  # pylint: disable=no-member
             lambda x: os.path.join(base_url, x), urls)
         download_dirs = dl_manager.download(urls)
 
@@ -140,9 +140,8 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
             tfds.core.SplitGenerator(
               name=split,
               num_shards=4,
-              gen_kwargs=dict(split=split, **download_dirs[split]),
-          ) for split in ("train", "validation", "test")
-        ]
+              gen_kwargs=dict(split=split, **download_dirs[split]))
+            for split in ("train", "validation", "test")]
 
     def _generate_examples(self, split, **kwargs):
         return {
@@ -195,7 +194,7 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                         "g%04d.jpg" % index)
                     seg_path = os.path.join(
                          "Annotation-Training400", "Disc_Cup_Masks",
-                          "Glaucoma", "g%04d.bmp" % index)
+                         "Glaucoma", "g%04d.bmp" % index)
 
                     yield get_example(True, fundus_path, seg_path)
 
@@ -206,7 +205,7 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                         "n%04d.jpg" % index)
                     seg_path = os.path.join(
                          "Annotation-Training400", "Disc_Cup_Masks",
-                          "Non-Glaucoma", "n%04d.bmp" % index)
+                         "Non-Glaucoma", "n%04d.bmp" % index)
                     yield get_example(False, fundus_path, seg_path)
 
     def _generate_validation_examples(self, fundi, annotations):
@@ -215,12 +214,12 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
             fov_data = _load_fovea(
                 annotations, "REFUGE-Validation400-GT/Fovea_locations.xlsx")
             label_data = {
-                fundus_fn: (x, y, bool(label)) for fundus_fn, x, y, label in
-                    zip(
-                        fov_data["ImgName"],
-                        fov_data["Fovea_X"],
-                        fov_data["Fovea_Y"],
-                        fov_data["Glaucoma Label"])
+                fundus_fn: (x, y, bool(label))
+                for fundus_fn, x, y, label in zip(
+                    fov_data["ImgName"],
+                    fov_data["Fovea_X"],
+                    fov_data["Fovea_Y"],
+                    fov_data["Glaucoma Label"])
             }
 
             with tf.io.gfile.GFile(fundi, "rb") as fundi:
@@ -253,7 +252,6 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                         "macular_center": xy,
                         "index": index,
                     }
-
 
     def _generate_test_examples(self, fundi):
         def get_seg(image_resolution):

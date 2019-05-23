@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import numpy as np
 import tensorflow_datasets.public_api as tfds
 import tensorflow as tf
 from ml_glaucoma.tfds_builders import transformer
@@ -53,8 +54,8 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
         Issue raised at https://github.com/tensorflow/datasets/issues/587
         """
         from tensorflow_datasets.core import download
-        download_dir = download_dir or os.path.join(self._data_dir_root,
-                                                      "downloads")
+        download_dir = download_dir or os.path.join(
+            self._data_dir_root, "downloads")
         extract_dir = (download_config.extract_dir or
                        os.path.join(download_dir, "extracted"))
         manual_dir = (download_config.manual_dir or
@@ -113,13 +114,13 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
 
     def _generate_examples(self, folder):
         for dirname, label in (('no_glaucoma', False), ('glaucoma', True)):
-            subdir = os.path.join(folder, subdir)
+            subdir = os.path.join(folder, dirname)
             for filename in os.listdir(subdir):
                 if not filename.endswith('.jpg'):
                     raise IOError('All files in directory must be `.jpg`')
                 path = os.path.join(subdir, filename)
                 with tf.io.gfile.GFile(path, "rb") as fp:
-                    fundus = _load_image(path)
+                    fundus = _load_image(fp)
                 transformer = self.builder_config.transformer(fundus.shape[:2])
                 if transformer is not None:
                     fundus = transformer.transform_image(

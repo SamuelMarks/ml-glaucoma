@@ -128,13 +128,11 @@ Training/validation scripts are provided in `bin` and each call a function defin
 cd ml-glaucoma
 python bin/__main__.py vis --dataset=refuge
 python bin/__main__.py train \
-  --model_file 'model_configs/dc.gin' \  # uncompiled model config
-  --model_param \                        # custom CL model modifications
-    'dc0.kernel_regularizer=@tf.keras.regularizers.l2()' \
-    'tf.keras.reguarlizers.l2.l = 1e-2' \
-  --model_dir=/tmp/ml_glaucoma/dc0-reg \ # location of saved weights/logs
-  -m BinaryAccuracy AUC \                # metrics
-  -pt 0.1 0.2 0.5 -rt 0.1 0.2 0.5 \      # precision/recall thresholds
+  --model_file 'model_configs/dc.gin'  \
+  --model_param 'import ml_glaucoma.gin_keras' 'dc0.kernel_regularizer=@tf.keras.regularizers.l2()' 'tf.keras.regularizers.l2.l = 1e-2' \
+  --model_dir /tmp/ml_glaucoma/dc0-reg \
+  -m BinaryAccuracy AUC \
+  -pt 0.1 0.2 0.5 -rt 0.1 0.2 0.5 \
   --use_inverse_freq_weights
 # ...
 tensorboard --logdir=/tmp/ml_glaucoma
@@ -144,6 +142,12 @@ tensorboard --logdir=/tmp/ml_glaucoma
 
 The main `Problem` implementation is backed by [tensorflow_datasets](https://github.com/tensorflow/datasets). This should manage dataset downloads, extraction, sha256 checks, on-disk shuffling/sharding and other best practices. Consequently it takes slightly longer to process initially, but the benefits in the long run are worth it.
 
+## BMES Initialization
+
+The current implementation leverages the existing `ml_glaucoma.utils.get_data` method to separate files. This uses `tf.contrib` so requires `tf < 2.0`. It can be run using the `--bmes_init` flag in `bin/__main__.py`. This must be run prior to the standard `tfds.DatasetBuilder.download_and_prepare` which is run automatically if necessary. Once the `tfds` files have been generated, the original `get_data` directories are no longer required.
+
+If the test/train/validation split here is just a random split, this could be done more easily by creating a single `tfds` split and using `tfds.Split.subsplit` - see [this post](https://www.tensorflow.org/datasets/splits).
+
 ## Status
 
 * Automatic model saving/loading via modified `ModelCheckpoint`.
@@ -151,3 +155,4 @@ The main `Problem` implementation is backed by [tensorflow_datasets](https://git
 * Loss re-weighting according to inverse class frequency (`TfdsProblem.use_inverse_freq_weights`).
 * Only `dc0` model verified to work. `dc1`, `unet` and `tf.keras.applications` implemented but untested.
 * Only `refuge` dataset implemented, and only tested the classification task.
+* BMES dataset: currently requires 2-stage preparation: `bmes_init` which is based on `ml_glaucoma.utils.get_data` and the standard `tfds.DatasetBuilder.download_and_prepare`. The first stage will only be run if `--bmes_init` is used in `__main__.py`.
