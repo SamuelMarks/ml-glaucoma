@@ -11,7 +11,7 @@ from __future__ import division
 from __future__ import print_function
 
 try:
-import os
+    import os
     import tensorflow_datasets as tfds
     tfds.core.download.checksums._CHECKSUM_DIRS.append(os.path.realpath(
         os.path.join(os.path.dirname(__file__), 'url_checksums')))
