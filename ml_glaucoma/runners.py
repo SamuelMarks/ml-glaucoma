@@ -91,7 +91,6 @@ def train(
     common_callbacks, initial_epoch = cb.get_callbacks(
         model,
         batch_size=batch_size,
-        callbacks=callbacks,
         checkpoint_freq=checkpoint_freq,
         summary_freq=summary_freq,
         model_dir=model_dir,
