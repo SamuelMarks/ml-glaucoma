@@ -96,19 +96,15 @@ class ConfigurableBuilder(Configurable):
             self, dataset, data_dir, download_dir, extract_dir, manual_dir,
             download_mode, resolution, gray_on_disk, **kwargs):
         import tensorflow_datasets as tfds
-        config_kwargs = dict(rgb=not gray_on_disk, resolution=resolution)
         if dataset == 'bmes':
-            from ml_glaucoma.problems import bmes
-            builder = bmes.Bmes(
-                bmes.BmesConfig(**config_kwargs),
-                data_dir=data_dir)
+            from ml_glaucoma.tfds_builder import bmes
+            builder_factory = refuge.get_bmes_builder
         elif dataset == 'refuge':
-            from ml_glaucoma.problems import refuge
-            builder = refuge.Refuge(
-                refuge.RefugeConfig(**config_kwargs),
-                data_dir=data_dir)
-        else:
-            raise NotImplementedError
+            from ml_glaucoma.tfds_builders import refuge
+            builder_factory = refuge.get_refuge_builder
+
+        builder = builder_factory(
+            resolution=resolution, rgb=not gray_on_disk, data_dir=data_dir)
 
         p.download_and_prepare(
             builder=builder,
@@ -172,9 +168,6 @@ class ConfigurableProblem(Configurable):
             precision_thresholds, recall_thresholds,
             shuffle_buffer, use_inverse_freq_weights,
             **kwargs):
-        # from ml_glaucoma.metrics import BinaryPrecision
-        # from ml_glaucoma.metrics import BinaryRecall
-        # from ml_glaucoma.metrics import BinaryAdapter
 
         metrics = [
             tf.keras.metrics.deserialize(dict(class_name=m, config={}))

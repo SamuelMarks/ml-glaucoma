@@ -2,25 +2,27 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import tensorflow_datasets.public_api as tfds
 import tensorflow as tf
 from ml_glaucoma.tfds_builders import transformer
 
 
-def BmesConfig(resolution=None):
+def BmesConfig(resolution=None, rgb=True):
     return transformer.ImageTransformerConfig(
-        description="TODO", resolution=resolution)
+        description="TODO", resolution=resolution, rgb=rgb)
 
 
 def _load_image(image_fp):
     return np.array(tfds.core.lazy_imports.PIL_Image.open(image_fp))
 
 
-base_config = BmesConfig(None)
+base_rgb = BmesConfig(rgb=True)
+base_gray = BmesConfig(rgb=False)
 
 
 class Bmes(tfds.core.GeneratorBasedBuilder):
-    BUILDER_CONFIGS = [base_config]
+    BUILDER_CONFIGS = [base_rgb, base_gray]
 
     def _info(self):
         resolution = self.builder_config.resolution
@@ -41,11 +43,46 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
             supervised_keys=("fundus", "label")
         )
 
+    def _make_download_manager(self, download_dir, download_config):
+        """
+        We override the base _make_download_manager to adjust manual_dir.
+
+        The default behaviour is to adjust the input download_config's
+        manual_dir by appending the builder's name. We remove appending.
+
+        Issue raised at https://github.com/tensorflow/datasets/issues/587
+        """
+        from tensorflow_datasets.core import download
+        download_dir = download_dir or os.path.join(self._data_dir_root,
+                                                      "downloads")
+        extract_dir = (download_config.extract_dir or
+                       os.path.join(download_dir, "extracted"))
+        manual_dir = (download_config.manual_dir or
+                      os.path.join(download_dir, "manual"))
+
+        # if test below is the only difference from original
+        if download_config.manual_dir is None:
+            manual_dir = os.path.join(manual_dir, self.name)
+
+        force_download = (
+            download_config.download_mode ==
+            download.GenerateMode.FORCE_REDOWNLOAD)
+        return download.DownloadManager(
+            dataset_name=self.name,
+            download_dir=download_dir,
+            extract_dir=extract_dir,
+            manual_dir=manual_dir,
+            force_download=force_download,
+            force_extraction=force_download,
+            register_checksums=download_config.register_checksums,
+        )
+
     def _split_generators(self, dl_manager):
         generators = []
         manual_dir = dl_manager.manual_dir
+        subdirs = {'validation': 'valid'}
         for split in ('train', 'validation', 'test'):
-            folder = os.path.join(manual_dir, split)
+            folder = os.path.join(manual_dir, subdirs.get(split, split))
             if not os.path.isdir(folder):
                 raise IOError(
                     'No manually downloaded data found at %s' % folder)
@@ -60,7 +97,7 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
             # - train
             #   - no_glaucoma
             #   - ...
-            # - validation
+            # - valid
             #   - no_glaucoma
             #   - ...
             num_examples = sum(
@@ -92,3 +129,11 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
                     label=label,
                     filename=filename,
                 )
+
+
+def get_bmes_builder(resolution=(256, 256), rgb=True, data_dir=None):
+    if resolution is None:
+        config = base_rgb if rgb else base_gray
+    else:
+        config = BmesConfig(resolution, rgb)
+    return Bmes(config=config, data_dir=data_dir)

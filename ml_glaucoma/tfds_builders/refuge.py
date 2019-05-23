@@ -276,3 +276,11 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                     "macular_center": xy,
                     "index": index,
                 }
+
+
+def get_refuge_builder(resolution=(256, 256), rgb=True, data_dir=None):
+    if resolution is None:
+        config = base_rgb if rgb else base_gray
+    else:
+        config = RefugeConfig(resolution, rgb)
+    return Refuge(config=config, data_dir=data_dir)

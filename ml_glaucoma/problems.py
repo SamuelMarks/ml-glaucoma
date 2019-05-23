@@ -71,8 +71,7 @@ class Problem(object):
 
 def download_and_prepare(builder, download_config=None, download_dir=None):
     if download_config is None:
-        download_config = DownloadConfig()
-    download_config = download_config
+        download_config = tfds.core.download.DownloadConfig()
     builder.download_and_prepare(
         download_dir=download_dir, download_config=download_config)
 
