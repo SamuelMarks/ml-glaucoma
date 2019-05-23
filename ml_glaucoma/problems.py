@@ -155,7 +155,7 @@ class BaseProblem(Problem):
     def metrics(self):
         return list(self._metrics)
 
-    @abc.abstract_method
+    @abc.abstractmethod
     def _get_base_dataset(self, split):
         raise NotImplementedError
 
