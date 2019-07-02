@@ -72,20 +72,19 @@ class Transformer(object):
         return xy
 
 
-
 class ImageTransformerConfig(tfds.core.BuilderConfig):
     def __init__(
-            self, description, name=None, resolution=None, rgb=True,
-            version=tfds.core.Version("0.0.1")):
+        self, description, name=None, resolution=None, rgb=True,
+        version=tfds.core.Version("0.0.1")):
         color_suffix = 'rgb' if rgb else 'gray'
         if resolution is None:
             self.resolution = None
             if name is None:
-                name = 'raw-%s' % color_suffix
-            desc_suffix = ' (%s)' % color_suffix
+                name = 'raw-{:s}'.format(color_suffix)
+            desc_suffix = ' ({:s})'.format(color_suffix)
         else:
             if isinstance(resolution, int):
-                resolution = (resolution,)*2
+                resolution = (resolution,) * 2
             else:
                 resolution = tuple(resolution)
             if not all(isinstance(r, int) for r in resolution):
@@ -94,15 +93,15 @@ class ImageTransformerConfig(tfds.core.BuilderConfig):
                     % str(resolution))
             self.resolution = resolution
             if name is None:
-                name = 'r%d-%d-%s' % (resolution + (color_suffix,))
-            desc_suffix = " (%d x %d, %s)" % (resolution + (color_suffix,))
+                name = 'r{:d}-{:d}-{:s}'.format(resolution[0], resolution[1], color_suffix)
+            desc_suffix = " ({:d} x {:d}, {:s})".format(resolution[0], resolution[1], color_suffix)
         self.rgb = rgb
 
         super(ImageTransformerConfig, self).__init__(
             name=name,
             version=version,
-            description="%s%s" % (description, desc_suffix))
-
+            description="{:s}{:s}".format(description, desc_suffix)
+        )
 
     def transformer(self, image_resolution):
         if self.resolution is None or image_resolution == self.resolution:

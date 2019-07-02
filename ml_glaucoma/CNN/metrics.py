@@ -83,7 +83,7 @@ class SensitivitySpecificityCallback(Callback):
 
 
 # from: https://stackoverflow.com/a/48720556
-def reweight(y_true, y_pred, tp_weight=0.2, tn_weight=0.2, fp_weight=1.2, fn_weight=1.2):
+def reweigh(y_true, y_pred, tp_weight=0.2, tn_weight=0.2, fp_weight=1.2, fn_weight=1.2):
     # Get predictions
     y_pred_classes = K.greater_equal(y_pred, 0.5)
     y_pred_classes_float = K.cast(y_pred_classes, K.floatx())
@@ -113,28 +113,28 @@ def reweight(y_true, y_pred, tp_weight=0.2, tn_weight=0.2, fp_weight=1.2, fn_wei
 def f_score_obj(y_true, y_pred):
     y_true = K.eval(y_true)
     y_pred = K.eval(y_pred)
-    precision, recall, f_score, support = precision_recall_fscore_support(y_true, y_pred)
+    _precision, _recall, f_score, _support = precision_recall_fscore_support(y_true, y_pred)
     return K.variable(1. - f_score[1])
 
 
 def precision(y_true, y_pred):
-    # Calculates the precision
+    """ Calculates the precision """
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
     predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
-    precision = true_positives / (predicted_positives + K.epsilon())
-    return precision
+    _precision = true_positives / (predicted_positives + K.epsilon())
+    return _precision
 
 
 def recall(y_true, y_pred):
-    # Calculates the recall
+    """ Calculates the recall """
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
     possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-    recall = true_positives / (possible_positives + K.epsilon())
-    return recall
+    _recall = true_positives / (possible_positives + K.epsilon())
+    return _recall
 
 
 def fmeasure(y_true, y_pred):
-    # Calculates the f-measure, the harmonic mean of precision and recall.
+    """ Calculates the f-measure, the harmonic mean of precision and recall. """
     return fbeta_score(y_true, y_pred, beta=1)
 
 
@@ -195,10 +195,10 @@ def sensitivity(y_true, y_pred):
     ), axis=1), K.floatx())
 
 
-def specificity_at_sensitivity(sensitivity, **kwargs):
+def specificity_at_sensitivity(sensitivity_value, **kwargs):
     def metric(labels, predictions):
         # any tensorflow metric
-        value, update_op = tf.metrics.specificity_at_sensitivity(labels, predictions, sensitivity, **kwargs)
+        value, update_op = tf.metrics.specificity_at_sensitivity(labels, predictions, sensitivity_value, **kwargs)
 
         # find all variables created for this metric
         metric_vars = (i for i in tf.local_variables() if 'specificity_at_sensitivity' in i.name.split('/')[2])
@@ -216,7 +216,7 @@ def specificity_at_sensitivity(sensitivity, **kwargs):
     return metric
 
 
-####### https://github.com/keras-team/keras/blob/e583c566f0fd9bf5d39a8b081a872f7d32e02480/keras/metrics.py
+# https://github.com/keras-team/keras/blob/e583c566f0fd9bf5d39a8b081a872f7d32e02480/keras/metrics.py
 
 class Recall(Layer):
     """Compute recall over all batches.

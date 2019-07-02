@@ -121,9 +121,9 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
                 path = os.path.join(subdir, filename)
                 with tf.io.gfile.GFile(path, "rb") as fp:
                     fundus = _load_image(fp)
-                transformer = self.builder_config.transformer(fundus.shape[:2])
-                if transformer is not None:
-                    fundus = transformer.transform_image(
+                curr_transformer = self.builder_config.transformer(fundus.shape[:2])
+                if curr_transformer is not None:
+                    fundus = curr_transformer.transform_image(
                         fundus, interp=tf.image.ResizeMethod.BILINEAR)
                 yield dict(
                     fundus=fundus,

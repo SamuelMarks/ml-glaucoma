@@ -25,8 +25,7 @@ from sklearn.metrics import confusion_matrix
 from ml_glaucoma import get_logger, __version__
 from ml_glaucoma.CNN.helpers import output_sensitivity_specificity
 from ml_glaucoma.CNN.loss import weighted_categorical_crossentropy
-from ml_glaucoma.CNN.metrics import BinaryTruePositives, SensitivitySpecificityCallback, Recall, Precision, \
-    binary_segmentation_recall
+from ml_glaucoma.CNN.metrics import BinaryTruePositives, Recall, Precision, binary_segmentation_recall
 from ml_glaucoma.CNN.test0 import test0
 from ml_glaucoma.CNN.directories2tfrecords import convert_to_tfrecord
 from ml_glaucoma.utils.get_data import get_data
@@ -209,9 +208,9 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
         imap(lambda cls: imap(lambda p: path.join(directory, cls, p), listdir(path.join(directory, cls))), class_names)
     ))
 
-    tfrecord_fn = lambda partition, partition_seq: convert_to_tfrecord(
+    tfrecord_fn = lambda curr_partition, partition_seq: convert_to_tfrecord(
         dataset_name=partition_seq,
-        data_directory=path.join(tfrecords_dir, partition),
+        data_directory=path.join(tfrecords_dir, curr_partition),
         files=get_files(partition_seq),
         class_map=class_name2id,
         directories_as_labels=True, pixels=pixels
@@ -246,7 +245,7 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     test_seq = flow(directory=test_dir)  # type: keras.preprocessing.image.DirectoryIterator
 
     mk_dataset = lambda seq: tf.data.Dataset.from_generator(lambda: seq, (tf.float32, tf.float32))
-    ## type: (ImageDataGenerator) => tf.data.Dataset
+    # \type: (ImageDataGenerator) => tf.data.Dataset
 
     train_dataset = mk_dataset(train_seq)  # type: tf.data.Dataset
     valid_dataset = mk_dataset(valid_seq)  # type: tf.data.Dataset

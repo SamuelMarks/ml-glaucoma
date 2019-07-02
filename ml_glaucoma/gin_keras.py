@@ -29,15 +29,15 @@ import tensorflow as tf
 from gin import config
 
 
-def _register_callables(package, module, blacklist):
-    for k in dir(package):
-        if k not in blacklist:
-            v = getattr(package, k)
+def _register_callables(pkg, mod, excludes):
+    for k in dir(pkg):
+        if k not in excludes:
+            v = getattr(pkg, k)
             if callable(v):
-                config.external_configurable(v, name=k, module=module)
+                config.external_configurable(v, name=k, module=mod)
 
 
-blacklist = set(('serialize', 'deserialize', 'get'))
+blacklist = {'serialize', 'deserialize', 'get'}
 # These may end up moving into gin-config proper
 for package, module in (
     (tf.keras.activations, 'tf.keras.activations'),
@@ -46,9 +46,8 @@ for package, module in (
     (tf.keras.metrics, 'tf.keras.metrics'),
     (tf.keras.optimizers, 'tf.keras.optimizers'),
     (tf.keras.regularizers, 'tf.keras.regularizers'),
-      ):
+):
     _register_callables(package, module, blacklist)
-
 
 # clean up namespace
 del package, module, blacklist

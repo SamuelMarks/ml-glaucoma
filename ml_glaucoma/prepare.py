@@ -22,19 +22,19 @@ def prepare_data(preprocess_to, pixels, force_new=False):
         # returns filenames list and labels list
         labels = []
         filenames = []
-        for id in list(pos_ids) + list(neg_ids[:120]):
-            for filename in id_to_imgs[id]:
-                if id in pos_ids:
+        for curr_id in list(pos_ids) + list(neg_ids[:120]):
+            for filename in id_to_imgs[curr_id]:
+                if curr_id in pos_ids:
                     labels += [1]
                 else:
                     labels += [0]
                 filenames += [filename]
         return filenames, labels
 
-    def _create_dataset(data_obj):
-        pos_ids = data_obj.pickled_cache['oags1']
-        neg_ids = data_obj.pickled_cache['no_oags1']
-        id_to_imgs = data_obj.pickled_cache['id_to_imgs']
+    def _create_dataset(data):
+        pos_ids = data.pickled_cache['oags1']
+        neg_ids = data.pickled_cache['no_oags1']
+        id_to_imgs = data.pickled_cache['id_to_imgs']
 
         img_names, data_labels = _get_filenames(neg_ids, pos_ids, id_to_imgs)
 

@@ -17,11 +17,12 @@ import abc
 from absl import logging
 import tensorflow as tf
 import tensorflow_datasets as tfds
+from tensorflow_datasets.core.download import DownloadConfig
 
 InputSpec = tf.keras.layers.InputSpec
 
 
-def dataset_spec(dataset, has_batch_dim=False):
+def dataset_spec_to_input_spec(dataset, has_batch_dim=False):
     """Convert dataset output_shapes and output_types to `InputSpec`s."""
     if has_batch_dim:
         def f(shape, dtype):
@@ -48,7 +49,7 @@ class Problem(object):
     def examples_per_epoch(self, split=tfds.Split.TRAIN):
         raise NotImplementedError
 
-    @abc.abstractproperty
+    @abc.abstractmethod
     def loss(self):
         raise NotImplementedError
 
@@ -66,7 +67,7 @@ class Problem(object):
     # Base implementations: these are possibly inefficient
     def dataset_spec(self):
         """Structure of `tf.keras.layers.InputSpec` corresponding to output."""
-        return dataset_spec(self.get_dataset('train'))
+        return dataset_spec_to_input_spec(self.get_dataset('train'))
 
     def input_spec(self):
         """First output (index 0) of `dataset_spec`."""
@@ -85,16 +86,11 @@ class BaseProblem(Problem):
         * _get_base_dataset
         * examples_per_epoch
     """
-    def __init__(
-            self,
-            loss,
-            metrics,
-            shuffle_buffer=1024,
-            map_fn=None,
-            use_inverse_freq_weights=False,
-            class_counts=None,
-            output_spec=None,
-            dataset_spec=None):
+
+    def __init__(self, loss, metrics, shuffle_buffer=1024,
+                 map_fn=None, use_inverse_freq_weights=False,
+                 class_counts=None, output_spec=None,
+                 dataset_spec=None):
         """
         Base implementation of `Problem`.
 
@@ -144,7 +140,7 @@ class BaseProblem(Problem):
 
     def dataset_spec(self):
         if self._dataset_spec is None:
-            self._dataset_spec = dataset_spec(self.get_dataset('train'))
+            self._dataset_spec = dataset_spec_to_input_spec(self.get_dataset('train'))
         return self._dataset_spec
 
     @property
@@ -165,8 +161,8 @@ class BaseProblem(Problem):
             dataset, split, batch_size, repeat=repeat, prefetch=prefetch)
 
     def data_pipeline(
-            self, dataset, split, batch_size, repeat, shuffle=None,
-            prefetch=True):
+        self, dataset, split, batch_size, repeat, shuffle=None,
+        prefetch=True):
         map_fn = self._map_fn
         if isinstance(map_fn, dict):
             map_fn = map_fn[split]
@@ -200,17 +196,17 @@ class BaseProblem(Problem):
                 self._use_inverse_freq_weights = u_temp
                 logging.info('Computing class counts...')
 
-                def reduce_func(counts, args):
-                    false_counts, true_counts = counts
+                def reduce_func(_counts, args):
+                    false_counts, true_counts = _counts
                     label = args[1]
                     false_counts, true_counts = tf.cond(
                         label,
                         lambda: (false_counts, true_counts + 1),
                         lambda: (false_counts + 1, true_counts))
-                    return (false_counts, true_counts)
+                    return false_counts, true_counts
 
                 counts = ds.reduce(
-                    (tf.constant(0, dtype=tf.int32),)*2, reduce_func)
+                    (tf.constant(0, dtype=tf.int32),) * 2, reduce_func)
                 with tf.compat.v1.Session() as sess:
                     counts = sess.run(counts)
                 self._class_counts = counts
@@ -220,7 +216,7 @@ class BaseProblem(Problem):
 
 def download_and_prepare(builder, download_config=None, download_dir=None):
     if download_config is None:
-        download_config = tfds.core.download.DownloadConfig()
+        download_config = DownloadConfig()
     builder.download_and_prepare(
         download_dir=download_dir, download_config=download_config)
 
@@ -232,20 +228,19 @@ def _examples_per_epoch(builder, split):
 class TfdsProblem(BaseProblem):
     """`BaseProblem` implementation based on `tfds.core.DatasetBuilder`s."""
 
-    def __init__(
-            self, builder, loss, metrics=None, as_supervised=True,
-            output_spec=None, map_fn=None, shuffle_buffer=1024,
-            use_inverse_freq_weights=False,
-            class_counts=None):
+    def __init__(self, builder, loss, metrics=None, as_supervised=True,
+                 output_spec=None, map_fn=None, shuffle_buffer=1024,
+                 use_inverse_freq_weights=False,
+                 class_counts=None):
         """
         Args:
             builder: `tfds.core.DatasetBuilder` instance.
             rest: see `ml_glaucoma.problems.BaseProblem`
         """
         if map_fn is not None:
-            assert(callable(map_fn) or
-                   isinstance(map_fn, dict) and
-                   all(v is None or callable(v) for v in map_fn.values()))
+            assert (callable(map_fn) or
+                    isinstance(map_fn, dict) and
+                    all(v is None or callable(v) for v in map_fn.values()))
         self._builder = builder
         self._output_spec = output_spec
         self._as_supervised = as_supervised
@@ -314,7 +309,7 @@ class TfdsProblem(BaseProblem):
             raise ValueError("Unrecognized split '%s'" % split)
         ```
         """
-        if (split == 'validation' and split not in self.builder.info.splits):
+        if split == 'validation' and split not in self.builder.info.splits:
             # hacky fallback
             split = 'test'
         return split
@@ -379,7 +374,7 @@ class TfdsMultiProblem(BaseProblem):
         return self.data_pipeline(
             dataset, split, batch_size, repeat=repeat, prefetch=prefetch,
             shuffle=False  # shuffling occurs in train each sampled dataset
-            )
+        )
 
     def examples_per_epoch(self, split=tfds.Split.TRAIN):
         return sum(_examples_per_epoch(b, split) for b in self._builders)
@@ -393,23 +388,23 @@ class TfdsMultiProblem(BaseProblem):
 
 
 def preprocess_example(
-        image, labels,
-        use_rgb=True,  # grayscale if False
-        maybe_horizontal_flip=False,
-        maybe_vertical_flip=False,
-        per_image_standardization=True,
-        labels_are_images=False):
+    image, labels,
+    use_rgb=True,  # grayscale if False
+    maybe_horizontal_flip=False,
+    maybe_vertical_flip=False,
+    per_image_standardization=True,
+    labels_are_images=False):
     """Preprocessing function for optional flipping/standardization."""
 
-    def _maybe_apply(image, labels, fn, apply_to_labels, prob=0.5):
+    def _maybe_apply(img, _labels, fn, apply_to_labels, prob=0.5):
         apply = tf.random.uniform((), dtype=tf.float32) < prob
         if apply_to_labels:
             return tf.cond(
                 apply,
-                lambda: (fn(image), fn(labels)),
-                lambda: (image, labels))
+                lambda: (fn(img), fn(_labels)),
+                lambda: (img, _labels))
         else:
-            return tf.cond(apply, lambda: fn(image), lambda: image), labels
+            return tf.cond(apply, lambda: fn(img), lambda: img), _labels
 
     if maybe_horizontal_flip:
         image, labels = _maybe_apply(

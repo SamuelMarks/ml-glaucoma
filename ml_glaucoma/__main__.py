@@ -4,7 +4,7 @@ from sys import modules, stdin
 from ml_glaucoma import __version__
 from ml_glaucoma.CNN import bmes_cnn
 from ml_glaucoma.download import download
-from ml_glaucoma.parser import parser
+from ml_glaucoma.parser import parser as ml_glaucoma_parser
 
 # Original options
 '''
@@ -65,7 +65,6 @@ def _build_parser():
     cnn_parser.add_argument('--lr', '--learning-rate', help='Learning rate of optimiser', type=float, dest='lr')
     cnn_parser.add_argument('--max-imgs', type=int)
 
-
     post_parser = subparsers.add_parser('parser',
                                         help='Show metrics from output. Default: per epoch sensitivity & specificity.')
     post_parser.add_argument('infile', nargs='?', type=FileType('r'), default=stdin,
@@ -89,5 +88,5 @@ if __name__ == '__main__':
     ({  # 'data': prepare_data,
         'download': download,
         'cnn': bmes_cnn.run,
-        'parser': parser
+        'parser': ml_glaucoma_parser
     }[command])(**kwargs)

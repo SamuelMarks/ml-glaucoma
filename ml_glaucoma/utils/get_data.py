@@ -105,10 +105,10 @@ def get_image_size(file_path):
             f.read(2)
             b = f.read(1)
             try:
-                while (b and ord(b) != 0xDA):
+                while b and ord(b) != 0xDA:
                     while ord(b) != 0xFF: b = f.read(1)
                     while ord(b) == 0xFF: b = f.read(1)
-                    if ord(b) >= 0xC0 and ord(b) <= 0xC3:
+                    if 0xC0 <= ord(b) <= 0xC3:
                         f.read(3)
                         h, w = struct.unpack('>HH', f.read(4))
                         break
@@ -299,11 +299,13 @@ def _vanilla_stats(skip_save=True):
     if 'loags_id2fname' not in pickled_cache:
         id2fname = lambda dataset, eye: (lambda l: dict(izip(l[::2], l[1::2])))(tuple(chain.from_iterable(
             imap(lambda idnum_group: (idnum_group[0], tuple(imap(itemgetter(1), idnum_group[1]))),
-                 groupby(chain.from_iterable(
-                imap(lambda ideyefnames: tuple(imap(lambda ideyefname: (ideyefname.id, ideyefname.fname), ideyefnames)),
-                     imap(lambda ideyefnames: ifilter(lambda ideyefname: ideyefname.eye == eye, ideyefnames),
-                          imap(lambda idnum: id2ideyefname[idnum], dataset)))), key=itemgetter(0)
-            )))))
+                 groupby(
+                     chain.from_iterable(
+                         imap(lambda ideyefnames: tuple(
+                             imap(lambda ideyefname: (ideyefname.id, ideyefname.fname), ideyefnames)),
+                              imap(lambda ideyefnames: ifilter(lambda ideyefname: ideyefname.eye == eye, ideyefnames),
+                                   imap(lambda idnum: id2ideyefname[idnum], dataset)))), key=itemgetter(0)
+                 )))))
 
         pickled_cache['loags_id2fname'] = loags_id2fname = id2fname(dataset=loag1, eye='L')
         pickled_cache['roags_id2fname'] = roags_id2fname = id2fname(dataset=roag1, eye='R')
@@ -453,14 +455,14 @@ def link_distribute_dataset(train_ratio, test_ratio, train_positive_ratio, test_
 
     test_glaucoma_fnames = idx_to_tuple(glaucoma_fnames,
                                         rand_glaucoma[train_glaucoma_n:train_glaucoma_n + test_glaucoma_n])
-    test_no_glaucoma_fnames = idx_to_tuple(bmes1_no_glaucoma_fnames,
-                                           rand_no_glaucoma[
-                                           train_no_glaucoma_n:train_no_glaucoma_n + test_no_glaucoma_n])
+    test_no_glaucoma_fnames = idx_to_tuple(
+        bmes1_no_glaucoma_fnames,
+        rand_no_glaucoma[train_no_glaucoma_n:train_no_glaucoma_n + test_no_glaucoma_n]
+    )
 
     if max_imgs:
         test_glaucoma_fnames = test_glaucoma_fnames[:max_imgs]
         test_no_glaucoma_fnames = test_no_glaucoma_fnames[:max_imgs]
-
 
     make_symlinks(path.join(test_dir, 'glaucoma'), filenames=test_glaucoma_fnames, clean_dir=True)
     make_symlinks(path.join(test_dir, 'no_glaucoma'), filenames=test_no_glaucoma_fnames, clean_dir=True)
@@ -493,19 +495,19 @@ def get_data(base_dir, split_dir,
     :keyword split_dir: Directory to place parsed files. NOTE: These are symbolically linked from the base dir.
     :type split_dir: ``str``
 
-    :keyword train_ratio: Represent the proportion of the dataset to include in the test split.
+    :keyword train_ratio: Proportion of the dataset to include in the test split.
     By default, the value is set to 0.8. Everything leftover goes into validation.
     :type train_ratio: ``float``
 
-    :keyword test_ratio: Represent the proportion of the dataset to include in the train split.
+    :keyword test_ratio: Proportion of the dataset to include in the train split.
     By default, the value is set to 0.1. Everything leftover goes into validation.
     :type test_ratio: ``float``
 
-    :keyword train_positive_ratio: Represent the proportion of the glaucoma-present dataset to include in the train split.
+    :keyword train_positive_ratio: Proportion of the glaucoma-present dataset to include in the train split.
     By default, the value is set to 0.5. Everything leftover goes into validation.
     :type train_positive_ratio: ``float``
 
-    :keyword test_positive_ratio: Represent the proportion of the glaucoma-present dataset to include in the test split.
+    :keyword test_positive_ratio: Proportion of the glaucoma-present dataset to include in the test split.
     By default, the value is set to 0.5. Everything leftover goes into validation.
     :type test_positive_ratio: ``float``
 
@@ -514,6 +516,9 @@ def get_data(base_dir, split_dir,
 
     :keyword cache_fname: Cache filename. Defaults to $CACHE_FNAME
     :type cache_fname: ``str``
+
+    :keyword max_imgs: Maximum number of images to process; `None` will process all images
+    :type max_imgs: ``int``
 
     :keyword invalidate: Invalidate cache first
     :type invalidate: ``bool``
@@ -587,8 +592,8 @@ def old(no_oags, oags, skip_save):
     cache.save(pickled_cache)
 
     tbl = pickled_cache['tbl']
-    sample = random_sample(tbl, datasets.train)
-    pp(sample)
+    curr_sample = random_sample(tbl, datasets.train)
+    pp(curr_sample)
     # print 'datasets.train =', datasets.train
     # print 'tbl =', tbl
     # oags1 = pickled_cache['oags1']

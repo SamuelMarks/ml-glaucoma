@@ -5,8 +5,8 @@ import tensorflow as tf
 
 
 def features_to_probs(
-        x, output_spec, activation='default', layer_fn=tf.keras.layers.Dense,
-        **layer_kwargs):
+    x, output_spec, activation='default', layer_fn=tf.keras.layers.Dense,
+    **layer_kwargs):
     if output_spec.shape == ():
         num_classes = 1
     else:

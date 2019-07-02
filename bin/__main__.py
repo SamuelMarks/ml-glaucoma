@@ -29,7 +29,7 @@ class Configurable(object):
     def __init__(self, **children):
         self._children = children
         for v in children.values():
-            assert(v is None or isinstance(v, Configurable))
+            assert (v is None or isinstance(v, Configurable))
 
     def fill(self, parser):
         for child in self._children.values():
@@ -106,9 +106,8 @@ class ConfigurableBuilders(Configurable):
             '--bmes_parent_dir', help='parent directory of bmes data')
 
     def build_self(
-            self, dataset, data_dir, download_dir, extract_dir, manual_dir,
-            download_mode, resolution, gray_on_disk, bmes_init,
-            bmes_parent_dir, **kwargs):
+        self, dataset, data_dir, download_dir, extract_dir, manual_dir,
+        download_mode, resolution, gray_on_disk, bmes_init, bmes_parent_dir, **kwargs):
         import tensorflow_datasets as tfds
         builders = []
         for ds in set(dataset):  # remove duplicates
@@ -129,6 +128,8 @@ class ConfigurableBuilders(Configurable):
             elif ds == 'refuge':
                 from ml_glaucoma.tfds_builders import refuge
                 builder_factory = refuge.get_refuge_builder
+            else:
+                raise NotImplementedError
 
             builder = builder_factory(
                 resolution=resolution,
@@ -157,8 +158,7 @@ class ConfigurableMapFn(Configurable):
         parser.add_argument(
             '--gray', help='use grayscale', action='store_true')
 
-    def build_self(
-            self, gray, maybe_horizontal_flip, maybe_vertical_flip, **kwargs):
+    def build_self(self, gray, maybe_horizontal_flip, maybe_vertical_flip, **kwargs):
         val_map_fn = functools.partial(
             p.preprocess_example,
             use_rgb=not gray,
@@ -206,12 +206,10 @@ class ConfigurableProblem(Configurable):
             '--use_inverse_freq_weights', action='store_true',
             help='weight loss according to inverse class frequency')
 
-    def build_self(
-            self, builders, map_fn, loss, metrics,
-            precision_thresholds, recall_thresholds,
-            shuffle_buffer, use_inverse_freq_weights,
-            **kwargs):
-
+    def build_self(self, builders, map_fn, loss, metrics,
+                   precision_thresholds, recall_thresholds,
+                   shuffle_buffer, use_inverse_freq_weights,
+                   **kwargs):
         metrics = [
             tf.keras.metrics.deserialize(dict(class_name=m, config={}))
             for m in metrics]
@@ -219,13 +217,13 @@ class ConfigurableProblem(Configurable):
         metrics.extend(
             [tf.keras.metrics.Precision(
                 thresholds=[t],
-                name='precision%d' % int((100*t)))
-             for t in precision_thresholds])
+                name='precision%d' % int((100 * t)))
+                for t in precision_thresholds])
         metrics.extend(
             [tf.keras.metrics.Recall(
                 thresholds=[r],
-                name='recall%d' % (int(100*r)))
-             for r in recall_thresholds])
+                name='recall%d' % (int(100 * r)))
+                for r in recall_thresholds])
 
         kwargs = dict(
             loss=tf.keras.losses.deserialize(dict(class_name=loss, config={})),
@@ -247,14 +245,15 @@ class ConfigurableModelFn(Configurable):
         parser.add_argument(
             '--model_file', nargs='*',
             help='gin files for model definition. Should define `model_fn` '
-            'macro either here or in --gin_param')
+                 'macro either here or in --gin_param')
         parser.add_argument(
             '--model_param', nargs='*',
             help='gin_params for model definition. Should define `model_fn` '
-            'macro either here or in --gin_file')
+                 'macro either here or in --gin_file')
 
     def build_self(self, model_file, model_param, **kwargs):
         import gin
+
         gin.parse_config_files_and_bindings(model_file, model_param)
         return gin.query_parameter('%model_fn').configurable.fn_or_cls
 
@@ -273,6 +272,9 @@ class ConfigurableOptimizer(Configurable):
 
     def build(self, optimizer, learning_rate, **kwargs):
         return getattr(tf.keras.optimizers, optimizer)(lr=learning_rate)
+
+    def build_self(self, learning_rate, exp_lr_decay, **kwargs):
+        raise NotImplementedError
 
 
 class ConfigurableExponentialDecayLrSchedule(Configurable):
@@ -325,10 +327,9 @@ class ConfigurableTrain(Configurable):
             '--write_images', action='store_true',
             help='whether or not to write images to tensorboard')
 
-    def build_self(
-            self, problem, batch_size, epochs, model_fn, optimizer, model_dir,
-            checkpoint_freq, summary_freq, lr_schedule, tb_log_dir,
-            write_images, **kwargs):
+    def build_self(self, problem, batch_size, epochs, model_fn, optimizer, model_dir,
+                   checkpoint_freq, summary_freq, lr_schedule, tb_log_dir,
+                   write_images, **kwargs):
         return runners.train(
             problem=problem,
             batch_size=batch_size,
@@ -358,9 +359,8 @@ class ConfigurableEvaluate(Configurable):
             help='model directory in which to save weights and tensorboard '
                  'summaries')
 
-    def build_self(
-            self, problem, batch_size, model_fn, optimizer, model_dir,
-            **kwargs):
+    def build_self(self, problem, batch_size, model_fn, optimizer, model_dir,
+                   **kwargs):
         from ml_glaucoma import runners
         return runners.evaluate(
             problem=problem,

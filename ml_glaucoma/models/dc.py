@@ -5,17 +5,17 @@ from __future__ import print_function
 import gin
 import tensorflow as tf
 from ml_glaucoma.models import util
+
 Conv2D = tf.keras.layers.Conv2D
 Dense = tf.keras.layers.Dense
 Dropout = tf.keras.layers.Dropout
 MaxPooling2D = tf.keras.layers.MaxPooling2D
 
-
 _poolers = {
-        'avg': tf.keras.layers.GlobalAveragePooling2D,
-        'max': tf.keras.layers.GlobalMaxPooling2D,
-        'flatten': tf.keras.layers.Flatten,
-    }
+    'avg': tf.keras.layers.GlobalAveragePooling2D,
+    'max': tf.keras.layers.GlobalMaxPooling2D,
+    'flatten': tf.keras.layers.Flatten,
+}
 
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])

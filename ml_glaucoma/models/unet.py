@@ -13,9 +13,9 @@ UpSampling2D = tf.keras.layers.UpSampling2D
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])
 def unet(
-        inputs, output_spec, training=None, kernel_regularizer=None,
-        dropout_rate=0.3, hidden_activation='relu',
-        final_activation='default'):
+    inputs, output_spec, training=None, kernel_regularizer=None,
+    dropout_rate=0.3, hidden_activation='relu',
+    final_activation='default'):
     if len(output_spec.shape) < 3:
         raise ValueError(
             'unet provides image outputs, but output_spec has shape %s'

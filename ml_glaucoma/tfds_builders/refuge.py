@@ -138,9 +138,9 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
 
         return [
             tfds.core.SplitGenerator(
-              name=split,
-              num_shards=4,
-              gen_kwargs=dict(split=split, **download_dirs[split]))
+                name=split,
+                num_shards=4,
+                gen_kwargs=dict(split=split, **download_dirs[split]))
             for split in ("train", "validation", "test")]
 
     def _generate_examples(self, split, **kwargs):
@@ -164,20 +164,20 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
             with tf.io.gfile.GFile(fundi, "rb") as fundi:
                 fundi = zipfile.ZipFile(fundi)
 
-                def get_example(label, fundus_path, segmentation_path):
-                    fundus_fn = fundus_path.split("/")[-1]
+                def get_example(label, _fundus_path, segmentation_path):
+                    fundus_fn = _fundus_path.split("/")[-1]
                     xy = np.array(xys[fundus_fn], dtype=np.float32)
-                    fundus = _load_image(fundi.open(fundus_path))
+                    fundus = _load_image(fundi.open(_fundus_path))
                     seg = _load_image(annotations.open(segmentation_path))
                     seg = _seg_to_label(seg)
                     image_res = fundus.shape[:2]
-                    assert(seg.shape[:2] == image_res)
-                    transformer = self.builder_config.transformer(image_res)
-                    if transformer is not None:
-                        xy = transformer.transform_point(xy)
-                        fundus = transformer.transform_image(
+                    assert (seg.shape[:2] == image_res)
+                    _transformer = self.builder_config.transformer(image_res)
+                    if _transformer is not None:
+                        xy = _transformer.transform_point(xy)
+                        fundus = _transformer.transform_image(
                             fundus, interp=tf.image.ResizeMethod.BILINEAR)
-                        seg = transformer.transform_image(
+                        seg = _transformer.transform_image(
                             seg, interp=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
                     return {
                         "fundus": fundus,
@@ -193,8 +193,8 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                         "Training400", "Glaucoma",
                         "g%04d.jpg" % index)
                     seg_path = os.path.join(
-                         "Annotation-Training400", "Disc_Cup_Masks",
-                         "Glaucoma", "g%04d.bmp" % index)
+                        "Annotation-Training400", "Disc_Cup_Masks",
+                        "Glaucoma", "g%04d.bmp" % index)
 
                     yield get_example(True, fundus_path, seg_path)
 
@@ -204,8 +204,8 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                         "Training400", "Non-Glaucoma",
                         "n%04d.jpg" % index)
                     seg_path = os.path.join(
-                         "Annotation-Training400", "Disc_Cup_Masks",
-                         "Non-Glaucoma", "n%04d.bmp" % index)
+                        "Annotation-Training400", "Disc_Cup_Masks",
+                        "Non-Glaucoma", "n%04d.bmp" % index)
                     yield get_example(False, fundus_path, seg_path)
 
     def _generate_validation_examples(self, fundi, annotations):
@@ -238,12 +238,12 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                     image_res = fundus.shape[:2]
                     seg = _load_image(annotations.open(seg_path))
                     seg = _seg_to_label(seg)
-                    transformer = self.builder_config.transformer(image_res)
-                    if transformer is not None:
-                        xy = transformer.transform_point(xy)
-                        fundus = transformer.transform_image(
+                    _transformer = self.builder_config.transformer(image_res)
+                    if _transformer is not None:
+                        xy = _transformer.transform_point(xy)
+                        fundus = _transformer.transform_image(
                             fundus, interp=tf.image.ResizeMethod.BILINEAR)
-                        seg = transformer.transform_image(
+                        seg = _transformer.transform_image(
                             seg, interp=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
                     yield {
                         "fundus": fundus,
@@ -256,6 +256,7 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
     def _generate_test_examples(self, fundi):
         def get_seg(image_resolution):
             return np.zeros(image_resolution + (1,), dtype=np.uint8)
+
         xy = -np.ones((2,), dtype=np.float32)
 
         with tf.io.gfile.GFile(fundi, "rb") as fundi:
@@ -263,9 +264,9 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
             for index in range(1, 401):
                 fundus = _load_image(fundi.open("Test400/T%04d.jpg" % index))
                 image_res = fundus.shape[:2]
-                transformer = self.builder_config.transformer(image_res)
-                if transformer is not None:
-                    fundus = transformer.transform_image(
+                _transformer = self.builder_config.transformer(image_res)
+                if _transformer is not None:
+                    fundus = _transformer.transform_image(
                         fundus, interp=tf.image.ResizeMethod.BILINEAR)
                 yield {
                     "fundus": fundus,

@@ -36,16 +36,17 @@ def default_model_dir(base_dir='~/ml_glaucoma_models', model_id=None):
 
 
 def train(
-        problem, batch_size, epochs, model_fn, optimizer, model_dir=None,
-        callbacks=None, verbose=True, checkpoint_freq=5,
-        summary_freq=10, lr_schedule=None,
-        tensorboard_log_dir=None, write_images=False):
+    problem, batch_size, epochs, model_fn, optimizer, model_dir=None,
+    callbacks=None, verbose=True, checkpoint_freq=5,
+    summary_freq=10, lr_schedule=None,
+    tensorboard_log_dir=None, write_images=False):
     """
     Train a model on the given problem
 
     Args:
         problem: `ml_glaucoma.problems.Problem` instance
         batch_size: int, size of each batch for training/evaluation
+        epochs: int, number of epochs
         model_fn: function mapping (inputs, output_spec) -> outputs.
         optimizer: `tf.keras.optimizers.Optimizer` instance.
         model_dir: directory in which to save models. If not provided,
@@ -122,7 +123,7 @@ def evaluate(problem, batch_size, model_fn, optimizer, model_dir=None):
     Evaluate the given model with weights saved as `model_dir`.
 
     Args:
-        problems: `ml_glaucoma.problems.Problem` instance
+        problem: `ml_glaucoma.problems.Problem` instance
         batch_size: size of each batch
         model_fn: model_fn: function mapping (inputs, output_spec) -> outputs
         optimizer: `tf.keras.optimizers.Optimizer` instance
