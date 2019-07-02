@@ -34,11 +34,17 @@ def _build_parser():
                              type=int, default=400)
     '''
 
+    ############
+    # Download #
+    ############
     download_parser = subparsers.add_parser('download', help='Download required data')
     download_parser.add_argument('-d', '--download-dir', help='Directory to store precompiled CNN nets', required=True)
     download_parser.add_argument('-f', '--force', dest='force_new', help='Force recreation of precompiled CNN nets',
                                  action='store_true')
 
+    #######
+    # CNN #
+    #######
     cnn_parser = subparsers.add_parser('cnn', help='Convolutional Neural Network runner')
     cnn_parser.add_argument('-b', '--batch-size', help='Batch size', default=128, type=int)
     cnn_parser.add_argument('-n', '--num-classes', help='Number of classes', default=2, type=int)
@@ -65,6 +71,9 @@ def _build_parser():
     cnn_parser.add_argument('--lr', '--learning-rate', help='Learning rate of optimiser', type=float, dest='lr')
     cnn_parser.add_argument('--max-imgs', type=int)
 
+    ##########
+    # Parser #
+    ##########
     post_parser = subparsers.add_parser('parser',
                                         help='Show metrics from output. Default: per epoch sensitivity & specificity.')
     post_parser.add_argument('infile', nargs='?', type=FileType('r'), default=stdin,

@@ -26,9 +26,7 @@ class RefugeTask(object):
     @classmethod
     def validate(cls, task):
         if task not in cls.all():
-            raise ValueError(
-                "Invalid task '%s': must be one of %s"
-                % (task, str(cls.all())))
+            raise ValueError("Invalid task '{:s}': must be one of {:s}".format(task, str(cls.all())))
 
 
 def _load_fovea(archive, subpath):
@@ -191,10 +189,10 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                 for index in range(1, 41):
                     fundus_path = os.path.join(
                         "Training400", "Glaucoma",
-                        "g%04d.jpg" % index)
+                        "g{:04d}.jpg".format(index))
                     seg_path = os.path.join(
                         "Annotation-Training400", "Disc_Cup_Masks",
-                        "Glaucoma", "g%04d.bmp" % index)
+                        "Glaucoma", "g{:04d}.bmp".format(index))
 
                     yield get_example(True, fundus_path, seg_path)
 
@@ -202,17 +200,17 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                 for index in range(1, 361):
                     fundus_path = os.path.join(
                         "Training400", "Non-Glaucoma",
-                        "n%04d.jpg" % index)
+                        "n{:04d}.jpg".format(index))
                     seg_path = os.path.join(
                         "Annotation-Training400", "Disc_Cup_Masks",
-                        "Non-Glaucoma", "n%04d.bmp" % index)
+                        "Non-Glaucoma", "n{:04d}.bmp".format(index))
                     yield get_example(False, fundus_path, seg_path)
 
     def _generate_validation_examples(self, fundi, annotations):
         with tf.io.gfile.GFile(annotations, "rb") as annotations:
             annotations = zipfile.ZipFile(annotations)
             fov_data = _load_fovea(
-                annotations, "REFUGE-Validation400-GT/Fovea_locations.xlsx")
+                annotations, os.path.join("REFUGE-Validation400-GT", "Fovea_locations.xlsx"))
             label_data = {
                 fundus_fn: (x, y, bool(label))
                 for fundus_fn, x, y, label in zip(
@@ -226,10 +224,10 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                 fundi = zipfile.ZipFile(fundi)
 
                 for index in range(1, 401):
-                    seg_fn = "V%04d.bmp" % index
+                    seg_fn = "V{:04d}.bmp".format(index)
                     seg_path = os.path.join(
                         "REFUGE-Validation400-GT", "Disc_Cup_Masks", seg_fn)
-                    fundus_fn = "V%04d.jpg" % index
+                    fundus_fn = "V{:04d}.jpg".format(index)
                     fundus_path = os.path.join(
                         "REFUGE-Validation400", fundus_fn)
                     x, y, label = label_data[fundus_fn]
@@ -262,7 +260,7 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
         with tf.io.gfile.GFile(fundi, "rb") as fundi:
             fundi = zipfile.ZipFile(fundi)
             for index in range(1, 401):
-                fundus = _load_image(fundi.open("Test400/T%04d.jpg" % index))
+                fundus = _load_image(fundi.open(os.path.join("Test400", "T{:04d}.jpg".format(index))))
                 image_res = fundus.shape[:2]
                 _transformer = self.builder_config.transformer(image_res)
                 if _transformer is not None:

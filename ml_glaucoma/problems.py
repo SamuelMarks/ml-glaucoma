@@ -306,7 +306,7 @@ class TfdsProblem(BaseProblem):
         elif split == 'test':
             return tfds.Split.TEST
         else:
-            raise ValueError("Unrecognized split '%s'" % split)
+            raise ValueError("Unrecognized split '{:s}'".format(split))
         ```
         """
         if split == 'validation' and split not in self.builder.info.splits:
@@ -387,13 +387,12 @@ class TfdsMultiProblem(BaseProblem):
         return self.dataset_spec()[1]
 
 
-def preprocess_example(
-    image, labels,
-    use_rgb=True,  # grayscale if False
-    maybe_horizontal_flip=False,
-    maybe_vertical_flip=False,
-    per_image_standardization=True,
-    labels_are_images=False):
+def preprocess_example(image, labels,
+                       use_rgb=True,  # grayscale if False
+                       maybe_horizontal_flip=False,
+                       maybe_vertical_flip=False,
+                       per_image_standardization=True,
+                       labels_are_images=False):
     """Preprocessing function for optional flipping/standardization."""
 
     def _maybe_apply(img, _labels, fn, apply_to_labels, prob=0.5):

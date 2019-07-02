@@ -5,6 +5,7 @@ from __future__ import print_function
 import abc
 import functools
 import tensorflow as tf
+
 from ml_glaucoma import problems as p
 from ml_glaucoma import runners
 
@@ -217,12 +218,12 @@ class ConfigurableProblem(Configurable):
         metrics.extend(
             [tf.keras.metrics.Precision(
                 thresholds=[t],
-                name='precision%d' % int((100 * t)))
+                name='precision{:d}'.format(int(100 * t)))
                 for t in precision_thresholds])
         metrics.extend(
             [tf.keras.metrics.Recall(
                 thresholds=[r],
-                name='recall%d' % (int(100 * r)))
+                name='recall{:d}'.format(int(100 * r)))
                 for r in recall_thresholds])
 
         kwargs = dict(

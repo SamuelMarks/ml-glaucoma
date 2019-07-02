@@ -85,8 +85,7 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
         for split in ('train', 'validation', 'test'):
             folder = os.path.join(manual_dir, subdirs.get(split, split))
             if not os.path.isdir(folder):
-                raise IOError(
-                    'No manually downloaded data found at %s' % folder)
+                raise IOError('No manually downloaded data found at {:s}'.format(folder))
             # assumes directory structure (filenames may vary)
             # manual dir
             # - test

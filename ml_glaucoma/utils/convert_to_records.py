@@ -29,8 +29,8 @@ def convert_to(data_set, name):
     num_examples = data_set.num_examples
 
     if images.shape[0] != num_examples:
-        raise ValueError('Images size %d does not match label size %d.' %
-                         (images.shape[0], num_examples))
+        raise ValueError('Images size {:d} does not match label size {:d}.'.format(
+            images.shape[0], num_examples))
     rows = images.shape[1]
     cols = images.shape[2]
     depth = images.shape[3]

@@ -88,9 +88,7 @@ class ImageTransformerConfig(tfds.core.BuilderConfig):
             else:
                 resolution = tuple(resolution)
             if not all(isinstance(r, int) for r in resolution):
-                raise ValueError(
-                    "`resolution`s must be `None` or all `int`s, got %s"
-                    % str(resolution))
+                raise ValueError("`resolution`s must be `None` or all `int`s, got {!r}".format(resolution))
             self.resolution = resolution
             if name is None:
                 name = 'r{:d}-{:d}-{:s}'.format(resolution[0], resolution[1], color_suffix)
