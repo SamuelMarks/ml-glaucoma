@@ -1,4 +1,4 @@
-python ../bin/__main__.py download \
+python ../alt_cli/__init__.py download \
 	-ds bmes \
 	--data_dir $HOME/tensorflow_datasets \
 	--bmes_init \

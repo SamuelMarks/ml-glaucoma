@@ -9,21 +9,16 @@ import tensorflow as tf
 from ml_glaucoma import problems as p
 from ml_glaucoma import runners
 
-SUPPORTED_LOSSES = (
-    'BinaryCrossentropy',
-)
+SUPPORTED_LOSSES = 'BinaryCrossentropy',
 
-SUPPORTED_METRICS = (
-    'F1',
-    'AUC',
-    'BinaryAccuracy',
-)
+SUPPORTED_METRICS = 'F1', 'AUC', 'BinaryAccuracy'
 
 # use --recall_thresholds and --precision_thresholds for Precision/Recall
 
 SUPPORTED_OPTIMIZERS = tuple(
-    k for k in dir(tf.keras.optimizers) if
-    not k.startswith('_') and k not in ('get', 'deserialize'))
+    k for k in dir(tf.keras.optimizers)
+    if not k.startswith('_') and k not in ('get', 'deserialize')
+)
 
 
 class Configurable(object):
@@ -106,14 +101,14 @@ class ConfigurableBuilders(Configurable):
         parser.add_argument(
             '--bmes_parent_dir', help='parent directory of bmes data')
 
-    def build_self(
-        self, dataset, data_dir, download_dir, extract_dir, manual_dir,
-        download_mode, resolution, gray_on_disk, bmes_init, bmes_parent_dir, **kwargs):
+    def build_self(self, dataset, data_dir, download_dir, extract_dir, manual_dir,
+                   download_mode, resolution, gray_on_disk, bmes_init, bmes_parent_dir, **kwargs):
         import tensorflow_datasets as tfds
         builders = []
         for ds in set(dataset):  # remove duplicates
             if ds == 'bmes':
                 from ml_glaucoma.tfds_builders import bmes
+
                 builder_factory = bmes.get_bmes_builder
                 if bmes_init:
                     from ml_glaucoma.utils.get_data import get_data
@@ -124,10 +119,13 @@ class ConfigurableBuilders(Configurable):
                         raise ValueError(
                             '`bmes_parent_dir` must be provided if doing '
                             'bmes_init')
+                    print('got here')
                     get_data(bmes_parent_dir, manual_dir)
+                    print('but not here')
 
             elif ds == 'refuge':
                 from ml_glaucoma.tfds_builders import refuge
+
                 builder_factory = refuge.get_refuge_builder
             else:
                 raise NotImplementedError
@@ -330,7 +328,7 @@ class ConfigurableTrain(Configurable):
 
     def build_self(self, problem, batch_size, epochs, model_fn, optimizer, model_dir,
                    checkpoint_freq, summary_freq, lr_schedule, tb_log_dir,
-                   write_images, **kwargs):
+                   write_images, **_kwargs):
         return runners.train(
             problem=problem,
             batch_size=batch_size,
@@ -372,11 +370,11 @@ class ConfigurableEvaluate(Configurable):
         )
 
 
-def main():
+def get_parser():
     from argparse import ArgumentParser
-    commands = {}
-    parser = ArgumentParser(description='CLI for a Glaucoma diagnosing CNN')
-    subparsers = parser.add_subparsers(dest='command')
+    _commands = {}
+    _parser = ArgumentParser(description='CLI for a Glaucoma diagnosing CNN')
+    subparsers = _parser.add_subparsers(dest='command')
 
     builders = ConfigurableBuilders()
     map_fn = ConfigurableMapFn()
@@ -392,31 +390,21 @@ def main():
     download_parser = subparsers.add_parser(
         'download', help='Download and prepare required data')
     builders.fill(download_parser)
-    commands['download'] = builders
+    _commands['download'] = builders
 
     vis_parser = subparsers.add_parser(
         'vis', help='Download and prepare required data')
     problem.fill(vis_parser)
-    commands['vis'] = problem.map(runners.vis)
+    _commands['vis'] = problem.map(runners.vis)
 
     # TRAIN
     train_parser = subparsers.add_parser('train', help='Train model')
     train.fill(train_parser)
-    commands['train'] = train
+    _commands['train'] = train
 
     # EVALUATE
     evaluate_parser = subparsers.add_parser('evaluate', help='Evaluate model')
     train.fill(evaluate_parser)
-    commands['evaluate'] = evaluate
+    _commands['evaluate'] = evaluate
 
-    kwargs = dict(parser.parse_args()._get_kwargs())
-    command = kwargs.pop('command')
-    if command is None:
-        raise ReferenceError(
-            'You must specify a command. Append `--help` for details.')
-
-    return commands[command].build(**kwargs)
-
-
-if __name__ == '__main__':
-    main()
+    return _parser, _commands

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/alt_cli/env python
 
 import ml_glaucoma.tf_compat
 import ml_glaucoma.tfds_checksums
@@ -9,7 +9,7 @@ from os import path
 import yaml
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.29'
+__version__ = '0.0.30'
 
 
 def get_logger(name=None):

@@ -1,4 +1,4 @@
- python ../bin/__main__.py train \
+ python ../alt_cli/__init__.py train \
 	-ds refuge \
 	--data_dir $HOME/tensorflow_datasets \
 	--model_file ../model_configs/dc.gin \

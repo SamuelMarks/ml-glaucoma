@@ -1,4 +1,4 @@
-python ../bin/__main__.py train \
+python ../alt_cli/__init__.py train \
         -ds bmes \
         --data_dir /mnt-lg/tensorflow_datasets \
 	--model_file ../model_configs/dc.gin \

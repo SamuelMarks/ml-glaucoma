@@ -125,9 +125,8 @@ Training/validation scripts are provided in `bin` and each call a function defin
 ## Example usage:
 
 ```bash
-cd ml-glaucoma
-python bin/__main__.py vis --dataset=refuge
-python bin/__main__.py train \
+python -m ml_glaucoma v2 vis --dataset=refuge
+python -m ml_glaucoma v2 train \
   --model_file 'model_configs/dc.gin'  \
   --model_param 'import ml_glaucoma.gin_keras' 'dc0.kernel_regularizer=@tf.keras.regularizers.l2()' 'tf.keras.regularizers.l2.l = 1e-2' \
   --model_dir /tmp/ml_glaucoma/dc0-reg \
