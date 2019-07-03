@@ -112,17 +112,17 @@ class ConfigurableBuilders(Configurable):
                 builder_factory = bmes.get_bmes_builder
                 if bmes_init:
                     from ml_glaucoma.utils.get_data import get_data
+
                     if manual_dir is None:
                         raise ValueError(
                             '`manual_dir` must be provided if doing bmes_init')
+
                     if bmes_parent_dir is None:
                         raise ValueError(
                             '`bmes_parent_dir` must be provided if doing '
                             'bmes_init')
-                    print('got here')
-                    get_data(bmes_parent_dir, manual_dir)
-                    print('but not here')
 
+                    get_data(bmes_parent_dir, manual_dir)
             elif ds == 'refuge':
                 from ml_glaucoma.tfds_builders import refuge
 
@@ -372,9 +372,10 @@ class ConfigurableEvaluate(Configurable):
 
 def get_parser():
     from argparse import ArgumentParser
+
     _commands = {}
     _parser = ArgumentParser(description='CLI for a Glaucoma diagnosing CNN')
-    subparsers = _parser.add_subparsers(dest='command')
+    subparsers = _parser.add_subparsers(dest='v2_command')
 
     builders = ConfigurableBuilders()
     map_fn = ConfigurableMapFn()
@@ -408,3 +409,13 @@ def get_parser():
     _commands['evaluate'] = evaluate
 
     return _parser, _commands
+
+
+def cli_v2_processor(main_parser, commands):
+    kwargs = dict(main_parser.parse_args()._get_kwargs())
+    command = kwargs.pop('v2_command')
+    if command is None:
+        raise ReferenceError(
+            'You must specify a command. Append `--help` for details.')
+
+    commands[command].build(**kwargs)

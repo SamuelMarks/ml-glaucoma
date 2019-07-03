@@ -5,7 +5,7 @@ from ml_glaucoma import __version__
 from ml_glaucoma.CNN import bmes_cnn
 from ml_glaucoma.download import download
 from ml_glaucoma.parser import parser as ml_glaucoma_parser
-from ml_glaucoma.alt_cli import get_parser
+from ml_glaucoma.v2_cli import get_parser, cli_v2_processor
 
 # Original options
 '''
@@ -87,22 +87,28 @@ def _build_parser():
     #############################
     # Alternative CLI interface #
     #############################
-    subparsers.add_parser('v2', parents=[get_parser()[0]], add_help=False,
+    _v2_parser, _v2_commands = get_parser()
+    subparsers.add_parser('v2', parents=[_v2_parser], add_help=False,
                           help='Alternative CLI parser')
 
-    return parser
+    return parser, _v2_parser, _v2_commands
 
 
 if __name__ == '__main__':
-    kwargs = dict(_build_parser().parse_args()._get_kwargs())
+    built_parser, v2_parser, v2_commands = _build_parser()
+    kwargs = dict(built_parser.parse_args()._get_kwargs())
 
     command = kwargs.pop('command')
 
     if command is None:
         raise ReferenceError('You must specify a command. Append `--help` for details.')
 
-    ({  # 'data': prepare_data,
-        'download': download,
-        'cnn': bmes_cnn.run,
-        'parser': ml_glaucoma_parser
-    }[command])(**kwargs)
+    v2_command = kwargs.get('v2_command')
+    if v2_command:
+        v2_commands[v2_command].build(**kwargs)
+    else:
+        ({  # 'data': prepare_data,
+            'download': download,
+            'cnn': bmes_cnn.run,
+            'parser': ml_glaucoma_parser
+        }[command])(**kwargs)
