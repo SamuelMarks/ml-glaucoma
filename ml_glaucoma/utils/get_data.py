@@ -207,11 +207,11 @@ def _populate_imgs(img_directory, skip_save=True):
                 filename[filename.rfind('BMES') + len('BMES') + 1:filename.rfind('-')].partition('-')[0]))
              for root, dirnames, filenames in walk(img_directory)
              for filename in fnmatch_filter(filenames, '*.jpg'))
-            , key=itemgetter(0)))  # type: tuple(IdEyeFname)
+            , key=itemgetter(0)))  # type: [IdEyeFname]
 
         pickled_cache['id2ideyefname'] = id2ideyefname = {key: d[key] for d in tuple(
             {_id: tuple(group)} for _id, group in groupby(all_imgs, key=itemgetter(0))
-        ) for key in d}  # type: {str: tuple(IdEyeFname)}
+        ) for key in d}  # type: {str: [IdEyeFname]}
 
         pickled_cache['total_imgs_assoc_to_id'] = total_imgs_assoc_to_id = sum(
             len(v) for k, v in iteritems(id2ideyefname))
