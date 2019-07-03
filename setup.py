@@ -24,6 +24,7 @@ if __name__ == '__main__':
     _data_join, _data_install_dir = to_funcs('_data')
     _data_cache_join, _data_cache_install_dir = to_funcs('_data', '.cache')
     _url_checksums_join, _url_checksums_install_dir = to_funcs('url_checksums')
+    _model_configs_join, _model_configs_install_dir = to_funcs('model_configs')
 
     setup(
         name=package_name,
@@ -36,5 +37,6 @@ if __name__ == '__main__':
             (_data_install_dir(), filter(lambda p: path.isfile(p), list(map(_data_join, listdir(_data_join()))))),
             (_data_cache_install_dir(), list(map(_data_cache_join, listdir(_data_cache_join())))),
             (_url_checksums_install_dir(), list(map(_url_checksums_join, listdir(_url_checksums_join())))),
+            (_model_configs_install_dir(), list(map(_model_configs_join, listdir(_model_configs_join()))))
         ]
     )

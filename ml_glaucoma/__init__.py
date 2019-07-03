@@ -1,4 +1,4 @@
-#!/usr/alt_cli/env python
+#!/usr/bin/env python
 
 import ml_glaucoma.tf_compat
 import ml_glaucoma.tfds_checksums

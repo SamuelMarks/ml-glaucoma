@@ -1,5 +1,11 @@
- python ../alt_cli/__init__.py train \
+#!/usr/bin/env bash
+
+dc_gin="$(python -c 'from pkg_resources import resource_filename; from os import path; print(path.join(path.dirname(resource_filename("ml_glaucoma", "__init__.py")), "model_configs", "dc.gin"))')"
+data_pardir="${DATA_DIR:-"$HOME"}"
+manual_dir="${MANUAL_DIR:-/mnt}"
+
+python -m ml_glaucoma v2 train \
 	-ds refuge \
-	--data_dir /mnt-lg/tensorflow_datasets \
-	--model_file ../model_configs/dc.gin \
-	--model_dir /mnt-lg/ml_glaucoma_models/refuge-n0
+	--data_dir "$data_pardir"/tensorflow_datasets \
+	--model_file "$dc_gin" \
+	--model_dir "$data_pardir"/ml_glaucoma_models/refuge-n0

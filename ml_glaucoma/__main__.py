@@ -75,7 +75,7 @@ def _build_parser():
     ##########
     # Parser #
     ##########
-    post_parser = subparsers.add_parser('main_parser',
+    post_parser = subparsers.add_parser('parser',
                                         help='Show metrics from output. Default: per epoch sensitivity & specificity.')
     post_parser.add_argument('infile', nargs='?', type=FileType('r'), default=stdin,
                              help='File to work from. Defaults to stdin. So can pipe.')
@@ -104,5 +104,5 @@ if __name__ == '__main__':
     ({  # 'data': prepare_data,
         'download': download,
         'cnn': bmes_cnn.run,
-        'main_parser': ml_glaucoma_parser
+        'parser': ml_glaucoma_parser
     }[command])(**kwargs)

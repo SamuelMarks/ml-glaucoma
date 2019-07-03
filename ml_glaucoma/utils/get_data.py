@@ -654,7 +654,7 @@ if __name__ == '__main__':
     # print(train)
 
 '''
-/Users/samuel/repos/.venvs/thenv/alt_cli/python /Users/samuel/repos/thesis/ml-glaucoma/ml_glaucoma/utils/get_data.py
+/Users/samuel/repos/.venvs/thenv/bin/python /Users/samuel/repos/thesis/ml-glaucoma/ml_glaucoma/utils/get_data.py
 2018-06-16 00:29:03,925 - get_data - WARNING - skipping header
 2018-06-16 00:38:13,841 - get_data - DEBUG - total_imgs == total_imgs_assoc_to_id:             False
 2018-06-16 00:38:13,866 - __init__ - DEBUG - # total:                                          3654

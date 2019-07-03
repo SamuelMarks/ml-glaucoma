@@ -14,17 +14,18 @@ A Glaucoma diagnosing CNN
 
     $ python -m ml_glaucoma --help
 
-    usage: __main__.py [-h] [--version] {download,cnn,parser} ...
-
+    usage: __main__.py [-h] [--version] {download,cnn,parser,v2} ...
+    
     CLI for a Glaucoma diagnosing CNN and preparing data for such
-
+    
     positional arguments:
-      {download,cnn,parser}
+      {download,cnn,parser,v2}
         download            Download required data
         cnn                 Convolutional Neural Network runner
         parser              Show metrics from output. Default: per epoch
                             sensitivity & specificity.
-
+        v2                  Alternative CLI parser
+    
     optional arguments:
       -h, --help            show this help message and exit
       --version             show program's version number and exit
@@ -121,6 +122,23 @@ Training/validation scripts are provided in `bin` and each call a function defin
 * `model_fn`: the function that takes one or more `tf.keras.layers.Input`s and returns a learnable keras model.
 
 `model_fn`s are configured using using a forked [TF2.0 compatible gin-config](https://github.com/jackd/gin-config/tree/tf2) (awaiting on [this PR](https://github.com/google/gin-config/pull/17) before reverting to the [google version](https://github.com/google/gin-config.git). See example configs in `model_configs` and the [gin user guide](https://github.com/google/gin-config/blob/master/docs/index.md).
+
+## Command usage:
+```bash
+$ python -m ml_glaucoma v2 --help
+
+usage: __main__.py v2 [-h] {download,vis,train,evaluate} ...
+
+positional arguments:
+  {download,vis,train,evaluate}
+    download            Download and prepare required data
+    vis                 Download and prepare required data
+    train               Train model
+    evaluate            Evaluate model
+
+optional arguments:
+  -h, --help            show this help message and exit
+```
 
 ## Example usage:
 
