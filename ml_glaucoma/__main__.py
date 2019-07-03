@@ -4,7 +4,8 @@ from sys import modules, stdin
 from ml_glaucoma import __version__
 from ml_glaucoma.CNN import bmes_cnn
 from ml_glaucoma.download import download
-from ml_glaucoma.parser import parser
+from ml_glaucoma.parser import parser as ml_glaucoma_parser
+from ml_glaucoma.alt_cli import get_parser
 
 # Original options
 '''
@@ -34,11 +35,17 @@ def _build_parser():
                              type=int, default=400)
     '''
 
+    ############
+    # Download #
+    ############
     download_parser = subparsers.add_parser('download', help='Download required data')
     download_parser.add_argument('-d', '--download-dir', help='Directory to store precompiled CNN nets', required=True)
     download_parser.add_argument('-f', '--force', dest='force_new', help='Force recreation of precompiled CNN nets',
                                  action='store_true')
 
+    #######
+    # CNN #
+    #######
     cnn_parser = subparsers.add_parser('cnn', help='Convolutional Neural Network runner')
     cnn_parser.add_argument('-b', '--batch-size', help='Batch size', default=128, type=int)
     cnn_parser.add_argument('-n', '--num-classes', help='Number of classes', default=2, type=int)
@@ -65,7 +72,9 @@ def _build_parser():
     cnn_parser.add_argument('--lr', '--learning-rate', help='Learning rate of optimiser', type=float, dest='lr')
     cnn_parser.add_argument('--max-imgs', type=int)
 
-
+    ##########
+    # Parser #
+    ##########
     post_parser = subparsers.add_parser('parser',
                                         help='Show metrics from output. Default: per epoch sensitivity & specificity.')
     post_parser.add_argument('infile', nargs='?', type=FileType('r'), default=stdin,
@@ -74,6 +83,12 @@ def _build_parser():
     post_parser.add_argument('--top', help='Show top k results', type=int)
     post_parser.add_argument('--by-diff', help='Sort by lowest difference between sensitivity & specificity',
                              action='store_true')
+
+    #############################
+    # Alternative CLI interface #
+    #############################
+    subparsers.add_parser('v2', parents=[get_parser()[0]], add_help=False,
+                          help='Alternative CLI parser')
 
     return parser
 
@@ -89,5 +104,5 @@ if __name__ == '__main__':
     ({  # 'data': prepare_data,
         'download': download,
         'cnn': bmes_cnn.run,
-        'parser': parser
+        'parser': ml_glaucoma_parser
     }[command])(**kwargs)

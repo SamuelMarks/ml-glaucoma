@@ -1,0 +1,5 @@
+import ml_glaucoma.models.dc
+model_fn = @dc0
+dc0.final_activation = %final_activation
+dc1.final_activation = %final_activation
+final_activation = 'default'

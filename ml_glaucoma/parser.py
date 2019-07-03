@@ -19,18 +19,18 @@ def parser(infile, top, threshold, by_diff):
     epoch2stat = {
         key: val
         for key, val in iteritems(
-        {
-            k: tuple(imap(itemgetter(1), v))
-            for k, v in groupby(
-            imap(lambda l: (l[0], l[1]),
-                 ifilter(None, imap(
-                     lambda l: (lambda fst: (
-                         lambda three: (int(three), l.rstrip()[l.rfind(':') + 2:])
-                         if three is not None and three.isdigit() and int(three[0]) < 4 else None)(
-                         l[fst - 3:fst] if fst > -1 else None))(l.rfind(']')), infile)
-                         ))
-            , itemgetter(0))
-        })
+            {
+                k: tuple(imap(itemgetter(1), v))
+                for k, v in groupby(imap(lambda l: (l[0], l[1]),
+                                         ifilter(None, imap(
+                                             lambda l: (lambda fst: (
+                                                 lambda three: (int(three), l.rstrip()[l.rfind(':') + 2:])
+                                                 if three is not None and three.isdigit() and int(
+                                                     three[0]) < 4 else None)(
+                                                 l[fst - 3:fst] if fst > -1 else None))(l.rfind(']')), infile)
+                                                 ))
+                                    , itemgetter(0))
+            })
         if val and len(val) == 2
     }
 

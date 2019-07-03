@@ -1,0 +1,6 @@
+import ml_glaucoma.models.applications
+model_fn = @applications_model
+applications_model.application = %application
+application = 'ResNet50'
+applications_model.final_activation = %final_activation
+final_activation = 'default'

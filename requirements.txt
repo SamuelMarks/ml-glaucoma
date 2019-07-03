@@ -6,12 +6,15 @@ redis
 matplotlib
 tqdm
 tflearn
-h5py==2.8.0rc1
+h5py==2.9.0
 scipy
 keras
-tensorflow
+tensorflow==1.14.0
 opencv-python
 scikit-learn
 urllib3[secure]
 numpy
 quantumrandom
+tensorflow_datasets
+xlrd
+git+git://github.com/jackd/gin-config@tf2
