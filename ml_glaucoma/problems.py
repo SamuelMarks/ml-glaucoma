@@ -394,7 +394,6 @@ def preprocess_example(image, labels,
                        per_image_standardization=True,
                        labels_are_images=False):
     """Preprocessing function for optional flipping/standardization."""
-
     def _maybe_apply(img, _labels, fn, apply_to_labels, prob=0.5):
         apply = tf.random.uniform((), dtype=tf.float32) < prob
         if apply_to_labels:
@@ -413,6 +412,7 @@ def preprocess_example(image, labels,
             image, labels, tf.image.flip_up_down, labels_are_images)
     if not use_rgb:
         image = tf.reduce_mean(image, axis=-1, keepdims=True)
+    image = tf.cast(image, tf.float32)
     if per_image_standardization:
         image = tf.image.per_image_standardization(image)
     return image, labels
