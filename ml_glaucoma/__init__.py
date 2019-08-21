@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
-import ml_glaucoma.tf_compat
-import ml_glaucoma.tfds_checksums
 import logging
 from logging.config import dictConfig as _dictConfig
 from os import path
 
 import yaml
 
+import ml_glaucoma.tf_compat
+import ml_glaucoma.tfds_checksums
+
 __author__ = 'Samuel Marks'
-__version__ = '0.0.31'
+__version__ = '0.0.32'
 
 
 def get_logger(name=None):
