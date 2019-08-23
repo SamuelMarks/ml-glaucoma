@@ -114,7 +114,7 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
     def _generate_examples(self, folder):
         for dirname, label in (('no_glaucoma', False), ('glaucoma', True)):
             subdir = os.path.join(folder, dirname)
-            for filename in os.listdir(subdir):
+            for i, filename in enumerate(os.listdir(subdir)):
                 if not filename.endswith('.jpg'):
                     raise IOError('All files in directory must be `.jpg`')
                 path = os.path.join(subdir, filename)
@@ -124,7 +124,7 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
                 if curr_transformer is not None:
                     fundus = curr_transformer.transform_image(
                         fundus, interp=tf.image.ResizeMethod.BILINEAR)
-                yield dict(
+                yield i, dict(
                     fundus=fundus,
                     label=label,
                     filename=filename,
