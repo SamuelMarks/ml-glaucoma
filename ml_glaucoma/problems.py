@@ -412,7 +412,8 @@ def preprocess_example(image, labels,
             image, labels, tf.image.flip_up_down, labels_are_images)
     if not use_rgb:
         image = tf.reduce_mean(image, axis=-1, keepdims=True)
-    image = tf.cast(image, tf.float32)
+    # image = tf.cast(image, tf.float32)
+    image = tf.image.convert_image_dtype(image, tf.float32)
     if per_image_standardization:
         image = tf.image.per_image_standardization(image)
     return image, labels
