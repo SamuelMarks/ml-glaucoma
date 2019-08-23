@@ -3,9 +3,11 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+
 import numpy as np
-import tensorflow_datasets.public_api as tfds
 import tensorflow as tf
+import tensorflow_datasets.public_api as tfds
+
 from ml_glaucoma.tfds_builders import transformer
 
 
@@ -112,9 +114,10 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
         return generators
 
     def _generate_examples(self, folder):
+        i = -1
         for dirname, label in (('no_glaucoma', False), ('glaucoma', True)):
             subdir = os.path.join(folder, dirname)
-            for i, filename in enumerate(os.listdir(subdir)):
+            for filename in os.listdir(subdir):
                 if not filename.endswith('.jpg'):
                     raise IOError('All files in directory must be `.jpg`')
                 path = os.path.join(subdir, filename)
@@ -124,6 +127,7 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
                 if curr_transformer is not None:
                     fundus = curr_transformer.transform_image(
                         fundus, interp=tf.image.ResizeMethod.BILINEAR)
+                i += 1
                 yield i, dict(
                     fundus=fundus,
                     label=label,
