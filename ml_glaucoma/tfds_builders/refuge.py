@@ -194,7 +194,8 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                         "Annotation-Training400", "Disc_Cup_Masks",
                         "Glaucoma", "g{:04d}.bmp".format(index))
 
-                    yield get_example(True, fundus_path, seg_path)
+                    yield (True, index), get_example(
+                        True, fundus_path, seg_path)
 
                 # negative examples
                 for index in range(1, 361):
@@ -204,7 +205,8 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                     seg_path = os.path.join(
                         "Annotation-Training400", "Disc_Cup_Masks",
                         "Non-Glaucoma", "n{:04d}.bmp".format(index))
-                    yield get_example(False, fundus_path, seg_path)
+                    yield (False, index), get_example(
+                        False, fundus_path, seg_path)
 
     def _generate_validation_examples(self, fundi, annotations):
         with tf.io.gfile.GFile(annotations, "rb") as annotations:
@@ -243,7 +245,7 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                             fundus, interp=tf.image.ResizeMethod.BILINEAR)
                         seg = _transformer.transform_image(
                             seg, interp=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-                    yield {
+                    yield index, {
                         "fundus": fundus,
                         "segmentation": seg,
                         "label": label,
@@ -266,7 +268,7 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                 if _transformer is not None:
                     fundus = _transformer.transform_image(
                         fundus, interp=tf.image.ResizeMethod.BILINEAR)
-                yield {
+                yield index, {
                     "fundus": fundus,
                     "segmentation": get_seg(fundus.shape[:2]),
                     "label": False,

@@ -282,7 +282,7 @@ class TfdsProblem(BaseProblem):
 
     def _get_base_dataset(self, split):
         return self.builder.as_dataset(
-            batch_size=1,
+            batch_size=None,
             split=self._split(split),
             as_supervised=self._as_supervised,
             shuffle_files=True)
