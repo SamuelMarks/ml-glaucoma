@@ -1,4 +1,4 @@
-Paper: Fine-Tuned Convolutional Neural Networks for Glaucoma Assessment using Fundus Images
+Paper: CNNs for automatic glaucoma assessment using fundus images: an extensive validation
 
 Folder "images": The test images need to be placed here. They need to be divided into 2 folders, "glaucoma" and "notGlaucoma" 
 Folder "models": Contains json files for the models. You will have to download/train and save the weights of the models to these folders.
