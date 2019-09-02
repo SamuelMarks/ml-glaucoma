@@ -7,9 +7,9 @@ import tensorflow as tf
 
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])
-def resnet50(inputs, output_spec, num_classes=2,
-             image_size=224, num_channels=3,
-             kernel_regularizer=None, final_activation='default'):
+def resnet50(inputs, num_classes=2,
+             image_size=224, num_channels=None):
+    assert num_channels is not None
     x = inputs
 
     base_model = tf.keras.applications.ResNet50(input_shape=(image_size, image_size, num_channels),
@@ -18,6 +18,7 @@ def resnet50(inputs, output_spec, num_classes=2,
     base_model.trainable = True
 
     model = tf.keras.Sequential([
+        x,
         base_model,
         tf.keras.layers.GlobalAveragePooling2D(),
         tf.keras.layers.Dense(num_classes, activation='sigmoid')
