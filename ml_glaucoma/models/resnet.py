@@ -7,7 +7,7 @@ import tensorflow as tf
 
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])
-def resnet50(inputs, num_classes=2,
+def resnet50(inputs, output_spec, num_classes=2,
              image_size=224, num_channels=None):
     assert num_channels is not None
     x = inputs
