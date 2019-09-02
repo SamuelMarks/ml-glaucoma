@@ -3,8 +3,8 @@ from platform import python_version_tuple
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import Callback
-from tensorflow.keras.engine import Layer
 from sklearn.metrics import precision_recall_fscore_support, fbeta_score
+from tensorflow.python.keras.engine import Layer
 
 from ml_glaucoma.CNN.helpers import output_sensitivity_specificity
 
