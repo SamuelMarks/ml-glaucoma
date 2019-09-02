@@ -1,13 +1,13 @@
 from os import path, environ
 
 from imgaug import augmenters as iaa
-from keras import backend as K
-from keras import optimizers
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
-from keras.layers import BatchNormalization, Activation
-from keras.layers import Input, Conv2D, MaxPooling2D, GlobalAveragePooling2D
-from keras.models import Model
-from keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras import backend as K
+from tensorflow.keras import optimizers
+from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.layers import BatchNormalization, Activation
+from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, GlobalAveragePooling2D
+from tensorflow.keras.models import Model
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 img_width, img_height = 256, 256
 

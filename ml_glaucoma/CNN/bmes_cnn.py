@@ -9,26 +9,26 @@ from itertools import chain
 from os import path, makedirs, listdir
 from platform import python_version_tuple
 
-import keras
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import backend as K, Input, Model
-from keras.callbacks import TensorBoard
-from keras.layers import (Dense, Dropout, Flatten, merge, Activation,
-                          MaxPooling2D, Conv2D, UpSampling2D)
-from keras.models import Sequential
-from keras.utils import to_categorical
-from keras.preprocessing.image import ImageDataGenerator
 from sklearn.metrics import confusion_matrix
-# from tensorflow.python.platform import tf_logging
+from tensorflow.keras import backend as K, Input, Model
+from tensorflow.keras.callbacks import TensorBoard
+from tensorflow.keras.layers import (Dense, Dropout, Flatten, Activation,
+                                     MaxPooling2D, Conv2D, UpSampling2D)
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.utils import to_categorical
 
 from ml_glaucoma import get_logger, __version__
+from ml_glaucoma.CNN.directories2tfrecords import convert_to_tfrecord
 from ml_glaucoma.CNN.helpers import output_sensitivity_specificity
 from ml_glaucoma.CNN.loss import weighted_categorical_crossentropy
 from ml_glaucoma.CNN.metrics import BinaryTruePositives, Recall, Precision, binary_segmentation_recall
 from ml_glaucoma.CNN.test0 import test0
-from ml_glaucoma.CNN.directories2tfrecords import convert_to_tfrecord
 from ml_glaucoma.utils.get_data import get_data
+
+# from tensorflow.python.platform import tf_logging
 
 if python_version_tuple()[0] == '3':
     xrange = range
@@ -239,10 +239,8 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
         vertical_flip=True,
         samplewise_std_normalization=True
     )
-    # type: keras.preprocessing.image.DirectoryIterator
-    valid_seq = flow(directory=validation_dir)
-    # type: keras.preprocessing.image.DirectoryIterator
-    test_seq = flow(directory=test_dir)  # type: keras.preprocessing.image.DirectoryIterator
+    valid_seq = flow(directory=validation_dir)  # type: tf.keras.preprocessing.image.DirectoryIterator
+    test_seq = flow(directory=test_dir)  # type: tf.keras.preprocessing.image.DirectoryIterator
 
     mk_dataset = lambda seq: tf.data.Dataset.from_generator(lambda: seq, (tf.float32, tf.float32))
     # \type: (ImageDataGenerator) => tf.data.Dataset
@@ -305,8 +303,8 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     # print(x_test.shape[0], 'test samples')
 
     # convert class vectors to binary class matrices
-    # y_train = keras.utils.to_categorical(y_train, num_classes)
-    # y_test = keras.utils.to_categorical(y_test, num_classes)
+    # y_train = tf.keras.utils.to_categorical(y_train, num_classes)
+    # y_test = tf.keras.utils.to_categorical(y_test, num_classes)
 
     # resnet_weights_path = path.join(download_dir, 'resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5')
 
@@ -378,14 +376,14 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
 
     if metrics == 'precision_recall':
         metric_fn = BinaryTruePositives()
-        config = keras.metrics.serialize(metric_fn)
-        metric_fn = keras.metrics.deserialize(
+        config = tf.keras.metrics.serialize(metric_fn)
+        metric_fn = tf.keras.metrics.deserialize(
             config, custom_objects={'BinaryTruePositives': BinaryTruePositives})
         metrics = ['acc', Recall(), Precision(), metric_fn]
     else:  # btp
         metric_fn = BinaryTruePositives()
-        config = keras.metrics.serialize(metric_fn)
-        metric_fn = keras.metrics.deserialize(
+        config = tf.keras.metrics.serialize(metric_fn)
+        metric_fn = tf.keras.metrics.deserialize(
             config, custom_objects={'BinaryTruePositives': BinaryTruePositives})
         metrics = ['accuracy', metric_fn]
 
@@ -394,8 +392,8 @@ def run(download_dir, bmes123_pardir, preprocess_to, batch_size, num_classes, ep
     elif loss == 'binary_segmentation_recall':
         loss = binary_segmentation_recall
 
-    model.compile(loss=loss if callable(loss) else getattr(keras.losses, loss),
-                  optimizer=getattr(keras.optimizers, optimizer)(**({} if lr is None else {'lr': lr})),
+    model.compile(loss=loss if callable(loss) else getattr(tf.keras.losses, loss),
+                  optimizer=getattr(tf.keras.optimizers, optimizer)(**({} if lr is None else {'lr': lr})),
                   metrics=metrics)
     print(model.summary())
 

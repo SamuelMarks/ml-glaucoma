@@ -6,7 +6,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas
-from keras.models import load_model
+from tensorflow.keras.models import load_model
 
 model = load_model('f1.h5')
 test_path = r'test'
