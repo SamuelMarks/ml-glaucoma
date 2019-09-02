@@ -1,5 +1,5 @@
 import ml_glaucoma.models.resnet
 model_fn = @resnet50
-dc0.final_activation = %final_activation
-dc1.final_activation = %final_activation
+resnet50.final_activation = %final_activation
+resnet50.final_activation = %final_activation
 final_activation = 'default'
