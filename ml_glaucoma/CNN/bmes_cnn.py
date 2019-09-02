@@ -12,10 +12,10 @@ from platform import python_version_tuple
 import keras
 import numpy as np
 import tensorflow as tf
-from keras import backend as K, Input, Model
+from tensorflow.keras import backend as K, Input, Model
 from keras.callbacks import TensorBoard
-from keras.layers import Dense, Dropout, Flatten, merge, Activation
-from keras.layers import MaxPooling2D, Conv2D, UpSampling2D
+from keras.layers import (Dense, Dropout, Flatten, merge, Activation,
+                          MaxPooling2D, Conv2D, UpSampling2D)
 from keras.models import Sequential
 from keras.utils import to_categorical
 from keras.preprocessing.image import ImageDataGenerator

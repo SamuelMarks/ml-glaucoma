@@ -10,7 +10,7 @@ import ml_glaucoma.tf_compat
 import ml_glaucoma.tfds_checksums
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.35-alpha'
+__version__ = '0.0.35-beta'
 
 
 def get_logger(name=None):
