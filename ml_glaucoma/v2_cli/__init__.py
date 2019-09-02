@@ -189,7 +189,7 @@ class ConfigurableProblem(Configurable):
             help='loss function to use')
         parser.add_argument(
             '-m', '--metrics', nargs='*',
-            choices=SUPPORTED_METRICS, default=['AUC'],
+            choices=SUPPORTED_METRICS, default=['F1'],
             help='metric functions to use')
         parser.add_argument(
             '-pt', '--precision_thresholds',
