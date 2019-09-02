@@ -290,9 +290,8 @@ class ConfigurableExponentialDecayLrSchedule(Configurable):
         if exp_lr_decay is None:
             return None
         else:
-            pass
-            #from ml_glaucoma.callbacks import exponential_decay_lr_schedule
-            #return exponential_decay_lr_schedule(learning_rate, exp_lr_decay)
+            from ml_glaucoma.callbacks import exponential_decay_lr_schedule
+            return exponential_decay_lr_schedule(learning_rate, exp_lr_decay)
 
 
 class ConfigurableTrain(Configurable):
