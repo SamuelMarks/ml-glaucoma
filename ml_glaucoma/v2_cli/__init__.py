@@ -189,7 +189,7 @@ class ConfigurableProblem(Configurable):
             help='loss function to use')
         parser.add_argument(
             '-m', '--metrics', nargs='*',
-            choices=SUPPORTED_METRICS, default=['F1'],
+            choices=SUPPORTED_METRICS, default=['AUC'],
             help='metric functions to use')
         parser.add_argument(
             '-pt', '--precision_thresholds',
@@ -290,8 +290,9 @@ class ConfigurableExponentialDecayLrSchedule(Configurable):
         if exp_lr_decay is None:
             return None
         else:
-            from ml_glaucoma.callbacks import exponential_decay_lr_schedule
-            return exponential_decay_lr_schedule(learning_rate, exp_lr_decay)
+            pass
+            #from ml_glaucoma.callbacks import exponential_decay_lr_schedule
+            #return exponential_decay_lr_schedule(learning_rate, exp_lr_decay)
 
 
 class ConfigurableTrain(Configurable):
