@@ -1,0 +1,7 @@
+import ml_glaucoma.models.keras_applications
+model_fn = @keras_applications
+keras_applications.image_size = 256
+keras_applications.num_channels = 3
+keras_applications.transfer_model = 'resnet50'
+keras_applications.weights = 'imagenet'
+final_activation = 'default'
