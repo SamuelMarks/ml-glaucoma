@@ -8,7 +8,6 @@ tqdm
 tflearn
 h5py==2.9.0
 scipy
-keras
 tensorflow==1.14.0
 opencv-python
 scikit-learn

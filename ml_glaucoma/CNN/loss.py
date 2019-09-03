@@ -1,9 +1,9 @@
-from keras import backend as K
+from tensorflow.keras import backend as K
 
 
 def weighted_categorical_crossentropy(weights):
     """
-    A weighted version of keras.objectives.categorical_crossentropy
+    A weighted version of tf.keras.objectives.categorical_crossentropy
 
     Variables:
         weights: numpy array of shape (C,) where C is the number of classes

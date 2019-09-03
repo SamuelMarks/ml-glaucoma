@@ -1,0 +1,5 @@
+import ml_glaucoma.models.resnet
+model_fn = @resnet50
+resnet50.image_size = 256
+resnet50.num_channels = 3
+final_activation = 'default'

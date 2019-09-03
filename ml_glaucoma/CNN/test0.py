@@ -1,9 +1,9 @@
 from __future__ import print_function
 
-import keras
-from keras import Sequential
-from keras.layers import Conv2D, Activation, MaxPooling2D, Flatten, Dense, Dropout
-from keras.preprocessing.image import ImageDataGenerator
+import tensorflow as tf
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Conv2D, Activation, MaxPooling2D, Flatten, Dense, Dropout
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
 def test0(train_dir, validation_dir, test_dir, pixels):  # type: (str, str, str, int) -> None
@@ -42,7 +42,7 @@ def test0(train_dir, validation_dir, test_dir, pixels):  # type: (str, str, str,
 
     model.load_weights("third_try.h5")
 
-    opt = keras.optimizers.SGD(lr=0.01, momentum=0.5)
+    opt = tf.keras.optimizers.SGD(lr=0.01, momentum=0.5)
     model.compile(loss='categorical_crossentropy',
                   optimizer='nadam',
                   metrics=['accuracy'])
