@@ -2,19 +2,23 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import efficientnet.tfkeras as efficientnet_tfkeras_models
 import gin
 import tensorflow as tf
-from efficientnet.tfkeras import EfficientNetB0
 
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])
-def efficientnet_b0(inputs, output_spec, num_classes=2,
-                    image_size=224, num_channels=None):
+def efficientnet(inputs, output_spec, num_classes=2, transfer_model=None,
+                 image_size=224, num_channels=None):
     assert num_channels is not None
 
-    base_model = EfficientNetB0(input_shape=(image_size, image_size, num_channels),
-                                include_top=False,  # Set to false to train
-                                weights='imagenet')
+    assert transfer_model is not None and transfer_model in dir(
+        efficientnet_tfkeras_models), '`transfer_model` not found'
+    base_model = getattr(efficientnet_tfkeras_models, transfer_model)(
+        input_shape=(image_size, image_size, num_channels),
+        include_top=False,  # Set to false to train
+        weights='imagenet'
+    )
     base_model.trainable = True
 
     return tf.keras.Sequential([
