@@ -18,3 +18,4 @@ tensorflow_datasets
 xlrd
 https://github.com/jackd/gin-config/zipball/tf2#egg=gin-config
 https://github.com/SamuelMarks/MNet_DeepCDR/zipball/setup#egg=mnet_deep_cdr
+git+https://github.com/qubvel/efficientnet
