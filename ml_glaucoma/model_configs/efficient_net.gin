@@ -1,0 +1,6 @@
+import ml_glaucoma.models.efficient_net
+model_fn = @efficient_net
+efficient_net.application = %application
+application = 'EfficientNetB4'
+efficient_net.final_activation = %final_activation
+final_activation = 'default'

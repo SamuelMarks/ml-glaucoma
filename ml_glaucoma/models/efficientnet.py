@@ -6,6 +6,8 @@ import efficientnet.tfkeras as efficientnet_tfkeras_models
 import gin
 import tensorflow as tf
 
+from ml_glaucoma.models import util
+
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])
 def efficientnet(inputs, output_spec, num_classes=2, transfer_model=None,
@@ -27,3 +29,20 @@ def efficientnet(inputs, output_spec, num_classes=2, transfer_model=None,
         tf.keras.layers.GlobalAveragePooling2D(),
         tf.keras.layers.Dense(num_classes, activation='sigmoid')
     ])
+
+
+@gin.configurable(blacklist=['inputs', 'output_spec'])
+def efficient_net(inputs, output_spec, application='EfficientNetB0',
+                  weights='imagenet', pooling='avg', final_activation='default',
+                  kwargs=None):
+    assert application is not None and application in dir(
+        efficientnet_tfkeras_models), '`application` not found'
+
+    if kwargs is None:
+        kwargs = {}
+    features, = getattr(efficientnet_tfkeras_models, application)(
+        include_top=False, weights=weights, pooling=pooling,
+        input_tensor=inputs, **kwargs).outputs
+    probs = util.features_to_probs(
+        features, output_spec, activation=final_activation)
+    return tf.keras.models.Model(inputs=inputs, outputs=probs)
