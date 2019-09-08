@@ -4,12 +4,17 @@ from __future__ import print_function
 
 import abc
 import functools
+
 import tensorflow as tf
 
+from ml_glaucoma import losses
 from ml_glaucoma import problems as p
 from ml_glaucoma import runners
+from ml_glaucoma.utils.helpers import get_upper_kv
 
-SUPPORTED_LOSSES = 'BinaryCrossentropy',
+valid_losses = get_upper_kv(tf.keras.losses)
+valid_losses.update(get_upper_kv(losses))
+SUPPORTED_LOSSES = tuple(valid_losses.keys())
 
 SUPPORTED_METRICS = 'F1', 'AUC', 'BinaryAccuracy'
 
@@ -225,7 +230,8 @@ class ConfigurableProblem(Configurable):
                 for r in recall_thresholds])
 
         kwargs = dict(
-            loss=tf.keras.losses.deserialize(dict(class_name=loss, config={})),
+            loss=(tf.keras.losses.deserialize(dict(class_name=loss, config={}))
+                  if loss in dir(tf.keras.losses) else valid_losses[loss]),
             metrics=metrics,
             map_fn=map_fn,
             shuffle_buffer=shuffle_buffer,
