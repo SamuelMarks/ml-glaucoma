@@ -1,4 +1,4 @@
-import ml_glaucoma.models.efficient_net
+import ml_glaucoma.models.efficientnet
 model_fn = @efficient_net
 efficient_net.application = %application
 application = 'EfficientNetB4'
