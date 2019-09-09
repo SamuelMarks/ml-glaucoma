@@ -1,0 +1,4 @@
+import ml_glaucoma.models.dr
+model_fn = @dr0
+efficient_net.final_activation = %final_activation
+final_activation = 'default'
