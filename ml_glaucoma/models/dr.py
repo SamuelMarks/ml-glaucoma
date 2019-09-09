@@ -1,6 +1,6 @@
 import gin
 import tensorflow as tf
-from efficientnet.keras import EfficientNetB5
+from efficientnet.tfkeras import EfficientNetB5
 
 from ml_glaucoma.models import util
 
