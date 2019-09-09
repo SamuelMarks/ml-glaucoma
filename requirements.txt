@@ -8,7 +8,7 @@ tqdm
 tflearn
 h5py==2.9.0
 scipy
-tensorflow==1.14.0
+#tensorflow==1.14.0 # omitting because you should pick `tensorflow-gpu` or compile your own (compile preferred)
 opencv-python
 scikit-learn
 urllib3[secure]
@@ -18,4 +18,4 @@ tensorflow_datasets
 xlrd
 https://github.com/jackd/gin-config/zipball/tf2#egg=gin-config
 https://github.com/SamuelMarks/MNet_DeepCDR/zipball/setup#egg=mnet_deep_cdr
-git+https://github.com/qubvel/efficientnet
+https://github.com/SamuelMarks/efficientnet/zipball/tf-no-attribute-fix#egg=efficientnet

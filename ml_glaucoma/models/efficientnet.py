@@ -7,6 +7,9 @@ import gin
 import tensorflow as tf
 
 from ml_glaucoma.models import util
+from ml_glaucoma.utils.helpers import get_upper_kv
+
+efficientnet_models = get_upper_kv(efficientnet_tfkeras_models)
 
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])
@@ -14,9 +17,8 @@ def efficientnet(inputs, output_spec, num_classes=2, transfer_model=None,
                  image_size=224, num_channels=None):
     assert num_channels is not None
 
-    assert transfer_model is not None and transfer_model in dir(
-        efficientnet_tfkeras_models), '`transfer_model` not found'
-    base_model = getattr(efficientnet_tfkeras_models, transfer_model)(
+    assert transfer_model is not None and transfer_model in efficientnet_models, '`transfer_model` not found'
+    base_model = efficientnet_models[transfer_model](
         input_shape=(image_size, image_size, num_channels),
         include_top=False,  # Set to false to train
         weights='imagenet'
@@ -35,12 +37,11 @@ def efficientnet(inputs, output_spec, num_classes=2, transfer_model=None,
 def efficient_net(inputs, output_spec, application='EfficientNetB0',
                   weights='imagenet', pooling='avg', final_activation='default',
                   kwargs=None):
-    assert application is not None and application in dir(
-        efficientnet_tfkeras_models), '`application` not found'
+    assert application is not None and application in efficientnet_models, '`application` not found'
 
     if kwargs is None:
         kwargs = {}
-    features, = getattr(efficientnet_tfkeras_models, application)(
+    features, = efficientnet_models[application](
         include_top=False, weights=weights, pooling=pooling,
         input_tensor=inputs, **kwargs).outputs
     probs = util.features_to_probs(
