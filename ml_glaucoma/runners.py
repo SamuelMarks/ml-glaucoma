@@ -108,11 +108,14 @@ def train(problem, batch_size, epochs, model_fn, optimizer, model_dir=None,
     else:
         callbacks.extend(common_callbacks)
 
-    print(os.path.basename(model_dir) + ':', model_to_dot(model))
+    dot = model_to_dot(model)
+    if dot is not None:
+        dotfile = os.path.join(os.path.dirname(model_dir),
+                               os.path.basename(model_dir) + '.dot')
+        dot.write(dotfile)
+        print('Wrote to:', dotfile)
     if model.name == 'model':
-        model.name = os.path.basename(model_dir)
-    else:
-        print('model.name:', model.name)
+        model._name = os.path.basename(model_dir)
     print(model.summary())
 
     return model.fit(
@@ -125,7 +128,6 @@ def train(problem, batch_size, epochs, model_fn, optimizer, model_dir=None,
         validation_steps=validation_steps,
         initial_epoch=initial_epoch,
     )
-tf.losses
 
 
 def evaluate(problem, batch_size, model_fn, optimizer, model_dir=None):
