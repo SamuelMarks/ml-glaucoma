@@ -79,3 +79,32 @@ def dc1(inputs, output_spec, training=None, dropout_rate=0.5,
         x, output_spec, kernel_regularizer=kernel_regularizer,
         activation=final_activation)
     return tf.keras.models.Model(inputs=inputs, outputs=probs)
+
+
+@gin.configurable(blacklist=['inputs', 'output_spec'])
+def dc2(inputs, output_spec, training=None, filters=(64, 32, 16),
+        dense_units=(16, 8), dropout_rate=0.5, conv_activation='relu',
+        dense_activation='relu', kernel_regularizer=None,
+        final_activation='default', pooling='flatten'):
+    conv_kwargs = dict(
+        kernel_regularizer=kernel_regularizer, activation=conv_activation)
+    dense_kwargs = dict(
+        kernel_regularizer=kernel_regularizer, activation=dense_activation)
+
+    x = inputs
+    for f in filters:
+        x = Conv2D(f, (3, 3), **conv_kwargs)(x)
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+
+    x = _poolers[pooling]()(x)
+
+    for u in dense_units:
+        x = Dense(u, **dense_kwargs)(x)
+        x = Dropout(dropout_rate)(x, training=training)
+    probs = util.features_to_probs(
+        x, output_spec, kernel_regularizer=kernel_regularizer,
+        activation=final_activation)
+    model = tf.keras.models.Model(inputs=inputs, outputs=probs)
+    model_to_dot(model).write('/tmp/dc0.dot')
+    print(model.summary())
+    return model
