@@ -38,8 +38,8 @@ def default_model_dir(base_dir=os.path.join(os.path.expanduser('~'), 'ml_glaucom
     return model_dir
 
 
-def train(problem, batch_size, epochs, model_fn, optimizer, model_dir=None,
-          callbacks=None, verbose=True, checkpoint_freq=5,
+def train(problem, batch_size, epochs, model_fn, optimizer, class_weight=None,
+          model_dir=None, callbacks=None, verbose=True, checkpoint_freq=5,
           summary_freq=10, lr_schedule=None,
           tensorboard_log_dir=None, write_images=False):
     """
@@ -51,6 +51,12 @@ def train(problem, batch_size, epochs, model_fn, optimizer, model_dir=None,
         epochs: int, number of epochs
         model_fn: function mapping (inputs, output_spec) -> outputs.
         optimizer: `tf.keras.optimizers.Optimizer` instance.
+        class_weight: Optional dictionary mapping class indices (integers)
+            to a weight (float) value, used for weighting the loss function
+            (during training only).
+            This can be useful to tell the model to
+            "pay more attention" to samples from
+            an under-represented class.
         model_dir: directory in which to save models. If not provided,
             `ml_glaucoma.runners.default_model_dir()` is used.
         callbacks: list of callbacks in addition to those created below
@@ -80,7 +86,7 @@ def train(problem, batch_size, epochs, model_fn, optimizer, model_dir=None,
         lambda spec: tf.keras.layers.Input(
             shape=spec.shape, dtype=spec.dtype),
         problem.input_spec())
-    model = model_fn(inputs, problem.output_spec())
+    model = model_fn(inputs, problem.output_spec())  # type: tf.keras.Model
     model.compile(
         optimizer=optimizer,
         loss=problem.loss,
@@ -113,7 +119,7 @@ def train(problem, batch_size, epochs, model_fn, optimizer, model_dir=None,
         dotfile = os.path.join(os.path.dirname(model_dir),
                                os.path.basename(model_dir) + '.dot')
         dot.write(dotfile)
-        print('Wrote to:', dotfile)
+        print('graphviz diagram of model generated to:', dotfile)
     if model.name == 'model':
         model._name = os.path.basename(model_dir)
     print(model.summary())
@@ -121,6 +127,7 @@ def train(problem, batch_size, epochs, model_fn, optimizer, model_dir=None,
     return model.fit(
         train_ds,
         epochs=epochs,
+        class_weight=class_weight,
         verbose=verbose,
         callbacks=callbacks,
         validation_data=val_ds,

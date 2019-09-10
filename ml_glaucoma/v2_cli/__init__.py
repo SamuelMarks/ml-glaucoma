@@ -6,6 +6,7 @@ import abc
 import functools
 
 import tensorflow as tf
+import yaml
 
 from ml_glaucoma import losses
 from ml_glaucoma import problems as p
@@ -304,7 +305,7 @@ class ConfigurableExponentialDecayLrSchedule(Configurable):
 
 
 class ConfigurableTrain(Configurable):
-    def __init__(self, problem, model_fn, optimizer, lr_schedule=None):
+    def __init__(self, problem, model_fn, optimizer, lr_schedule=None, class_weight=None):
         super(ConfigurableTrain, self).__init__(
             problem=problem,
             model_fn=model_fn,
@@ -318,6 +319,15 @@ class ConfigurableTrain(Configurable):
         parser.add_argument(
             '-e', '--epochs', default=20, type=int,
             help='number of epochs to run training from')
+        parser.add_argument(
+            '--class-weight', default=None, type=yaml.load,
+            help='Optional dictionary mapping class indices (integers)'
+                 'to a weight (float) value, used for weighting the loss function'
+                 '(during training only).'
+                 'This can be useful to tell the model to'
+                 '"pay more attention" to samples from'
+                 'an under-represented class.'
+        )
         parser.add_argument(
             '--model_dir',
             help='model directory in which to save weights and '
@@ -336,7 +346,7 @@ class ConfigurableTrain(Configurable):
             help='whether or not to write images to tensorboard')
 
     def build_self(self, problem, batch_size, epochs, model_fn, optimizer, model_dir,
-                   checkpoint_freq, summary_freq, lr_schedule, tb_log_dir,
+                   checkpoint_freq, summary_freq, lr_schedule, tb_log_dir, class_weight,
                    write_images, **_kwargs):
         return runners.train(
             problem=problem,
@@ -344,6 +354,7 @@ class ConfigurableTrain(Configurable):
             epochs=epochs,
             model_fn=model_fn,
             optimizer=optimizer,
+            class_weight=class_weight,
             model_dir=model_dir,
             checkpoint_freq=checkpoint_freq,
             summary_freq=summary_freq,
