@@ -4,7 +4,6 @@ from __future__ import print_function
 
 import gin
 import tensorflow as tf
-from tensorflow.python.keras.utils import model_to_dot
 
 from ml_glaucoma.models import util
 
@@ -80,18 +79,18 @@ def dc1(inputs, output_spec, training=None, dropout_rate=0.5,
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])
 def dc2(inputs, output_spec, training=None, filters=(32, 64, 128),
-        dense_units=(32, ), dropout_rate=0.5, conv_activation='relu',
+        dense_units=(32,), dropout_rate=0.5, conv_activation='relu',
         dense_activation='relu', kernel_regularizer='l1',
         final_activation='default', pooling='flatten'):
     conv_kwargs = dict(
-        strides=(2,1), kernel_initializer='he_normal',
+        strides=(2, 1), kernel_initializer='he_normal',
         kernel_regularizer=kernel_regularizer, activation=conv_activation)
     dense_kwargs = dict(
         kernel_regularizer=kernel_regularizer, activation=dense_activation)
 
     x = inputs
     for f in filters:
-        x = Conv2D(f, (11, 7, 5, 3), **conv_kwargs)(x)
+        x = Conv2D(f, (5, 3), **conv_kwargs)(x)
         x = MaxPooling2D(pool_size=(2, 2))(x)
 
     x = _poolers[pooling]()(x)
