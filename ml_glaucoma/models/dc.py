@@ -43,10 +43,7 @@ def dc0(inputs, output_spec, training=None, filters=(32, 32, 64),
     probs = util.features_to_probs(
         x, output_spec, kernel_regularizer=kernel_regularizer,
         activation=final_activation)
-    model = tf.keras.models.Model(inputs=inputs, outputs=probs)
-    model_to_dot(model).write('/tmp/dc0.dot')
-    print(model.summary())
-    return model
+    return tf.keras.models.Model(inputs=inputs, outputs=probs)
 
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])
@@ -104,7 +101,4 @@ def dc2(inputs, output_spec, training=None, filters=(64, 32, 16),
     probs = util.features_to_probs(
         x, output_spec, kernel_regularizer=kernel_regularizer,
         activation=final_activation)
-    model = tf.keras.models.Model(inputs=inputs, outputs=probs)
-    model_to_dot(model).write('/tmp/dc0.dot')
-    print(model.summary())
-    return model
+    return tf.keras.models.Model(inputs=inputs, outputs=probs)

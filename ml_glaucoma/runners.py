@@ -5,7 +5,10 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+
 import tensorflow as tf
+from tensorflow.python.keras.utils import model_to_dot
+
 from ml_glaucoma import callbacks as cb
 
 
@@ -104,6 +107,9 @@ def train(problem, batch_size, epochs, model_fn, optimizer, model_dir=None,
         callbacks = common_callbacks
     else:
         callbacks.extend(common_callbacks)
+
+    print(os.path.basename(model_dir), ':', model_to_dot(model))
+    print(model.summary())
 
     return model.fit(
         train_ds,
