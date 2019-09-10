@@ -4,6 +4,8 @@ from __future__ import print_function
 
 import gin
 import tensorflow as tf
+from tensorflow.python.keras.utils import model_to_dot
+
 from ml_glaucoma.models import util
 
 Conv2D = tf.keras.layers.Conv2D
@@ -41,7 +43,10 @@ def dc0(inputs, output_spec, training=None, filters=(32, 32, 64),
     probs = util.features_to_probs(
         x, output_spec, kernel_regularizer=kernel_regularizer,
         activation=final_activation)
-    return tf.keras.models.Model(inputs=inputs, outputs=probs)
+    model = tf.keras.models.Model(inputs=inputs, outputs=probs)
+    model_to_dot(model).write('/tmp/dc0.dot')
+    print(model.summary())
+    return model
 
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])
