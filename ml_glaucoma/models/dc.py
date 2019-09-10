@@ -78,9 +78,9 @@ def dc1(inputs, output_spec, training=None, dropout_rate=0.5,
 
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])
-def dc2(inputs, output_spec, training=None, filters=(32, 64, 128),
+def dc2(inputs, output_spec, training=None, filters=(32, 32, 64),
         dense_units=(32,), dropout_rate=0.5, conv_activation='relu',
-        dense_activation='relu', kernel_regularizer='l1',
+        dense_activation='relu', kernel_regularizer='l2',
         final_activation='default', pooling='flatten'):
     conv_kwargs = dict(
         strides=(2, 1), kernel_initializer='he_normal',
@@ -90,7 +90,7 @@ def dc2(inputs, output_spec, training=None, filters=(32, 64, 128),
 
     x = inputs
     for f in filters:
-        x = Conv2D(f, (5, 3), **conv_kwargs)(x)
+        x = Conv2D(f, (11, 7), **conv_kwargs)(x)
         x = MaxPooling2D(pool_size=(2, 2))(x)
 
     x = _poolers[pooling]()(x)
