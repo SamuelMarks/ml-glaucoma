@@ -14,6 +14,9 @@ from ml_glaucoma.utils.helpers import get_upper_kv
 
 valid_losses = get_upper_kv(tf.keras.losses)
 valid_losses.update(get_upper_kv(losses))
+valid_losses.update({loss_name: getattr(tf.losses, loss_name)
+                     for loss_name in dir(tf.losses)
+                     if not loss_name.startswith('_') and not loss_name.isupper()})
 SUPPORTED_LOSSES = tuple(valid_losses.keys())
 
 SUPPORTED_METRICS = 'F1', 'AUC', 'BinaryAccuracy'
