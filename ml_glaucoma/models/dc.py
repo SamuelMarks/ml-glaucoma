@@ -79,9 +79,9 @@ def dc1(inputs, output_spec, training=None, dropout_rate=0.5,
 
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])
-def dc2(inputs, output_spec, training=None, filters=(64, 32, 16),
-        dense_units=(16, 8), dropout_rate=0.5, conv_activation='relu',
-        dense_activation='relu', kernel_regularizer=None,
+def dc2(inputs, output_spec, training=None, filters=(128, 64, 32),
+        dense_units=(32, 16,), dropout_rate=0.5, conv_activation='relu',
+        dense_activation='relu', kernel_regularizer='l1',
         final_activation='default', pooling='flatten'):
     conv_kwargs = dict(
         kernel_regularizer=kernel_regularizer, activation=conv_activation)
@@ -101,4 +101,6 @@ def dc2(inputs, output_spec, training=None, filters=(64, 32, 16),
     probs = util.features_to_probs(
         x, output_spec, kernel_regularizer=kernel_regularizer,
         activation=final_activation)
-    return tf.keras.models.Model(inputs=inputs, outputs=probs)
+    model = tf.keras.models.Model(inputs=inputs, outputs=probs)
+    model._name = 'dc2'
+    return model

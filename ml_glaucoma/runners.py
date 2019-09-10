@@ -109,7 +109,7 @@ def train(problem, batch_size, epochs, model_fn, optimizer, model_dir=None,
         callbacks.extend(common_callbacks)
 
     print(os.path.basename(model_dir) + ':', model_to_dot(model))
-    if model.name == 'Model':
+    if model.name == 'model':
         model.name = os.path.basename(model_dir)
     else:
         print('model.name:', model.name)
