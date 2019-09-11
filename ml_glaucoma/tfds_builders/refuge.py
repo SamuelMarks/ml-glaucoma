@@ -137,7 +137,6 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
         return [
             tfds.core.SplitGenerator(
                 name=split,
-                num_shards=4,
                 gen_kwargs=dict(split=split, **download_dirs[split]))
             for split in ("train", "validation", "test")]
 
