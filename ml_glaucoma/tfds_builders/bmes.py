@@ -105,10 +105,10 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
             num_examples = sum(
                 len(os.listdir(os.path.join(folder, dirname)))
                 for dirname in os.listdir(folder))
-            num_shards = num_examples // 100 + 2  # basic heuristic
+            if num_examples == 0:
+                raise RuntimeError('No examples found {}'.format(folder))
             generators.append(tfds.core.SplitGenerator(
                 name=split,
-                num_shards=num_shards,
                 gen_kwargs=dict(folder=folder)))
 
         return generators
