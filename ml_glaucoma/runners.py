@@ -5,11 +5,14 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+from sys import modules
 
 import tensorflow as tf
 from tensorflow.python.keras.utils import model_to_dot
 
-from ml_glaucoma import callbacks as cb
+from ml_glaucoma import callbacks as cb, get_logger
+
+logger = get_logger(modules[__name__].__name__)
 
 
 def batch_steps(num_examples, batch_size):
@@ -114,12 +117,15 @@ def train(problem, batch_size, epochs, model_fn, optimizer, class_weight=None,
     else:
         callbacks.extend(common_callbacks)
 
-    dot = model_to_dot(model)
-    if dot is not None:
-        dotfile = os.path.join(os.path.dirname(model_dir),
-                               os.path.basename(model_dir) + '.dot')
-        dot.write(dotfile)
-        print('graphviz diagram of model generated to:', dotfile)
+    try:
+        dot = model_to_dot(model)
+        if dot is not None:
+            dotfile = os.path.join(os.path.dirname(model_dir),
+                                   os.path.basename(model_dir) + '.dot')
+            dot.write(dotfile)
+            print('graphviz diagram of model generated to:', dotfile)
+    except ImportError:
+        logger.warn('Install graphviz and pydot to generate graph')
     if model.name == 'model':
         model._name = os.path.basename(model_dir)
     print(model.summary())

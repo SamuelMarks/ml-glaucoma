@@ -4,7 +4,8 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from ml_glaucoma.callbacks import exponential_decay_lr_schedule
+from ml_glaucoma.callbacks import ExponentialDecayLrSchedule
+from ml_glaucoma.callbacks.auc_roc import AucRocCallback
 from ml_glaucoma.callbacks.loading_model_checkpoint import LoadingModelCheckpoint
 from ml_glaucoma.callbacks.sgdr_scheduler import SGDRScheduler
 from ml_glaucoma.tf_compat import is_v1

@@ -8,7 +8,7 @@ import functools
 import tensorflow as tf
 import yaml
 
-from ml_glaucoma import losses
+from ml_glaucoma import losses, callbacks
 from ml_glaucoma import problems as p
 from ml_glaucoma import runners
 from ml_glaucoma.utils.helpers import get_upper_kv
@@ -17,17 +17,21 @@ valid_losses = get_upper_kv(tf.keras.losses)
 valid_losses.update(get_upper_kv(losses))
 valid_losses.update({loss_name: getattr(tf.losses, loss_name)
                      for loss_name in dir(tf.losses)
-                     if not loss_name.startswith('_') and not loss_name.isupper()})
+                     if not loss_name.startswith('_') and loss_name == 'Reduction'})
 SUPPORTED_LOSSES = tuple(valid_losses.keys())
 
-SUPPORTED_METRICS = 'F1', 'AUC', 'BinaryAccuracy'
+valid_metrics = get_upper_kv({k: getattr(tf.keras.metrics, k)
+                              for k in dir(tf.keras.metrics)})
+SUPPORTED_METRICS = tuple(valid_metrics.keys())
 
 # use --recall_thresholds and --precision_thresholds for Precision/Recall
 
-SUPPORTED_OPTIMIZERS = tuple(
-    k for k in dir(tf.keras.optimizers)
-    if not k.startswith('_') and k not in ('get', 'deserialize')
-)
+valid_optimizers = get_upper_kv(tf.keras.optimizers)
+SUPPORTED_OPTIMIZERS = tuple(valid_optimizers.keys())
+
+valid_callbacks = get_upper_kv(tf.keras.callbacks)
+valid_callbacks.update(get_upper_kv(callbacks))
+SUPPORTED_CALLBACKS = tuple(valid_callbacks.keys())
 
 
 class Configurable(object):
@@ -300,8 +304,8 @@ class ConfigurableExponentialDecayLrSchedule(Configurable):
         if exp_lr_decay is None:
             return None
         else:
-            from ml_glaucoma.callbacks import exponential_decay_lr_schedule
-            return exponential_decay_lr_schedule(learning_rate, exp_lr_decay)
+            from ml_glaucoma.callbacks import ExponentialDecayLrSchedule
+            return ExponentialDecayLrSchedule(learning_rate, exp_lr_decay)
 
 
 class ConfigurableTrain(Configurable):
@@ -329,6 +333,20 @@ class ConfigurableTrain(Configurable):
                  'an under-represented class.'
         )
         parser.add_argument(
+            '--class-weight', default=None, type=yaml.load,
+            help='Optional dictionary mapping class indices (integers)'
+                 'to a weight (float) value, used for weighting the loss function'
+                 '(during training only).'
+                 'This can be useful to tell the model to'
+                 '"pay more attention" to samples from'
+                 'an under-represented class.'
+        )
+        parser.add_argument(
+            '--callback', nargs='*', dest='callbacks',
+            choices=SUPPORTED_CALLBACKS, default=['AUC'],
+            help='Keras callback function(s) to use. Extends default callback list.'
+        )
+        parser.add_argument(
             '--model_dir',
             help='model directory in which to save weights and '
                  'tensorboard summaries')
@@ -346,9 +364,11 @@ class ConfigurableTrain(Configurable):
             help='whether or not to write images to tensorboard')
 
     def build_self(self, problem, batch_size, epochs, model_fn, optimizer, model_dir,
+                   callback,
                    checkpoint_freq, summary_freq, lr_schedule, tb_log_dir, class_weight,
                    write_images, **_kwargs):
         return runners.train(
+            callbacks=callback,
             problem=problem,
             batch_size=batch_size,
             epochs=epochs,
