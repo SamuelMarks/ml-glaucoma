@@ -13,7 +13,7 @@ from ml_glaucoma import problems as p
 from ml_glaucoma import runners
 from ml_glaucoma.utils.helpers import get_upper_kv
 
-valid_losses = {loss: tf.keras.losses.deserialize(dict(class_name=loss, config={}))
+valid_losses = {loss: getattr(tf.keras.losses, loss)
                 for loss in dir(tf.keras.losses)
                 if not loss.startswith('_')}
 valid_losses.update({loss_name: getattr(tf.losses, loss_name)
@@ -22,7 +22,7 @@ valid_losses.update({loss_name: getattr(tf.losses, loss_name)
 valid_losses.update(get_upper_kv(losses_module))
 SUPPORTED_LOSSES = tuple(valid_losses.keys())
 
-valid_metrics = {metric: tf.keras.metrics.deserialize(dict(class_name=metric, config={}))
+valid_metrics = {metric: getattr(tf.keras.metrics, metric)
                  for metric in dir(tf.keras.metrics)
                  if not metric.startswith('_') and metric not in frozenset(('serialize', 'deserialize', 'get'))}
 SUPPORTED_METRICS = tuple(valid_metrics.keys())
@@ -226,7 +226,8 @@ class ConfigurableProblem(Configurable):
                    shuffle_buffer, use_inverse_freq_weights,
                    **kwargs):
         metrics = [
-            valid_metrics[metric]
+            (tf.keras.metrics.deserialize(dict(class_name=metric, config={})) if metric in dir(tf.keras.metrics)
+             else valid_metrics[metric])
             for metric in metrics
         ]
         # multiple threshold values don't seem to work for metrics
@@ -242,7 +243,8 @@ class ConfigurableProblem(Configurable):
                 for r in recall_thresholds])
 
         kwargs = dict(
-            loss=valid_losses[loss],
+            loss=(tf.keras.losses.deserialize(dict(class_name=loss, config={})) if loss in dir(tf.keras.losses)
+                  else valid_losses[loss]),
             metrics=metrics,
             map_fn=map_fn,
             shuffle_buffer=shuffle_buffer,
@@ -363,7 +365,7 @@ class ConfigurableTrain(Configurable):
                    callbacks, checkpoint_freq, summary_freq, lr_schedule, tb_log_dir,
                    class_weight, write_images, **_kwargs):
         return runners.train(
-            callbacks=list(map(lambda callback: valid_callbacks[callback], callbacks)),
+            callbacks=[valid_callbacks[callback] for callback in callbacks],
             problem=problem,
             batch_size=batch_size,
             epochs=epochs,
