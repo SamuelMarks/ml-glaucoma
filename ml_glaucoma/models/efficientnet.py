@@ -2,6 +2,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from inspect import currentframe
+
 import efficientnet.tfkeras as efficientnet_tfkeras_models
 import gin
 import tensorflow as tf
@@ -25,12 +27,14 @@ def efficientnet(inputs, output_spec, num_classes=2, transfer_model=None,
     )
     base_model.trainable = True
 
-    return tf.keras.Sequential([
+    model = tf.keras.Sequential([
         inputs,
         base_model,
         tf.keras.layers.GlobalAveragePooling2D(),
         tf.keras.layers.Dense(num_classes, activation='sigmoid')
     ])
+    model._name = currentframe().f_code.co_name
+    return model
 
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])
@@ -46,4 +50,6 @@ def efficient_net(inputs, output_spec, application='EfficientNetB0',
         input_tensor=inputs, **kwargs).outputs
     probs = util.features_to_probs(
         features, output_spec, activation=final_activation)
-    return tf.keras.models.Model(inputs=inputs, outputs=probs)
+    model = tf.keras.models.Model(inputs=inputs, outputs=probs)
+    model._name = currentframe().f_code.co_name
+    return model

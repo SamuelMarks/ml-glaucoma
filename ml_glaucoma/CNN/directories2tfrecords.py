@@ -3,15 +3,14 @@
 from __future__ import print_function
 
 import argparse
-import os
-import sys
 import glob
+import os
+import pickle
+import sys
 from platform import python_version_tuple
 
-import pickle
-
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 from PIL import Image
 
 if python_version_tuple()[0] == '3':

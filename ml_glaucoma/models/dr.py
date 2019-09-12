@@ -1,3 +1,5 @@
+from inspect import currentframe
+
 import gin
 import tensorflow as tf
 from efficientnet.tfkeras import EfficientNetB5
@@ -28,4 +30,6 @@ def dr0(inputs, output_spec,
     ]).outputs
     probs = util.features_to_probs(
         features, output_spec, activation=final_activation)
-    return tf.keras.models.Model(inputs=inputs, outputs=probs)
+    model = tf.keras.models.Model(inputs=inputs, outputs=probs)
+    model._name = currentframe().f_code.co_name
+    return model

@@ -2,8 +2,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
+from inspect import currentframe
+
 import gin
+import tensorflow as tf
+
 from ml_glaucoma.models import util
 
 
@@ -18,4 +21,6 @@ def applications_model(inputs, output_spec, application='ResNet50',
         input_tensor=inputs, **kwargs).outputs
     probs = util.features_to_probs(
         features, output_spec, activation=final_activation)
-    return tf.keras.models.Model(inputs=inputs, outputs=probs)
+    model = tf.keras.models.Model(inputs=inputs, outputs=probs)
+    model._name = currentframe().f_code.co_name
+    return model

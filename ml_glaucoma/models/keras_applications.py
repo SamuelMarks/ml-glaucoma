@@ -2,6 +2,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from inspect import currentframe
+
 import gin
 import tensorflow as tf
 
@@ -23,4 +25,5 @@ def keras_applications(inputs, output_spec, num_classes=2,
         tf.keras.layers.GlobalAveragePooling2D(),
         tf.keras.layers.Dense(num_classes, activation='sigmoid')
     ])
+    model._name = currentframe().f_code.co_name
     return model

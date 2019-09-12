@@ -14,9 +14,10 @@ from __future__ import division
 from __future__ import print_function
 
 import abc
-from absl import logging
+
 import tensorflow as tf
 import tensorflow_datasets as tfds
+from absl import logging
 from tensorflow_datasets.core.download import DownloadConfig
 
 InputSpec = tf.keras.layers.InputSpec
@@ -394,6 +395,7 @@ def preprocess_example(image, labels,
                        per_image_standardization=True,
                        labels_are_images=False):
     """Preprocessing function for optional flipping/standardization."""
+
     def _maybe_apply(img, _labels, fn, apply_to_labels, prob=0.5):
         apply = tf.random.uniform((), dtype=tf.float32) < prob
         if apply_to_labels:

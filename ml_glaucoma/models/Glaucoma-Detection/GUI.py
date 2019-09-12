@@ -1,6 +1,5 @@
 import os
-from tkinter import *
-from tkinter import messagebox
+from collections import namedtuple
 
 import cv2
 import matplotlib.pyplot as plt
@@ -20,6 +19,12 @@ def get_filenames():
 
 def curselect(_event):
     global spath
+
+    if 't1' not in globals():
+        raise NotImplementedError('Fix `t1` import')
+
+    t1 = namedtuple('a', ('curselection', 'get'))(lambda: [], lambda i: i)
+
     index = t1.curselection()[0]
     spath = t1.get(index)
     return spath
@@ -111,40 +116,44 @@ def graph():
 
 # Frontend GUI
 
+def get_window():
+    from tkinter import *
 
-window = Tk()
-window.title('Glaucoma Detection')
-window.geometry('1000x550')
-window.configure(background='grey')
+    window = Tk()
+    window.title('Glaucoma Detection')
+    window.geometry('1000x550')
+    window.configure(background='grey')
 
-l1 = Label(window, text='Test Image', font=('Arial', 20), padx=10, bg='grey')
-l1.grid(row=0, column=0)
+    l1 = Label(window, text='Test Image', font=('Arial', 20), padx=10, bg='grey')
+    l1.grid(row=0, column=0)
 
-b1 = Button(window, text='Run', font=('Arial', 20), command=run)
-b1.grid(row=1, column=3)
+    b1 = Button(window, text='Run', font=('Arial', 20), command=run)
+    b1.grid(row=1, column=3)
 
-b2 = Button(window, text='Preview', font=('Arial', 20), command=preview)
-b2.grid(row=1, column=2, rowspan=2, padx=10)
+    b2 = Button(window, text='Preview', font=('Arial', 20), command=preview)
+    b2.grid(row=1, column=2, rowspan=2, padx=10)
 
-b2 = Button(window, text='ROI', font=('Arial', 20), command=ROI)
-b2.grid(row=2, column=2, rowspan=3, padx=10)
+    b2 = Button(window, text='ROI', font=('Arial', 20), command=ROI)
+    b2.grid(row=2, column=2, rowspan=3, padx=10)
 
-b3 = Button(window, text='Run all', font=('Arial', 20), command=run_all)
-b3.grid(row=2, column=3)
+    b3 = Button(window, text='Run all', font=('Arial', 20), command=run_all)
+    b3.grid(row=2, column=3)
 
-b4 = Button(window, text='Graph', font=('Arial', 20), command=graph)
-b4.grid(row=3, column=3)
+    b4 = Button(window, text='Graph', font=('Arial', 20), command=graph)
+    b4.grid(row=3, column=3)
 
-t1 = Listbox(window, height=20, width=60, selectmode=SINGLE, font=('Arial', 15), justify=CENTER)
-t1.grid(row=1, column=0, rowspan=3, padx=10)
-for filename in get_filenames():
-    t1.insert(END, filename)
-t1.bind('<<ListboxSelect>>', curselect)
+    t1 = Listbox(window, height=20, width=60, selectmode=SINGLE, font=('Arial', 15), justify=CENTER)
+    t1.grid(row=1, column=0, rowspan=3, padx=10)
+    for filename in get_filenames():
+        t1.insert(END, filename)
+    t1.bind('<<ListboxSelect>>', curselect)
 
-sb1 = Scrollbar(window)
-sb1.grid(row=1, column=1, rowspan=4)
+    sb1 = Scrollbar(window)
+    sb1.grid(row=1, column=1, rowspan=4)
 
-t1.configure(yscrollcommand=sb1.set)
-sb1.configure(command=t1.yview)
+    t1.configure(yscrollcommand=sb1.set)
+    sb1.configure(command=t1.yview)
 
-window.mainloop()
+
+if __name__ == '__main__':
+    get_window().mainloop()

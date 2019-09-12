@@ -2,11 +2,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow_datasets.public_api as tfds
-import tensorflow as tf
-import numpy as np
 import os
 import zipfile
+
+import numpy as np
+import tensorflow as tf
+import tensorflow_datasets.public_api as tfds
+
 from ml_glaucoma.tfds_builders import transformer
 
 

@@ -2,15 +2,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from inspect import currentframe
+
 import gin
 import tensorflow as tf
+from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Dense, Dropout
 
 from ml_glaucoma.models import util
-
-Conv2D = tf.keras.layers.Conv2D
-Dense = tf.keras.layers.Dense
-Dropout = tf.keras.layers.Dropout
-MaxPooling2D = tf.keras.layers.MaxPooling2D
 
 _poolers = {
     'avg': tf.keras.layers.GlobalAveragePooling2D,
@@ -42,7 +40,9 @@ def dc0(inputs, output_spec, training=None, filters=(32, 32, 64),
     probs = util.features_to_probs(
         x, output_spec, kernel_regularizer=kernel_regularizer,
         activation=final_activation)
-    return tf.keras.models.Model(inputs=inputs, outputs=probs)
+    model = tf.keras.models.Model(inputs=inputs, outputs=probs)
+    model._name = currentframe().f_code.co_name
+    return model
 
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])
@@ -74,7 +74,9 @@ def dc1(inputs, output_spec, training=None, dropout_rate=0.5,
     probs = util.features_to_probs(
         x, output_spec, kernel_regularizer=kernel_regularizer,
         activation=final_activation)
-    return tf.keras.models.Model(inputs=inputs, outputs=probs)
+    model = tf.keras.models.Model(inputs=inputs, outputs=probs)
+    model._name = currentframe().f_code.co_name
+    return model
 
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])
@@ -102,5 +104,5 @@ def dc2(inputs, output_spec, training=None, filters=(32, 32, 64),
         x, output_spec, kernel_regularizer=kernel_regularizer,
         activation=final_activation)
     model = tf.keras.models.Model(inputs=inputs, outputs=probs)
-    model._name = 'dc2'
+    model._name = currentframe().f_code.co_name
     return model

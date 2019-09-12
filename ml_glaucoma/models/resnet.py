@@ -2,6 +2,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from inspect import currentframe
+
 import gin
 import tensorflow as tf
 
@@ -28,4 +30,5 @@ def resnet50(inputs, output_spec, num_classes=2,
         x, output_spec, kernel_regularizer=kernel_regularizer,
         activation=final_activation)
     '''
+    model._name = currentframe().f_code.co_name
     return model

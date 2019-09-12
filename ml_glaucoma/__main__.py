@@ -5,7 +5,7 @@ from ml_glaucoma import __version__
 from ml_glaucoma.CNN import bmes_cnn
 from ml_glaucoma.download import download
 from ml_glaucoma.parser import parser as ml_glaucoma_parser
-from ml_glaucoma.v2_cli import get_parser, cli_v2_processor
+from ml_glaucoma.v2_cli import get_parser
 
 # Original options
 '''

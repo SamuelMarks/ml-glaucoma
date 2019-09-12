@@ -2,6 +2,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from inspect import currentframe
+
 import gin
 import tensorflow as tf
 from tensorflow.python.keras.layers import Conv2D
@@ -33,5 +35,6 @@ def unet(inputs, output_spec, training=None, kernel_regularizer=None,
         activation=final_activation)
 
     model = tf.keras.models.Model(input=inputs, output=probs)
+    model._name = currentframe().f_code.co_name
 
     return model
