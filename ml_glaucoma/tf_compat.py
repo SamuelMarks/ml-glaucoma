@@ -14,15 +14,15 @@ except ImportError:
 import distutils.version
 
 tf_version = distutils.version.LooseVersion(tf.__version__)
-is_v1 = tf_version.version[0] == 1
-is_v2 = tf_version.version[0] == 2
+is_tf_v1 = tf_version.version[0] == 1
+is_tf_v2 = tf_version.version[0] == 2
 
-if not (is_v1 or is_v2):
+if not (is_tf_v1 or is_tf_v2):
     raise ImportError(
         'Detected version of tensorflow {:s} not compatible with `gl-glaucoma` -'
         ' only versions 1 and 2 supported'.format(tf.__version__))
 
-if is_v1:
+if is_tf_v1:
     def dim_value(dimension):
         return dimension.value
 
@@ -44,7 +44,7 @@ else:
     def dim_value(dimension):
         return dimension
 
-if is_v1:
+if is_tf_v1:
     tf.nest = tf.contrib.framework.nest
     from tensorflow.python.keras.metrics import Metric
 

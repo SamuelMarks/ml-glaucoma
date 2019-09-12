@@ -1,4 +1,4 @@
-def exponential_decay_lr_schedule(lr0, factor):
+def ExponentialDecayLrSchedule(lr0, factor):
     """
     lambda epoch: lr0 * (factor ** epoch)
 

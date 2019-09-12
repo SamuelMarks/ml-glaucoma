@@ -8,13 +8,13 @@ import functools
 import tensorflow as tf
 import yaml
 
-from ml_glaucoma import losses, callbacks
+from ml_glaucoma import losses as losses_module, callbacks as callbacks_module
 from ml_glaucoma import problems as p
 from ml_glaucoma import runners
 from ml_glaucoma.utils.helpers import get_upper_kv
 
 valid_losses = get_upper_kv(tf.keras.losses)
-valid_losses.update(get_upper_kv(losses))
+valid_losses.update(get_upper_kv(losses_module))
 valid_losses.update({loss_name: getattr(tf.losses, loss_name)
                      for loss_name in dir(tf.losses)
                      if not loss_name.startswith('_') and loss_name == 'Reduction'})
@@ -30,7 +30,7 @@ valid_optimizers = get_upper_kv(tf.keras.optimizers)
 SUPPORTED_OPTIMIZERS = tuple(valid_optimizers.keys())
 
 valid_callbacks = get_upper_kv(tf.keras.callbacks)
-valid_callbacks.update(get_upper_kv(callbacks))
+valid_callbacks.update(get_upper_kv(callbacks_module))
 SUPPORTED_CALLBACKS = tuple(valid_callbacks.keys())
 
 
@@ -223,8 +223,11 @@ class ConfigurableProblem(Configurable):
                    shuffle_buffer, use_inverse_freq_weights,
                    **kwargs):
         metrics = [
-            tf.keras.metrics.deserialize(dict(class_name=m, config={}))
-            for m in metrics]
+            (tf.keras.metrics.deserialize(dict(class_name=m, config={}))
+             if m in dir(tf.metrics)
+             else valid_metrics[m])
+            for m in metrics
+        ]
         # multiple threshold values don't seem to work for metrics
         metrics.extend(
             [tf.keras.metrics.Precision(
@@ -284,7 +287,7 @@ class ConfigurableOptimizer(Configurable):
             help='base optimizer learning rate')
 
     def build(self, optimizer, learning_rate, **kwargs):
-        return getattr(tf.keras.optimizers, optimizer)(lr=learning_rate)
+        return valid_optimizers[optimizer](lr=learning_rate)
 
     def build_self(self, learning_rate, exp_lr_decay, **kwargs):
         raise NotImplementedError
@@ -304,17 +307,19 @@ class ConfigurableExponentialDecayLrSchedule(Configurable):
         if exp_lr_decay is None:
             return None
         else:
-            from ml_glaucoma.callbacks import ExponentialDecayLrSchedule
+            from ml_glaucoma.callbacks.exponential_decay_lr_schedule import ExponentialDecayLrSchedule
             return ExponentialDecayLrSchedule(learning_rate, exp_lr_decay)
 
 
 class ConfigurableTrain(Configurable):
-    def __init__(self, problem, model_fn, optimizer, lr_schedule=None, class_weight=None):
+    def __init__(self, problem, model_fn, optimizer, lr_schedule=None, class_weight=None, callbacks=None):
         super(ConfigurableTrain, self).__init__(
+            class_weight=class_weight,
             problem=problem,
             model_fn=model_fn,
             optimizer=optimizer,
-            lr_schedule=lr_schedule)
+            lr_schedule=lr_schedule,
+            callbacks=callbacks)
 
     def fill_self(self, parser):
         parser.add_argument(
@@ -364,11 +369,10 @@ class ConfigurableTrain(Configurable):
             help='whether or not to write images to tensorboard')
 
     def build_self(self, problem, batch_size, epochs, model_fn, optimizer, model_dir,
-                   callback,
-                   checkpoint_freq, summary_freq, lr_schedule, tb_log_dir, class_weight,
-                   write_images, **_kwargs):
+                   callbacks, checkpoint_freq, summary_freq, lr_schedule, tb_log_dir,
+                   class_weight, write_images, **_kwargs):
         return runners.train(
-            callbacks=callback,
+            callbacks=list(map(lambda callback: valid_callbacks[callback], callbacks)),
             problem=problem,
             batch_size=batch_size,
             epochs=epochs,

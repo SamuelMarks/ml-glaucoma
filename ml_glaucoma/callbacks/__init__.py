@@ -4,11 +4,11 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from ml_glaucoma.callbacks import ExponentialDecayLrSchedule
 from ml_glaucoma.callbacks.auc_roc import AucRocCallback
+from ml_glaucoma.callbacks.exponential_decay_lr_schedule import ExponentialDecayLrSchedule
 from ml_glaucoma.callbacks.loading_model_checkpoint import LoadingModelCheckpoint
 from ml_glaucoma.callbacks.sgdr_scheduler import SGDRScheduler
-from ml_glaucoma.tf_compat import is_v1
+from ml_glaucoma.tf_compat import is_tf_v1
 
 
 def get_callbacks(
@@ -74,7 +74,7 @@ def get_callbacks(
                 initial_epoch * train_steps_per_epoch
             tb_callback._total_batches_seen = initial_train_steps
             # v1 a sample is a batch, where as in v2 a sample is an element
-            if is_v1:
+            if is_tf_v1:
                 tb_callback._samples_seen = initial_train_steps
             else:
                 tb_callback._samples_seen = initial_train_steps * batch_size
