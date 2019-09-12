@@ -338,15 +338,6 @@ class ConfigurableTrain(Configurable):
                  'an under-represented class.'
         )
         parser.add_argument(
-            '--class-weight', default=None, type=yaml.load,
-            help='Optional dictionary mapping class indices (integers)'
-                 'to a weight (float) value, used for weighting the loss function'
-                 '(during training only).'
-                 'This can be useful to tell the model to'
-                 '"pay more attention" to samples from'
-                 'an under-represented class.'
-        )
-        parser.add_argument(
             '--callback', nargs='*', dest='callbacks',
             choices=SUPPORTED_CALLBACKS, default=['AUC'],
             help='Keras callback function(s) to use. Extends default callback list.'
