@@ -389,6 +389,8 @@ class TfdsMultiProblem(BaseProblem):
 
 
 def preprocess_example(image, labels,
+                       pad_to_square=False,
+                       resolution=None,
                        use_rgb=True,  # grayscale if False
                        maybe_horizontal_flip=False,
                        maybe_vertical_flip=False,
@@ -396,7 +398,7 @@ def preprocess_example(image, labels,
                        labels_are_images=False):
     """Preprocessing function for optional flipping/standardization."""
 
-    def _maybe_apply(img, _labels, fn, apply_to_labels, prob=0.5):
+    def maybe_apply(img, _labels, fn, apply_to_labels, prob=0.5):
         apply = tf.random.uniform((), dtype=tf.float32) < prob
         if apply_to_labels:
             return tf.cond(
@@ -407,11 +409,35 @@ def preprocess_example(image, labels,
             return tf.cond(apply, lambda: fn(img), lambda: img), _labels
 
     if maybe_horizontal_flip:
-        image, labels = _maybe_apply(
+        image, labels = maybe_apply(
             image, labels, tf.image.flip_left_right, labels_are_images)
     if maybe_vertical_flip:
-        image, labels = _maybe_apply(
+        image, labels = maybe_apply(
             image, labels, tf.image.flip_up_down, labels_are_images)
+    if pad_to_square:
+        input_res = tf.shape(image)[-3:-1]
+        max_dim = tf.reduce_max(input_res)
+        pad_total = max_dim - input_res
+        pad_left = pad_total // 2
+        pad_right = pad_total - pad_left
+        num_batch_dims = image.shape.ndims - 3  # probably zero
+        pad_left = tf.pad(pad_left, [[num_batch_dims, 1]])
+        pad_right = tf.pad(pad_right, [[num_batch_dims, 1]])
+        paddings = tf.stack((pad_left, pad_right), axis=1)
+        image = tf.pad(image, paddings)
+        if labels_are_images:
+            labels = tf.pad(labels, paddings)
+    if resolution is not None:
+        def resize(image):
+            image = tf.expand_dims(image, axis=0)
+            image = tf.image.resize_area(image, resolution, align_corners=True)
+            image = tf.squeeze(image, axis=0)
+            return image
+
+        image = resize(image)
+        if labels_are_images:
+            labels = resize(image)
+
     if not use_rgb:
         image = tf.reduce_mean(image, axis=-1, keepdims=True)
     # image = tf.cast(image, tf.float32)
