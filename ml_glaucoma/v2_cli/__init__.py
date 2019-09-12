@@ -365,7 +365,7 @@ class ConfigurableTrain(Configurable):
                    callbacks, checkpoint_freq, summary_freq, lr_schedule, tb_log_dir,
                    class_weight, write_images, **_kwargs):
         return runners.train(
-            callbacks=[valid_callbacks[callback] for callback in callbacks],
+            callbacks=list(map(lambda callback: valid_callbacks[callback], callbacks)),
             problem=problem,
             batch_size=batch_size,
             epochs=epochs,
