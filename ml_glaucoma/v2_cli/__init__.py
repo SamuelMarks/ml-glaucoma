@@ -13,15 +13,18 @@ from ml_glaucoma import problems as p
 from ml_glaucoma import runners
 from ml_glaucoma.utils.helpers import get_upper_kv
 
-valid_losses = get_upper_kv(tf.keras.losses)
-valid_losses.update(get_upper_kv(losses_module))
+valid_losses = {loss: tf.keras.losses.deserialize(dict(class_name=loss, config={}))
+                for loss in dir(tf.keras.losses)
+                if not loss.startswith('_')}
 valid_losses.update({loss_name: getattr(tf.losses, loss_name)
                      for loss_name in dir(tf.losses)
                      if not loss_name.startswith('_') and loss_name == 'Reduction'})
+valid_losses.update(get_upper_kv(losses_module))
 SUPPORTED_LOSSES = tuple(valid_losses.keys())
 
-valid_metrics = get_upper_kv({k: getattr(tf.keras.metrics, k)
-                              for k in dir(tf.keras.metrics)})
+valid_metrics = {metric: tf.keras.metrics.deserialize(dict(class_name=metric, config={}))
+                 for metric in dir(tf.keras.metrics)
+                 if not metric.startswith('_') and metric not in frozenset(('serialize', 'deserialize', 'get'))}
 SUPPORTED_METRICS = tuple(valid_metrics.keys())
 
 # use --recall_thresholds and --precision_thresholds for Precision/Recall
@@ -223,10 +226,8 @@ class ConfigurableProblem(Configurable):
                    shuffle_buffer, use_inverse_freq_weights,
                    **kwargs):
         metrics = [
-            (tf.keras.metrics.deserialize(dict(class_name=m, config={}))
-             if m in dir(tf.metrics)
-             else valid_metrics[m])
-            for m in metrics
+            valid_metrics[metric]
+            for metric in metrics
         ]
         # multiple threshold values don't seem to work for metrics
         metrics.extend(
@@ -241,8 +242,7 @@ class ConfigurableProblem(Configurable):
                 for r in recall_thresholds])
 
         kwargs = dict(
-            loss=(tf.keras.losses.deserialize(dict(class_name=loss, config={}))
-                  if loss in dir(tf.keras.losses) else valid_losses[loss]),
+            loss=valid_losses[loss],
             metrics=metrics,
             map_fn=map_fn,
             shuffle_buffer=shuffle_buffer,
