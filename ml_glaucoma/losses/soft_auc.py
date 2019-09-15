@@ -12,7 +12,8 @@ def SoftAUC(y_true, y_pred):
 
     # Extract zeros and ones
     if y_true.dtype != tf.bool:
-        raise ValueError('y_true must be bool, got {}'.format(y_true.dtype))
+        y_true = tf.cast(y_true, tf.bool)  # keras will pass in a float
+        # raise ValueError('y_true must be bool, got {}'.format(y_true.dtype))
     neg_pred_vr, pos_pred_vr = tf.dynamic_partition(
         y_pred, tf.cast(y_true, tf.int32), num_partitions=2)
 
