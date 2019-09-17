@@ -232,6 +232,31 @@ class ConfigurableProblem(Configurable):
         ]
         # multiple threshold values don't seem to work for metrics
         metrics.extend(
+            [tf.keras.metrics.TruePositives(
+                thresholds=[t],
+                name='tp{:d}'.format(int(100 * t)))
+                for t in precision_thresholds])
+        metrics.extend(
+            [tf.keras.metrics.FalsePositives(
+                thresholds=[t],
+                name='fp{:d}'.format(int(100 * t)))
+                for t in precision_thresholds])
+        metrics.extend(
+            [tf.keras.metrics.TrueNegatives(
+                thresholds=[t],
+                name='tn{:d}'.format(int(100 * t)))
+                for t in precision_thresholds])
+        metrics.extend(
+            [tf.keras.metrics.FalseNegatives(
+                thresholds=[t],
+                name='fn{:d}'.format(int(100 * t)))
+                for t in precision_thresholds])
+        metrics.extend(
+            [tf.contrib.metrics.f1_score(
+                thresholds=[t],
+                name='f1{:d}'.format(int(100 * t)))
+                for t in precision_thresholds])
+        metrics.extend(
             [tf.keras.metrics.Precision(
                 thresholds=[t],
                 name='precision{:d}'.format(int(100 * t)))

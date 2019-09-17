@@ -1,6 +1,3 @@
-import numpy as np
-
-
 def SoftAUC(y_true, y_pred):
     import tensorflow as tf
     import tensorflow.keras.backend as K
