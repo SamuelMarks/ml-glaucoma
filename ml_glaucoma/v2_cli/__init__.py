@@ -254,6 +254,7 @@ class ConfigurableProblem(Configurable):
                 thresholds=[t],
                 name='fn{:d}'.format(int(100 * t)))
                 for t in precision_thresholds])
+        '''
         metrics.extend(
             [F1Metric(
                 num_classes=2,
@@ -270,6 +271,7 @@ class ConfigurableProblem(Configurable):
                 thresholds=[r],
                 name='recall{:d}'.format(int(100 * r)))
                 for r in recall_thresholds])
+        '''
 
         kwargs = dict(
             loss=(tf.keras.losses.deserialize(dict(class_name=loss, config={})) if loss in dir(tf.keras.losses)

@@ -1,3 +1,5 @@
+from abc import ABC
+
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras.backend as K
@@ -5,7 +7,13 @@ from tensorflow.python.keras.backend import get_session
 
 
 # Adapted from Vinicius comment in https://www.kaggle.com/c/human-protein-atlas-image-classification/discussion/73929
-class F1Metric(tf.keras.layers.Layer):
+class F1Metric(tf.keras.metrics.Metric):
+    def result(self):
+        pass
+
+    def update_state(self, *args, **kwargs):
+        pass
+
     def __init__(self, num_classes, threshold, **kwargs):
         kwargs.setdefault('name', 'f1')
         super(F1Metric, self).__init__(**kwargs)
@@ -33,13 +41,13 @@ class F1Metric(tf.keras.layers.Layer):
         )
 
     def streaming_counts(self, y_true, y_pred):
-        self.tp_mac = Metrics.metric_variable(
+        self.tp_mac = F1Metric.metric_variable(
             shape=[self.num_classes], dtype=tf.int64, validate_shape=False, name='tp_mac'
         )
-        self.fp_mac = Metrics.metric_variable(
+        self.fp_mac = F1Metric.metric_variable(
             shape=[self.num_classes], dtype=tf.int64, validate_shape=False, name='fp_mac'
         )
-        self.fn_mac = Metrics.metric_variable(
+        self.fn_mac = F1Metric.metric_variable(
             shape=[self.num_classes], dtype=tf.int64, validate_shape=False, name='fn_mac'
         )
 
@@ -52,8 +60,7 @@ class F1Metric(tf.keras.layers.Layer):
 
         self.local_variables = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES)
 
-    def __call__(self, y_true_and_y_pred, **kwargs):
-        y_true, y_pred = y_true_and_y_pred
+    def __call__(self, y_true, y_pred, **kwargs):
         rounded_pred = K.cast(K.greater_equal(y_pred, self.threshold), 'float32')
         self.streaming_counts(y_true, rounded_pred)
         prec_mac = self.tp_mac / (self.tp_mac + self.fp_mac)
