@@ -230,6 +230,7 @@ class ConfigurableProblem(Configurable):
              else valid_metrics[metric])
             for metric in metrics
         ]
+
         # multiple threshold values don't seem to work for metrics
         metrics.extend(
             [tf.keras.metrics.TruePositives(
@@ -251,11 +252,10 @@ class ConfigurableProblem(Configurable):
                 thresholds=[t],
                 name='fn{:d}'.format(int(100 * t)))
                 for t in precision_thresholds])
-        metrics.extend(
-            [tf.contrib.metrics.f1_score(
-                thresholds=[t],
-                name='f1{:d}'.format(int(100 * t)))
-                for t in precision_thresholds])
+        metrics.append(
+            tf.contrib.metrics.f1_score(
+                name='f1{:d}')
+        )
         metrics.extend(
             [tf.keras.metrics.Precision(
                 thresholds=[t],

@@ -48,33 +48,55 @@ def train(problem, batch_size, epochs, model_fn, optimizer, class_weight=None,
     """
     Train a model on the given problem
 
-    Args:
-        problem: `ml_glaucoma.problems.Problem` instance
-        batch_size: int, size of each batch for training/evaluation
-        epochs: int, number of epochs
-        model_fn: function mapping (inputs, output_spec) -> outputs.
-        optimizer: `tf.keras.optimizers.Optimizer` instance.
-        class_weight: Optional dictionary mapping class indices (integers)
+    :param problem: Problem instance
+    :param problem: ```ml_glaucoma.problems.Problem```
+
+    :param batch_size: size of each batch for training/evaluation
+    :param batch_size: int
+
+    :param epochs: number of epochs
+    :param epochs: int
+
+    :param model_fn: function mapping (inputs, output_spec) -> outputs.
+    :param model_fn: (inputs, output_spec) -> outputs
+
+    :param optimizer: Optimizer instance.
+    :param optimizer: ```tf.keras.optimizers.Optimizer```
+
+    :param class_weight: Optional dictionary mapping class indices (integers)
             to a weight (float) value, used for weighting the loss function
             (during training only).
             This can be useful to tell the model to
             "pay more attention" to samples from
             an under-represented class.
-        model_dir: directory in which to save models. If not provided,
-            `ml_glaucoma.runners.default_model_dir()` is used.
-        callbacks: list of callbacks in addition to those created below
-        verbose: passed to `tf.keras.models.Model.fit`.
-        checkpoint_freq: frequency in epochs at which to save weights.
-        summary_freq: frequency in batches at which to save tensorboard
-            summaries.
-        lr_schedule: function mapping `epoch -> learning_rate`
-        tensorboard_log_dir: directory to log tensorboard summaries. If not
-            provided, `model_dir` is used
-        write_images: passed to `tf.keras.callbacks.TensorBoard`.
+    :param class_weight: {}
 
-    Returns:
-        `tf.keras` `History` object as returned by `model.fit`
+    :param callbacks: list of callbacks in addition to those created below
+    :param callbacks: [tf.keras.callbacks.Callback]
+
+    :param verbose: passed to `tf.keras.models.Model.fit`
+    :param verbose: bool
+
+    :param checkpoint_freq: frequency in epochs at which to save weights.
+    :param checkpoint_freq: int
+
+    :param summary_freq: frequency in batches at which to save tensorboard summaries.
+    :param summary_freq: int
+
+    :param lr_schedule: function mapping `epoch -> learning_rate`
+    :param (int) -> int
+
+    :param tensorboard_log_dir: directory to log tensorboard summaries. If not
+            provided, `model_dir` is used
+    :param tensorboard_log_dir: str
+
+    :param write_images: passed to `tf.keras.callbacks.TensorBoard`
+    :param write_images: bool
+
+    :return `History` object as returned by `model.fit`
+    :rtype ``tf.keras.History``
     """
+    optimizer = optimizer  # type: tf.keras.optimizers.Optimizer
     if model_dir is None:
         model_dir = default_model_dir()
     if model_dir is not None:
@@ -94,6 +116,8 @@ def train(problem, batch_size, epochs, model_fn, optimizer, class_weight=None,
         optimizer=optimizer,
         loss=problem.loss,
         metrics=problem.metrics)
+
+    logger.info('optimizer: {}'.format(optimizer))
 
     train_steps = batch_steps(
         problem.examples_per_epoch('train'), batch_size)
