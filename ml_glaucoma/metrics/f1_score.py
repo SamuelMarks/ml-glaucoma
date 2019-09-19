@@ -7,7 +7,8 @@ from tensorflow.python.keras.backend import get_session
 # Adapted from Vinicius comment in https://www.kaggle.com/c/human-protein-atlas-image-classification/discussion/73929
 class F1Metric(tf.keras.layers.Layer):
     def __init__(self, num_classes, threshold, **kwargs):
-        super(F1Metric, self).__init__(name='f1', **kwargs)
+        kwargs.setdefault('name', 'f1')
+        super(F1Metric, self).__init__(**kwargs)
         self.num_classes = num_classes
         self.threshold = threshold
         self.stateful = True
