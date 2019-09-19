@@ -8,9 +8,10 @@ import functools
 import tensorflow as tf
 import yaml
 
-from ml_glaucoma import losses as losses_module, callbacks as callbacks_module
+from ml_glaucoma import losses as losses_module, callbacks as callbacks_module, metrics as metrics_module
 from ml_glaucoma import problems as p
 from ml_glaucoma import runners
+from ml_glaucoma.metrics import F1Metric
 from ml_glaucoma.utils.helpers import get_upper_kv
 
 valid_losses = {loss: getattr(tf.keras.losses, loss)
@@ -25,6 +26,7 @@ SUPPORTED_LOSSES = tuple(valid_losses.keys())
 valid_metrics = {metric: getattr(tf.keras.metrics, metric)
                  for metric in dir(tf.keras.metrics)
                  if not metric.startswith('_') and metric not in frozenset(('serialize', 'deserialize', 'get'))}
+valid_metrics.update(get_upper_kv(metrics_module))
 SUPPORTED_METRICS = tuple(valid_metrics.keys())
 
 # use --recall_thresholds and --precision_thresholds for Precision/Recall
@@ -252,10 +254,11 @@ class ConfigurableProblem(Configurable):
                 thresholds=[t],
                 name='fn{:d}'.format(int(100 * t)))
                 for t in precision_thresholds])
-        metrics.append(
-            tf.contrib.metrics.f1_score(
-                name='f1{:d}')
-        )
+        metrics.extend([F1Metric(
+            num_classes=2,
+            threshold=t,
+            name='f1{:d}'.format(int(100 * t)))
+            for t in precision_thresholds])
         metrics.extend(
             [tf.keras.metrics.Precision(
                 thresholds=[t],
