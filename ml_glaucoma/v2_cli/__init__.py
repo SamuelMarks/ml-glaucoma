@@ -254,11 +254,12 @@ class ConfigurableProblem(Configurable):
                 thresholds=[t],
                 name='fn{:d}'.format(int(100 * t)))
                 for t in precision_thresholds])
-        metrics.extend([F1Metric(
-            num_classes=2,
-            threshold=t,
-            name='f1{:d}'.format(int(100 * t)))
-            for t in precision_thresholds])
+        metrics.extend(
+            [F1Metric(
+                num_classes=2,
+                threshold=t,
+                name='f1{:d}'.format(int(100 * t)))
+                for t in precision_thresholds])
         metrics.extend(
             [tf.keras.metrics.Precision(
                 thresholds=[t],
