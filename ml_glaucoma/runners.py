@@ -201,7 +201,8 @@ def evaluate(problem, batch_size, model_fn, optimizer, model_dir=None):
         metrics=problem.metrics)
 
     manager_cb = cb.LoadingModelCheckpoint(
-        model_dir=model_dir, period=1)
+        model_dir=model_dir, save_freq='epoch'
+    )
     manager_cb.set_model(model)
     manager_cb.restore()
 
