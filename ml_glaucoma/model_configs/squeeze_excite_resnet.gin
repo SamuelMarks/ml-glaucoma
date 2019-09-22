@@ -1,0 +1,6 @@
+import ml_glaucoma.models.squeeze_excite_resnet
+model_fn = @se_resnet
+se_resnet.application = %application
+application = 'SEResNet50'
+se_resnet.final_activation = %final_activation
+final_activation = 'default'

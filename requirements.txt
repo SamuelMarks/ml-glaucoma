@@ -20,3 +20,4 @@ pydot
 https://github.com/jackd/gin-config/zipball/tf2#egg=gin-config
 https://github.com/SamuelMarks/MNet_DeepCDR/zipball/setup#egg=mnet_deep_cdr
 https://github.com/SamuelMarks/efficientnet/zipball/tf-no-attribute-fix#egg=efficientnet
+https://github.com/SamuelMarks/keras-squeeze-excite-network/zipball/master#egg=keras-squeeze-excite-network

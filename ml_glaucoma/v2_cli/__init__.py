@@ -234,43 +234,42 @@ class ConfigurableProblem(Configurable):
         ]
 
         # multiple threshold values don't seem to work for metrics
-        metrics.extend(
-            [tf.keras.metrics.TruePositives(
-                thresholds=[t],
-                name='tp{:d}'.format(int(100 * t)))
-                for t in precision_thresholds])
-        metrics.extend(
-            [tf.keras.metrics.FalsePositives(
-                thresholds=[t],
-                name='fp{:d}'.format(int(100 * t)))
-                for t in precision_thresholds])
-        metrics.extend(
-            [tf.keras.metrics.TrueNegatives(
-                thresholds=[t],
-                name='tn{:d}'.format(int(100 * t)))
-                for t in precision_thresholds])
-        metrics.extend(
-            [tf.keras.metrics.FalseNegatives(
-                thresholds=[t],
-                name='fn{:d}'.format(int(100 * t)))
-                for t in precision_thresholds])
-
-        metrics.extend(
-            [F1Metric(
-                num_classes=2,
-                threshold=t,
-                name='f1{:d}'.format(int(100 * t)))
-                for t in precision_thresholds])
-        metrics.extend(
-            [tf.keras.metrics.Precision(
-                thresholds=[t],
-                name='precision{:d}'.format(int(100 * t)))
-                for t in precision_thresholds])
-        metrics.extend(
-            [tf.keras.metrics.Recall(
-                thresholds=[r],
-                name='recall{:d}'.format(int(100 * r)))
-                for r in recall_thresholds])
+        metrics += [
+                       tf.keras.metrics.TruePositives(
+                           thresholds=[t],
+                           name='tp{:d}'.format(int(100 * t)))
+                       for t in precision_thresholds
+                   ] + [
+                       tf.keras.metrics.FalsePositives(
+                           thresholds=[t],
+                           name='fp{:d}'.format(int(100 * t)))
+                       for t in precision_thresholds
+                   ] + [
+                       tf.keras.metrics.TrueNegatives(
+                           thresholds=[t],
+                           name='tn{:d}'.format(int(100 * t)))
+                       for t in precision_thresholds
+                   ] + [
+                       tf.keras.metrics.FalseNegatives(
+                           thresholds=[t],
+                           name='fn{:d}'.format(int(100 * t)))
+                       for t in precision_thresholds
+                   ] + [
+                       F1Metric(
+                           num_classes=2,
+                           threshold=t,
+                           name='f1{:d}'.format(int(100 * t)))
+                       for t in precision_thresholds
+                   ] + [
+                       tf.keras.metrics.Precision(
+                           thresholds=[t],
+                           name='precision{:d}'.format(int(100 * t)))
+                       for t in precision_thresholds
+                   ] + [
+                       tf.keras.metrics.Recall(
+                           thresholds=[r],
+                           name='recall{:d}'.format(int(100 * r)))
+                       for r in recall_thresholds]
 
         kwargs = dict(
             loss=(tf.keras.losses.deserialize(dict(class_name=loss, config={})) if loss in dir(tf.keras.losses)
@@ -281,8 +280,7 @@ class ConfigurableProblem(Configurable):
             use_inverse_freq_weights=use_inverse_freq_weights)
         if len(builders) == 1:
             return p.TfdsProblem(builder=builders[0], **kwargs)
-        else:
-            return p.TfdsMultiProblem(builders=builders, **kwargs)
+        return p.TfdsMultiProblem(builders=builders, **kwargs)
 
 
 class ConfigurableModelFn(Configurable):
