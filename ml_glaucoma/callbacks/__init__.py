@@ -14,7 +14,7 @@ from ml_glaucoma.tf_compat import is_tf_v1
 def get_callbacks(
     model,
     batch_size,
-    checkpoint_freq=5,
+    checkpoint_freq='epoch',
     summary_freq=10,
     model_dir=None,
     train_steps_per_epoch=None,
@@ -55,7 +55,7 @@ def get_callbacks(
     initial_epoch = 0
     if checkpoint_freq is not None:
         saver_callback = LoadingModelCheckpoint(
-            model_dir, period=checkpoint_freq)
+            model_dir, save_freq=checkpoint_freq)
         latest_checkpoint = saver_callback.latest_checkpoint
         if latest_checkpoint is not None:
             initial_epoch = LoadingModelCheckpoint.filename_epoch(latest_checkpoint)
