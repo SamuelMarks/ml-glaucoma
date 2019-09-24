@@ -6,14 +6,16 @@ from inspect import currentframe
 
 import gin
 import tensorflow as tf
-from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Dense, Dropout
+from tensorflow.python.keras.layers import (Conv2D, MaxPooling2D, Dense,
+                                            Dropout, GlobalAveragePooling2D,
+                                            GlobalMaxPooling2D, Flatten)
 
 from ml_glaucoma.models import util
 
 _poolers = {
-    'avg': tf.keras.layers.GlobalAveragePooling2D,
-    'max': tf.keras.layers.GlobalMaxPooling2D,
-    'flatten': tf.keras.layers.Flatten,
+    'avg': GlobalAveragePooling2D,
+    'max': GlobalMaxPooling2D,
+    'flatten': Flatten,
 }
 
 

@@ -17,8 +17,7 @@ def unet(inputs, output_spec, training=None, kernel_regularizer=None,
          final_activation='default'):
     if len(output_spec.shape) < 3:
         raise ValueError(
-            'unet provides image outputs, but output_spec has shape %s'
-            % (str(output_spec)))
+            'unet provides image outputs, but output_spec has shape {}'.format(output_spec))
     conv_kwargs = dict(
         kernel_regularizer=kernel_regularizer, padding='same',
         activation=hidden_activation)

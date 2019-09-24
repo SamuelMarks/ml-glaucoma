@@ -25,5 +25,5 @@ def keras_applications(inputs, output_spec, num_classes=2,
         tf.keras.layers.GlobalAveragePooling2D(),
         tf.keras.layers.Dense(num_classes, activation='sigmoid')
     ])
-    model._name = currentframe().f_code.co_name
+    model._name = '_'.join((currentframe().f_code.co_name, transfer_model))
     return model

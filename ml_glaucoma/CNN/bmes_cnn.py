@@ -19,6 +19,7 @@ from tensorflow.keras.layers import (Dense, Dropout, Flatten, Activation,
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.utils import to_categorical
+from tensorflow.python.keras.backend import concatenate
 
 from ml_glaucoma import get_logger, __version__
 from ml_glaucoma.CNN.directories2tfrecords import convert_to_tfrecord
@@ -76,22 +77,22 @@ def get_unet_light_for_fold0(img_rows, img_cols):
     conv5 = Dropout(0.3)(conv5)
     conv5 = Conv2D(64, (3, 3), activation='relu', border_mode='same')(conv5)
 
-    up6 = merge([UpSampling2D(size=(2, 2))(conv5), conv4], mode='concat', concat_axis=1)
+    up6 = concatenate([UpSampling2D(size=(2, 2))(conv5), conv4], axis=1)
     conv6 = Conv2D(64, (3, 3), activation='relu', border_mode='same')(up6)
     conv6 = Dropout(0.3)(conv6)
     conv6 = Conv2D(64, (3, 3), activation='relu', border_mode='same')(conv6)
 
-    up7 = merge([UpSampling2D(size=(2, 2))(conv6), conv3], mode='concat', concat_axis=1)
+    up7 = concatenate([UpSampling2D(size=(2, 2))(conv6), conv3], axis=1)
     conv7 = Conv2D(64, (3, 3), activation='relu', border_mode='same')(up7)
     conv7 = Dropout(0.3)(conv7)
     conv7 = Conv2D(64, (3, 3), activation='relu', border_mode='same')(conv7)
 
-    up8 = merge([UpSampling2D(size=(2, 2))(conv7), conv2], mode='concat', concat_axis=1)
+    up8 = concatenate([UpSampling2D(size=(2, 2))(conv7), conv2], axis=1)
     conv8 = Conv2D(64, (3, 3), activation='relu', border_mode='same')(up8)
     conv8 = Dropout(0.3)(conv8)
     conv8 = Conv2D(64, (3, 3), activation='relu', border_mode='same')(conv8)
 
-    up9 = merge([UpSampling2D(size=(2, 2))(conv8), conv1], mode='concat', concat_axis=1)
+    up9 = concatenate([UpSampling2D(size=(2, 2))(conv8), conv1], axis=1)
     conv9 = Conv2D(32, (3, 3), activation='relu', border_mode='same')(up9)
     conv9 = Dropout(0.3)(conv9)
     conv9 = Conv2D(32, (3, 3), activation='relu', border_mode='same')(conv9)

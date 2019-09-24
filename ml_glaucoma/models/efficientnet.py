@@ -33,7 +33,7 @@ def efficientnet(inputs, output_spec, num_classes=2, transfer_model=None,
         tf.keras.layers.GlobalAveragePooling2D(),
         tf.keras.layers.Dense(num_classes, activation='sigmoid')
     ])
-    model._name = currentframe().f_code.co_name
+    model._name = '_'.join((currentframe().f_code.co_name, transfer_model))
     return model
 
 
@@ -51,5 +51,5 @@ def efficient_net(inputs, output_spec, application='EfficientNetB0',
     probs = util.features_to_probs(
         features, output_spec, activation=final_activation)
     model = tf.keras.models.Model(inputs=inputs, outputs=probs)
-    model._name = currentframe().f_code.co_name
+    model._name = '_'.join((currentframe().f_code.co_name, application))
     return model

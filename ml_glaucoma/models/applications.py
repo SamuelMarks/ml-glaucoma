@@ -22,5 +22,5 @@ def applications_model(inputs, output_spec, application='ResNet50',
     probs = util.features_to_probs(
         features, output_spec, activation=final_activation)
     model = tf.keras.models.Model(inputs=inputs, outputs=probs)
-    model._name = currentframe().f_code.co_name
+    model._name = '_'.join((currentframe().f_code.co_name, application))
     return model
