@@ -18,9 +18,8 @@ import abc
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from absl import logging
+from tensorflow.keras.layers import InputSpec
 from tensorflow_datasets.core.download import DownloadConfig
-
-InputSpec = tf.keras.layers.InputSpec
 
 
 def dataset_spec_to_input_spec(dataset, has_batch_dim=False):

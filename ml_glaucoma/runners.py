@@ -71,6 +71,9 @@ def train(problem, batch_size, epochs, model_fn, optimizer, class_weight=None,
             an under-represented class.
     :param class_weight: {}
 
+    :param model_dir: string path to directory containing weight files.
+    :param model_dir: str
+
     :param callbacks: list of callbacks in addition to those created below
     :param callbacks: [tf.keras.callbacks.Callback]
 
@@ -125,7 +128,6 @@ def train(problem, batch_size, epochs, model_fn, optimizer, class_weight=None,
         problem.examples_per_epoch('validation'), batch_size)
 
     common_callbacks, initial_epoch = cb.get_callbacks(
-        model,
         batch_size=batch_size,
         checkpoint_freq=checkpoint_freq,
         summary_freq=summary_freq,

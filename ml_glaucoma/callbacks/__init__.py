@@ -12,7 +12,6 @@ from ml_glaucoma.tf_compat import is_tf_v1
 
 
 def get_callbacks(
-    model,
     batch_size,
     checkpoint_freq='epoch',
     summary_freq=10,
@@ -27,7 +26,6 @@ def get_callbacks(
     Get common callbacks used in training.
 
     Args:
-        model: `tf.keras.models.Model` to be used.
         batch_size: size of each batch - used to correct tensorboard initial
             step.
         checkpoint_freq: if not None, adds a `LoadingModelCheckpoint` which

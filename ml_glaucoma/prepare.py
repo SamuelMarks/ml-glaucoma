@@ -1,13 +1,17 @@
 from __future__ import print_function
 
 from os import path
+from platform import python_version_tuple
 
 import cv2
 import h5py
 import numpy as np
 from sklearn.utils import shuffle
 
-from ml_glaucoma.utils.get_data import get_data
+from ml_glaucoma.utils.bmes_data_prep import get_data
+
+if python_version_tuple()[0] == '2':
+    from itertools import imap as map
 
 
 def prepare_data(preprocess_to, pixels, force_new=False):

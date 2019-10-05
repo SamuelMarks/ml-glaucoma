@@ -26,6 +26,7 @@ def SoftAUC(y_true, y_pred):
 
 if __name__ == '__main__':
     import tensorflow as tf
+
     with tf.device('/cpu:0'):
         y_true = tf.constant([False, False, True, True, False])
         y_pred = tf.constant([0.3, 0.3, 0.6, 0.6, 0.4], dtype=tf.float32)

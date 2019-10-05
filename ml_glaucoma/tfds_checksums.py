@@ -12,11 +12,11 @@ from __future__ import print_function
 
 try:
     import os
-    import tensorflow_datasets as tfds
+    from tensorflow_datasets.core import download
 
-    tfds.core.download.checksums._CHECKSUM_DIRS.append(os.path.realpath(
+    download.checksums.add_checksums_dir(os.path.realpath(
         os.path.join(os.path.dirname(__file__), 'url_checksums')))
-    tfds.core.download.checksums._checksum_paths.cache_clear()
+    download.checksums._checksum_paths.cache_clear()
 except AttributeError:
     # later versions of tfds don't have tfds.core.download.checksums
     # bug seems fixed in these?

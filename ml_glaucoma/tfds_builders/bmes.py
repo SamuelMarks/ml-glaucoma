@@ -106,7 +106,7 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
                 len(os.listdir(os.path.join(folder, dirname)))
                 for dirname in os.listdir(folder))
             if num_examples == 0:
-                raise RuntimeError('No examples found {}'.format(folder))
+                raise RuntimeError('No data_preparation_scripts found {}'.format(folder))
             generators.append(tfds.core.SplitGenerator(
                 name=split,
                 gen_kwargs=dict(folder=folder)))

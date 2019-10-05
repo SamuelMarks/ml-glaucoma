@@ -1,6 +1,0 @@
-import ml_glaucoma.models.efficientnet
-model_fn = @efficientnet
-efficientnet.image_size = 256
-efficientnet.num_channels = 3
-efficientnet.transfer_model = 'EfficientNetB4'
-final_activation = 'default'

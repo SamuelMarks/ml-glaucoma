@@ -78,8 +78,6 @@ def get_image_size(file_path):
     size = path.getsize(file_path)
 
     with open(file_path) as f:
-        height = -1
-        width = -1
         data = f.read(25)
 
         if (size >= 10) and data[:6] in ('GIF87a', 'GIF89a'):
@@ -395,7 +393,7 @@ def get_feature_names():
                  if field.endswith('1'))  # BMES1
 
 
-def get_features(feature_names, skip_save=True):
+def get_features(feature_names):
     return np.bmat(np.fromiter((idx for idx, _ in enumerate(feature_names)), np.float32))
 
 
@@ -585,7 +583,7 @@ def old(no_oags, oags, skip_save):
     _log_set_stats()
 
     feature_names = get_feature_names()
-    features = get_features(feature_names, skip_save=skip_save)
+    features = get_features(feature_names)
 
     logger.debug('feature_names:'.ljust(just) + '{}'.format(feature_names))
     logger.debug('features:'.ljust(just) + '{}'.format(features))
@@ -654,7 +652,7 @@ if __name__ == '__main__':
     # print(train)
 
 '''
-/Users/samuel/repos/.venvs/thenv/bin/python /Users/samuel/repos/thesis/ml-glaucoma/ml_glaucoma/utils/get_data.py
+python ml-glaucoma/ml_glaucoma/utils/bmes_data_prep.py
 2018-06-16 00:29:03,925 - get_data - WARNING - skipping header
 2018-06-16 00:38:13,841 - get_data - DEBUG - total_imgs == total_imgs_assoc_to_id:             False
 2018-06-16 00:38:13,866 - __init__ - DEBUG - # total:                                          3654

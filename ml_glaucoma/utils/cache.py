@@ -70,7 +70,8 @@ class Cache(object):
         if isinstance(self.fname, StrictRedis):
             logger.info('saving cache to redis://{}'.format(
                 '.pycache/{key}'.format(key=key if key is not None else 'caches.pkl')))
-            self.fname.set('.pycache/{key}'.format(key=key if key is not None else 'caches.pkl'), marshall.dumps(cache))
+            self.fname.set('.pycache/{key}'.format(key=key if key is not None else 'caches.pkl'),
+                           marshall.dumps(cache))
         else:
             logger.info('saving cache to file://{}'.format(self.fname))
             with open(self.fname, 'wb') as f:

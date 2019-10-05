@@ -186,7 +186,7 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                         "index": index,
                     }
 
-                # positive examples
+                # positive data_preparation_scripts
                 for index in range(1, 41):
                     fundus_path = os.path.join(
                         "Training400", "Glaucoma",
@@ -198,7 +198,7 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                     yield (True, index), get_example(
                         True, fundus_path, seg_path)
 
-                # negative examples
+                # negative data_preparation_scripts
                 for index in range(1, 361):
                     fundus_path = os.path.join(
                         "Training400", "Non-Glaucoma",

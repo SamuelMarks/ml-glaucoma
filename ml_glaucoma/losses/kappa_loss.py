@@ -8,7 +8,7 @@ def Kappa(y_pred, y_true, y_pow=2, eps=1e-10, N=5, batch_size=1, name='kappa'):
             y_true: 2D tensor or array,[batch_size, num_classes]
             y_pow: int,  e.g. y_pow=2
             N: typically num_classes of the model
-            bsize: batch_size of the training or validation ops
+            batch_size: batch_size of the training or validation ops
             eps: a float, prevents divide by zero
             name: Optional scope/name for op_scope.
         Returns:

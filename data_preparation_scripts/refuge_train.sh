@@ -4,8 +4,8 @@ dc_gin="$(python -c 'from pkg_resources import resource_filename; from os import
 data_pardir="${DATA_DIR:-"$HOME"}"
 manual_dir="${MANUAL_DIR:-/mnt}"
 
-python -m ml_glaucoma v2 train \
-	-ds refuge \
-	--data_dir "$data_pardir"/tensorflow_datasets \
-	--model_file "$dc_gin" \
-	--model_dir "$data_pardir"/ml_glaucoma_models/refuge-n0
+python -m ml_glaucoma train \
+    -ds refuge \
+    --data_dir "$data_pardir"/tensorflow_datasets \
+    --model_file "$dc_gin" \
+    --model_dir "$data_pardir"/ml_glaucoma_models/refuge-n0

@@ -30,13 +30,8 @@ class SGDRScheduler(Callback):
         Original paper: http://arxiv.org/abs/1608.03983
     """
 
-    def __init__(self,
-                 min_lr,
-                 max_lr,
-                 steps_per_epoch,
-                 lr_decay=1,
-                 cycle_length=10,
-                 mult_factor=1.1):
+    def __init__(self, min_lr, max_lr, steps_per_epoch, lr_decay=1, cycle_length=10, mult_factor=1.1):
+        super(SGDRScheduler, self).__init__()
         self.min_lr = min_lr
         self.max_lr = max_lr
         self.lr_decay = lr_decay
@@ -56,17 +51,17 @@ class SGDRScheduler(Callback):
         # print(lr)
         return lr
 
-    def on_train_begin(self, logs={}):
+    def on_train_begin(self, logs=None):
         """Initialize the learning rate to the minimum value at the start of training."""
         K.set_value(self.model.optimizer.lr, self.max_lr)
 
-    def on_batch_end(self, batch, logs={}):
+    def on_batch_end(self, batch, logs=None):
         """Record previous batch statistics and update the learning rate."""
 
         self.batch_since_restart += 1
         K.set_value(self.model.optimizer.lr, self.clr())
 
-    def on_epoch_end(self, epoch, logs={}):
+    def on_epoch_end(self, epoch, logs=None):
         """Check for end of current cycle, apply restarts when necessary."""
         if epoch + 1 == self.next_restart:
             self.batch_since_restart = 0

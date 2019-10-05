@@ -6,6 +6,8 @@ from platform import python_version_tuple
 
 from six import iteritems
 
+from ml_glaucoma import get_logger
+
 if python_version_tuple()[0] == '3':
     from functools import reduce
 
@@ -14,8 +16,10 @@ if python_version_tuple()[0] == '3':
 
 from ml_glaucoma.utils import pp
 
+logger = get_logger(__file__)
 
-def parser(infile, top, threshold, by_diff):
+
+def log_parser(infile, top, threshold, by_diff):
     epoch2stat = {
         key: val
         for key, val in iteritems(
