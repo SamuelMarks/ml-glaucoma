@@ -31,7 +31,11 @@ from openpyxl import load_workbook
 from sas7bdat import SAS7BDAT
 
 import numpy as np
-from tensorflow.contrib.learn.python.learn.datasets.base import Datasets
+
+if environ['TF']:
+    from tensorflow.contrib.learn.python.learn.datasets.base import Datasets
+else:
+    Datasets = namedtuple('Datasets', ('train', 'validation', 'test'))
 
 from ml_glaucoma import get_logger
 from ml_glaucoma.utils import run_once, it_consumes, pp, redis_cursor

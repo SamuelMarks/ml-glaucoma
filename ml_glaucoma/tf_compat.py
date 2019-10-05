@@ -3,13 +3,18 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from os import environ
+
 from tensorflow.python.keras.utils.losses_utils import ReductionV2
+
+if not environ['TF']:
+    raise NotImplementedError('tf_compat is TensorFlow only')
 
 try:
     import tensorflow as tf
 except ImportError:
     raise ImportError(
-        'No tensorflow installation found. `gl-glaucoma` does not '
+        'No tensorflow installation found. `ml-glaucoma` does not '
         'automatically install tensorflow. Please install manually.')
 import distutils.version
 
@@ -19,7 +24,7 @@ is_tf_v2 = tf_version.version[0] == 2
 
 if not (is_tf_v1 or is_tf_v2):
     raise ImportError(
-        'Detected version of tensorflow {:s} not compatible with `gl-glaucoma` -'
+        'Detected version of tensorflow {:s} not compatible with `ml-glaucoma` -'
         ' only versions 1 and 2 supported'.format(tf.__version__))
 
 if is_tf_v1:

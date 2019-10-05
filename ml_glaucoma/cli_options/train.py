@@ -1,4 +1,5 @@
-import tensorflow as tf
+from os import environ
+
 from yaml import load as yaml_load
 
 from ml_glaucoma import callbacks as callbacks_module
@@ -6,9 +7,18 @@ from ml_glaucoma import runners
 from ml_glaucoma.cli_options.base import Configurable
 from ml_glaucoma.utils.helpers import get_upper_kv
 
-valid_callbacks = get_upper_kv(tf.keras.callbacks)
-valid_callbacks.update(get_upper_kv(callbacks_module))
-SUPPORTED_CALLBACKS = tuple(valid_callbacks.keys())
+if environ['TF']:
+    import tensorflow as tf
+
+    valid_callbacks = get_upper_kv(tf.keras.callbacks)
+    valid_callbacks.update(get_upper_kv(callbacks_module))
+    SUPPORTED_CALLBACKS = tuple(valid_callbacks.keys())
+elif environ['TORCH']:
+    valid_callbacks = {}
+    SUPPORTED_CALLBACKS = tuple()
+else:
+    valid_callbacks = {}
+    SUPPORTED_CALLBACKS = tuple()
 
 
 class ConfigurableTrain(Configurable):

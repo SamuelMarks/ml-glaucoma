@@ -25,6 +25,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from os import environ
+
+if not environ['TF']:
+    raise NotImplementedError('This module is for tf.keras use only')
+
 import tensorflow as tf
 from gin import config
 

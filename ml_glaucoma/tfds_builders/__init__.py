@@ -7,3 +7,8 @@ This module should be kept independent of any model-specific preprocessing
 or model implementations. See `ml_glaucoma.problems` for model-specific adapters
 (data augmentation, model-specific data pipeline etc.).
 """
+
+from os import environ
+
+if not environ['TF']:
+    raise NotImplementedError('tensorflow_datasets is [currently] TensorFlow only')
