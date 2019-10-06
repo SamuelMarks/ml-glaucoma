@@ -10,6 +10,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from os import environ
+
+if not environ['TF']:
+    raise NotImplementedError('tfds_checksums is TensorFlow only')
+
 try:
     import os
     from tensorflow_datasets.core import download

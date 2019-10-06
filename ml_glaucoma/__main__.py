@@ -7,7 +7,6 @@ if __name__ == '__main__':
     kwargs = dict(parser.parse_args()._get_kwargs())
     command = kwargs.pop('command')
     if command is None:
-        raise ReferenceError(
-            'You must specify a command. Append `--help` for details.')
+        raise ReferenceError('You must specify a command. Append `--help` for details.')
 
     commands[command].build(**kwargs)

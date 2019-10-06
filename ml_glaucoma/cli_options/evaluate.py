@@ -1,3 +1,4 @@
+import ml_glaucoma.runners
 from ml_glaucoma.cli_options.base import Configurable
 
 
@@ -20,7 +21,7 @@ class ConfigurableEvaluate(Configurable):
     def build_self(self, problem, batch_size, model_fn, optimizer, model_dir,
                    **kwargs):
         from ml_glaucoma import runners
-        return runners.evaluate(
+        return ml_glaucoma.runners.tf_keras.evaluate(
             problem=problem,
             batch_size=batch_size,
             model_fn=model_fn,

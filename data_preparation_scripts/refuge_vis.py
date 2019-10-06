@@ -3,13 +3,22 @@ from __future__ import division
 from __future__ import print_function
 
 import functools
+from os import environ
 
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow_datasets as tfds
 
 from ml_glaucoma.problems import preprocess_example
-from ml_glaucoma.tfds_builders.refuge import Refuge
+
+if environ['TF']:
+    from ml_glaucoma.tfds_builders.refuge import Refuge
+elif environ['TORCH']:
+    def Refuge(*args, **kwargs):
+        raise NotImplementedError()
+else:
+    def Refuge(*args, **kwargs):
+        raise NotImplementedError()
 
 builder = Refuge()
 builder.download_and_prepare()
