@@ -1,10 +1,7 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 from sys import modules
 
-from ml_glaucoma import __version__, runners
+import ml_glaucoma.runners
+from ml_glaucoma import __version__
 from ml_glaucoma.cli_options.augment import ConfigurableMapFn
 from ml_glaucoma.cli_options.evaluate import ConfigurableEvaluate
 from ml_glaucoma.cli_options.hyperparameters import (ConfigurableProblem, ConfigurableModelFn,
@@ -45,7 +42,7 @@ def get_parser():
     # VISUALISE
     vis_parser = subparsers.add_parser('vis', help='Visualise data')
     problem.fill(vis_parser)
-    _commands['vis'] = problem.map(runners.vis)
+    _commands['vis'] = problem.map(ml_glaucoma.runners.vis)
 
     # TRAIN
     train_parser = subparsers.add_parser('train', help=ConfigurableTrain.description)

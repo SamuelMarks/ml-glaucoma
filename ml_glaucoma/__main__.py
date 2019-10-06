@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from ml_glaucoma.cli_options import get_parser
-from ml_glaucoma.utils import pp
 
 if __name__ == '__main__':
     parser, commands = get_parser()

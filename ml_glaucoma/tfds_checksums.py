@@ -13,7 +13,7 @@ from __future__ import print_function
 from os import environ
 
 if not environ['TF']:
-    raise NotImplementedError('tf_compat is TensorFlow only')
+    raise NotImplementedError('tfds_checksums is TensorFlow only')
 
 try:
     import os

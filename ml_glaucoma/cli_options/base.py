@@ -1,4 +1,4 @@
-import abc
+from abc import abstractmethod
 
 
 class Configurable(object):
@@ -22,11 +22,11 @@ class Configurable(object):
         kwargs.update(children_values)
         return self.build_self(**kwargs)
 
-    @abc.abstractmethod
+    @abstractmethod
     def fill_self(self, parser):
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def build_self(self, **kwargs):
         raise NotImplementedError
 
