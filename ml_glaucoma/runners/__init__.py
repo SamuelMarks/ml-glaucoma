@@ -1,11 +1,11 @@
 """Train/validation/predict loops."""
 from __future__ import absolute_import
 
-import os
+from os import environ
 
-if os.environ['TF']:
+if environ['TF']:
     from ml_glaucoma.runners.tf_keras import *
-elif os.environ['TORCH']:
+elif environ['TORCH']:
     from ml_glaucoma.runners.torch import *
 else:
     from ml_glaucoma.runners.other import *
