@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from ml_glaucoma.callbacks import LoadingModelCheckpoint
+from ml_glaucoma.callbacks.loading_model_checkpoint.tf_keras import LoadingModelCheckpoint
 from ml_glaucoma.tf_compat import is_tf_v1
 
 
