@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow.python.keras.utils import model_to_dot
 
 from ml_glaucoma import callbacks as cb, runners, get_logger
-from ml_glaucoma.runners import default_model_dir, batch_steps
+from ml_glaucoma.runners.utils import default_model_dir, batch_steps
 
 logger = get_logger(modules[__name__].__name__)
 
