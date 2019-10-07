@@ -64,11 +64,45 @@ class ConfigurableTrain(Configurable):
         parser.add_argument(
             '--write_images', action='store_true',
             help='whether or not to write images to tensorboard')
+        parser.add_argument(
+            '--seed', type=int, help='Set the seed, combine with `--disable-gpu` to disable GPU for added determinism'
+        )
+        parser.add_argument(
+            '--disable-gpu', action='store_true',
+            help='Set the seed, combine with `--disable-gpu` to disable GPU for added determinism'
+        )
 
     def build_self(self, problem, batch_size, epochs, model_fn, optimizer, model_dir,
                    callbacks, checkpoint_freq, summary_freq, lr_schedule, tb_log_dir,
-                   class_weight, write_images, **_kwargs):
-        return ml_glaucoma.runners.tf_keras.train(
+                   class_weight, write_images, seed, disable_gpu, **_kwargs):
+        if disable_gpu:
+            environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+        if seed:
+            environ['PYTHONHASHSEED'] = str(seed)
+            import random
+            random.seed(seed)
+
+            # 3. Set `numpy` pseudo-random generator at a fixed value
+            import numpy as np
+            np.random.seed(seed)
+
+            # 4. Set `tensorflow` pseudo-random generator at a fixed value
+            if environ['TF']:
+                import tensorflow as tf
+                import tensorflow.python.keras.backend as K
+                tf.set_random_seed(seed)
+                session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+                sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+                K.set_session(sess)
+            elif environ['TORCH']:
+                import torch
+
+                torch.manual_seed(seed)
+                torch.backends.cudnn.deterministic = True
+                torch.backends.cudnn.benchmark = False
+
+        return ml_glaucoma.runners.train(
             callbacks=[] if callbacks is None else list(map(lambda callback: valid_callbacks[callback], callbacks)),
             problem=problem,
             batch_size=batch_size,

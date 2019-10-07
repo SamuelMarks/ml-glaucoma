@@ -4,7 +4,6 @@ import gin
 import tensorflow as tf
 
 import ml_glaucoma.models.utils.tf_keras
-from ml_glaucoma.models import utils
 
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])

@@ -16,7 +16,6 @@ from sys import modules
 import quantumrandom
 from six import iteritems, itervalues
 
-import ml_glaucoma.runners
 
 if python_version_tuple()[0] == '3':
     from importlib import reload
@@ -373,20 +372,20 @@ def _log_set_stats():
     tbl = pickled_cache['tbl']
     datasets = pickled_cache['datasets']
 
-    logger.debug('# in train set:'.ljust(just) + str(len(ml_glaucoma.runners.tf_keras.train)))
+    logger.debug('# in train set:'.ljust(just) + str(len(datasets.train)))
     logger.debug('# in test set:'.ljust(just) + str(len(datasets.test)))
     logger.debug('# in validation set:'.ljust(just) + str(len(datasets.validation)))
     logger.debug('# shared between sets:'.ljust(just) + str(sum((len(datasets.validation & datasets.test),
-                                                                 len(datasets.test & ml_glaucoma.runners.tf_keras.train),
-                                                                 len(datasets.validation & ml_glaucoma.runners.tf_keras.train)))))
+                                                                 len(datasets.test & datasets.train),
+                                                                 len(datasets.validation & datasets.train)))))
     # '# shared between sets:'.ljust(just), sum(len(s0&s1) for s0, s1 in combinations((validation, test, train), 2))
     logger.debug(
         '# len(all sets):'.ljust(just) + str(sum(imap(len, (
-        ml_glaucoma.runners.tf_keras.train, datasets.test, datasets.validation)))))
+        datasets.train, datasets.test, datasets.validation)))))
     logger.debug('# len(total):'.ljust(just) + str(len(tbl)))
     logger.debug(
         '# len(all sets) == len(total):'.ljust(just) + str(
-            sum(imap(len, (ml_glaucoma.runners.tf_keras.train, datasets.test, datasets.validation))) == len(tbl)))
+            sum(imap(len, (datasets.train, datasets.test, datasets.validation))) == len(tbl)))
 
 
 def random_sample(tbl, ids, num=1):
