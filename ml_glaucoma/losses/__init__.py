@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from ml_glaucoma.losses.binary_crossentropy_with_ranking import BinaryCrossentropyWithRanking
 from ml_glaucoma.losses.dice_loss import DiceLoss
 from ml_glaucoma.losses.jaccard_distance import JaccardDistance

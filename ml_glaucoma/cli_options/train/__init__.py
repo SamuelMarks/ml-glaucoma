@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from os import environ
 
 from yaml import load as yaml_load

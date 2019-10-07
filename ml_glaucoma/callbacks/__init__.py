@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from ml_glaucoma.callbacks.auc_roc import AucRocCallback
 from ml_glaucoma.callbacks.backends import get_callbacks
 from ml_glaucoma.callbacks.exponential_decay_lr_schedule import ExponentialDecayLrSchedule
