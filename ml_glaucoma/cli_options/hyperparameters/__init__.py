@@ -82,7 +82,7 @@ class ConfigurableOptimizer(Configurable):
             '-lr', '--learning_rate', default=1e-3, type=float,
             help='base optimizer learning rate')
         parser.add_argument(
-            '--optimiser_args', default={}, type=yaml_load,
+            '--optimiser_params', default={}, type=yaml_load,
             help='Extra optimiser args, e.g.: \'{epsilon: 1e-7, amsgrad: true}\''
         )
 
