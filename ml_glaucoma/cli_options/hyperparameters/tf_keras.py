@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from ml_glaucoma import losses as losses_module, metrics as metrics_module
+from ml_glaucoma import losses as losses_module, metrics as metrics_module, problems as p
 from ml_glaucoma.cli_options.base import Configurable
 from ml_glaucoma.metrics import F1Metric
 from ml_glaucoma.utils.helpers import get_upper_kv
@@ -86,7 +86,5 @@ class ConfigurableProblemBase(Configurable):
 
 
 # Cleanup namespace
-del tf
-del losses_module
-del metrics_module
-del get_upper_kv
+for obj in losses_module, metrics_module, get_upper_kv:
+    del obj
