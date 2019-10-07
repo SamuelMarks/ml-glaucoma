@@ -1,12 +1,13 @@
 import os
+from sys import modules
 
 import tensorflow as tf
 from tensorflow.python.keras.utils import model_to_dot
 
-import ml_glaucoma.callbacks
-import ml_glaucoma.runners.torch
-from ml_glaucoma import callbacks as cb
-from ml_glaucoma.runners import default_model_dir, logger, batch_steps
+from ml_glaucoma import callbacks as cb, runners, get_logger
+from ml_glaucoma.runners import default_model_dir, batch_steps
+
+logger = get_logger(modules[__name__].__name__)
 
 
 def train(problem, batch_size, epochs, model_fn, optimizer, class_weight=None,
@@ -95,7 +96,7 @@ def train(problem, batch_size, epochs, model_fn, optimizer, class_weight=None,
     validation_steps = batch_steps(
         problem.examples_per_epoch('validation'), batch_size)
 
-    common_callbacks, initial_epoch = ml_glaucoma.callbacks.backends.tf_keras.get_callbacks(
+    common_callbacks, initial_epoch = cb.backends.get_callbacks(
         batch_size=batch_size,
         checkpoint_freq=checkpoint_freq,
         summary_freq=summary_freq,
@@ -179,7 +180,7 @@ def evaluate(problem, batch_size, model_fn, optimizer, model_dir=None):
     validation_steps = batch_steps(
         problem.examples_per_epoch('validation'), batch_size)
 
-    return ml_glaucoma.runners.torch.evaluate(val_ds, steps=validation_steps)
+    return runners.evaluate(val_ds, steps=validation_steps)
 
 
 def vis(problem, split='train'):
@@ -201,6 +202,6 @@ def vis(problem, split='train'):
 
 
 # Cleanup namespace
-for obj in (ml_glaucoma.callbacks, tf, os, model_to_dot, cb,
-            default_model_dir, logger, batch_steps):
+for obj in (modules, tf, model_to_dot, cb, runners, get_logger,
+            default_model_dir, batch_steps):
     del obj

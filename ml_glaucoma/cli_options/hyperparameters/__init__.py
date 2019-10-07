@@ -1,7 +1,9 @@
 # See ml-glaucoma/ml_glaucoma/cli_options/train.py for other hyperparameters
 from os import environ
 
-from ml_glaucoma import problems as p
+from yaml import load as yaml_load
+
+from ml_glaucoma import problems as p, get_logger
 from ml_glaucoma.cli_options import ConfigurableMapFn
 from ml_glaucoma.cli_options.base import Configurable
 from ml_glaucoma.metrics import F1Metric
@@ -12,6 +14,8 @@ elif environ['TORCH']:
     from ml_glaucoma.cli_options.hyperparameters.torch import *
 else:
     from ml_glaucoma.cli_options.hyperparameters.other import *
+
+logger = get_logger(__file__.partition('.')[0])
 
 
 class ConfigurableProblem(Configurable):
@@ -136,11 +140,19 @@ class ConfigurableOptimizer(Configurable):
         parser.add_argument(
             '-lr', '--learning_rate', default=1e-3, type=float,
             help='base optimizer learning rate')
+        parser.add_argument(
+            '--optimiser_args', default={}, type=yaml_load,
+            help='Extra optimiser args, e.g.: \'{epsilon: 1e-7, amsgrad: true}\''
+        )
 
-    def build(self, optimizer, learning_rate, **kwargs):
-        return valid_optimizers[optimizer](lr=learning_rate)
+    def build(self, optimizer, learning_rate, optimiser_args, **kwargs):
+        if 'lr' in optimiser_args:
+            logger.warn('Learning rate is being replaced by `--learning_rate` value or its default')
 
-    def build_self(self, learning_rate, exp_lr_decay, **kwargs):
+        optimiser_args['lr'] = learning_rate
+        return valid_optimizers[optimizer](**optimiser_args)
+
+    def build_self(self, learning_rate, optimiser_args, exp_lr_decay, **kwargs):
         raise NotImplementedError
 
 

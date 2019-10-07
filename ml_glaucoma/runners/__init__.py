@@ -1,11 +1,6 @@
 """Train/validation/predict loops."""
 
 import os
-from sys import modules
-
-from ml_glaucoma import get_logger
-
-logger = get_logger(modules[__name__].__name__)
 
 if os.environ['TF']:
     from ml_glaucoma.runners.tf_keras import *

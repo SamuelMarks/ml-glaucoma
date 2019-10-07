@@ -65,11 +65,6 @@ def log_parser(infile, top, threshold, by_diff):
 class ConfigurableLogParser(Configurable):
     description = 'Parse out metrics from log output. Default: per epoch sensitivity & specificity.'
 
-    def __init__(self, infile=None, threshold=None, top=None, by_diff=None):
-        super(ConfigurableLogParser, self).__init__(
-            infile=infile, threshold=threshold, top=top, by_diff=by_diff
-        )
-
     def fill_self(self, parser):
         parser.description = 'Show metrics from output. Default: per epoch sensitivity & specificity.'
         parser.add_argument('infile', nargs='?', type=FileType('r'), default=stdin,
