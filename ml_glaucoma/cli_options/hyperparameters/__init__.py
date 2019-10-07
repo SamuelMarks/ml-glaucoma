@@ -86,14 +86,14 @@ class ConfigurableOptimizer(Configurable):
             help='Extra optimiser args, e.g.: \'{epsilon: 1e-7, amsgrad: true}\''
         )
 
-    def build(self, optimizer, learning_rate, optimiser_args, **kwargs):
-        if 'lr' in optimiser_args:
+    def build(self, optimizer, learning_rate, optimiser_params, **kwargs):
+        if 'lr' in optimiser_params:
             logger.warn('Learning rate is being replaced by `--learning_rate` value or its default')
 
-        optimiser_args['lr'] = learning_rate
-        return valid_optimizers[optimizer](**optimiser_args)
+        optimiser_params['lr'] = learning_rate
+        return valid_optimizers[optimizer](**optimiser_params)
 
-    def build_self(self, learning_rate, optimiser_args, exp_lr_decay, **kwargs):
+    def build_self(self, learning_rate, optimiser_params, exp_lr_decay, **kwargs):
         raise NotImplementedError
 
 
