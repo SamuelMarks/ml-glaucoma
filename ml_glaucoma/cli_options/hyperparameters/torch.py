@@ -10,7 +10,7 @@ valid_optimizers = {}
 SUPPORTED_OPTIMIZERS = tuple()
 
 
-class ConfigurableProblemBase(object):
+class ConfigurableProblemBase(Configurable):
     def build_self(self, builders, map_fn, loss, metrics,
                    precision_thresholds, recall_thresholds,
                    shuffle_buffer, use_inverse_freq_weights,

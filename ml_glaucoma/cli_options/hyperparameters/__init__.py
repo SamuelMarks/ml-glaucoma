@@ -7,7 +7,6 @@ from yaml import load as yaml_load
 
 from ml_glaucoma import get_logger
 from ml_glaucoma.cli_options import ConfigurableMapFn
-from ml_glaucoma.cli_options.base import Configurable
 
 if environ['TF']:
     from ml_glaucoma.cli_options.hyperparameters.tf_keras import *
@@ -19,7 +18,7 @@ else:
 logger = get_logger(__file__.partition('.')[0])
 
 
-class ConfigurableProblem(Configurable, ConfigurableProblemBase):
+class ConfigurableProblem(ConfigurableProblemBase):
     def __init__(self, builders, map_fn=None):
         if map_fn is None:
             map_fn = ConfigurableMapFn()

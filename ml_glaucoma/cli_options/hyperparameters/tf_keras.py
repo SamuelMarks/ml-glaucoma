@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 from ml_glaucoma import losses as losses_module, metrics as metrics_module
+from ml_glaucoma.cli_options.base import Configurable
 from ml_glaucoma.metrics import F1Metric
 from ml_glaucoma.utils.helpers import get_upper_kv
 
@@ -23,7 +24,7 @@ valid_optimizers = get_upper_kv(tf.keras.optimizers)
 SUPPORTED_OPTIMIZERS = tuple(valid_optimizers.keys())
 
 
-class ConfigurableProblemBase(object):
+class ConfigurableProblemBase(Configurable):
     def build_self(self, builders, map_fn, loss, metrics,
                    precision_thresholds, recall_thresholds,
                    shuffle_buffer, use_inverse_freq_weights,
