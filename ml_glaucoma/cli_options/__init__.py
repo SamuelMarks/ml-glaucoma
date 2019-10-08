@@ -25,36 +25,36 @@ def get_parser():
                          version='{} {}'.format(modules[__name__].__package__.partition('.')[0], __version__))
     subparsers = _parser.add_subparsers(dest='command')
 
-    builders = ConfigurableBuilders()
-    map_fn = ConfigurableMapFn()
-    problem = ConfigurableProblem(builders, map_fn)
-    model_fn = ConfigurableModelFn()
-    optimizer = ConfigurableOptimizer()
+    builders_config = ConfigurableBuilders()
+    map_fn_config = ConfigurableMapFn()
+    problem_config = ConfigurableProblem(builders_config, map_fn_config)
+    model_fn_config = ConfigurableModelFn()
+    optimizer_config = ConfigurableOptimizer()
     lr_schedule = ConfigurableExponentialDecayLrSchedule()
 
-    train = ConfigurableTrain(problem, model_fn, optimizer, lr_schedule)
-    evaluate = ConfigurableEvaluate(problem, model_fn, optimizer)
+    train_config = ConfigurableTrain(problem_config, model_fn_config, optimizer_config, lr_schedule)
+    evaluate_config = ConfigurableEvaluate(problem_config, model_fn_config, optimizer_config)
 
     # DOWNLOAD
     download_parser = subparsers.add_parser(
         'download', help='Download and prepare required data')
-    builders.fill(download_parser)
-    _commands['download'] = builders
+    builders_config.fill(download_parser)
+    _commands['download'] = builders_config
 
     # VISUALISE
     vis_parser = subparsers.add_parser('vis', help='Visualise data')
-    problem.fill(vis_parser)
-    _commands['vis'] = problem.map(ml_glaucoma.runners.vis)
+    problem_config.fill(vis_parser)
+    _commands['vis'] = problem_config.map(ml_glaucoma.runners.vis)
 
     # TRAIN
     train_parser = subparsers.add_parser('train', help=ConfigurableTrain.description)
-    train.fill(train_parser)
-    _commands['train'] = train
+    train_config.fill(train_parser)
+    _commands['train'] = train_config
 
     # EVALUATE
     evaluate_parser = subparsers.add_parser('evaluate', help=ConfigurableEvaluate.description)
-    train.fill(evaluate_parser)
-    _commands['evaluate'] = evaluate
+    train_config.fill(evaluate_parser)
+    _commands['evaluate'] = evaluate_config
 
     # PARSE
     parser_parser = subparsers.add_parser('parser', help=ConfigurableLogParser.description)

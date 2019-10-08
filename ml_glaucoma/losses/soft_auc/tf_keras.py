@@ -30,9 +30,9 @@ def SoftAUC(y_true, y_pred):
 
 if __name__ == '__main__' and environ['TF']:
     with tf.device('/cpu:0'):
-        y_true = tf.constant([False, False, True, True, False])
-        y_pred = tf.constant([0.3, 0.3, 0.6, 0.6, 0.4], dtype=tf.float32)
-        loss = SoftAUC(y_true, y_pred)
+        _y_true = tf.constant([False, False, True, True, False])
+        _y_pred = tf.constant([0.3, 0.3, 0.6, 0.6, 0.4], dtype=tf.float32)
+        loss = SoftAUC(_y_true, _y_pred)
         if tf.executing_eagerly():
             print(loss.numpy())
         else:

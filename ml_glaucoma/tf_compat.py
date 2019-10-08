@@ -34,7 +34,7 @@ if is_tf_v1:
 
     if tf_version.version[1] == 13:
         from tensorflow.keras.losses import Loss
-        from tensorflow.ops.losses import losses_impl
+        from tensorflow.python.ops.losses import losses_impl
 
         tf.keras.losses.Loss = Loss
         tf.keras.losses.Reduction = ReductionV2

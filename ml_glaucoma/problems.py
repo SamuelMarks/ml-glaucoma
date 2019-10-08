@@ -431,11 +431,11 @@ if environ['TF']:
             if labels_are_images:
                 labels = tf.pad(labels, paddings)
         if resolution is not None:
-            def resize(image):
-                image = tf.expand_dims(image, axis=0)
-                image = tf.image.resize_area(image, resolution, align_corners=True)
-                image = tf.squeeze(image, axis=0)
-                return image
+            def resize(img):
+                img = tf.expand_dims(img, axis=0)
+                img = tf.image.resize_area(img, resolution, align_corners=True)
+                img = tf.squeeze(img, axis=0)
+                return img
 
             image = resize(image)
             if labels_are_images:
