@@ -5,7 +5,7 @@ import tensorflow as tf
 from efficientnet.tfkeras import EfficientNetB5
 
 import ml_glaucoma.models.utils.tf_keras
-from ml_glaucoma.models import utils
+
 
 # Based off https://www.kaggle.com/nemethpeti/keras-implementation-for-0-829-0-916#Model:-EfficientNet
 @gin.configurable(blacklist=['inputs', 'output_spec'])

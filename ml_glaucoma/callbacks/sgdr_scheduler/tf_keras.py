@@ -1,8 +1,8 @@
 from math import pi
 
 import tensorflow as tf
-from tensorflow.python.keras.api._v1.keras import backend as K
-from tensorflow.python.keras.callbacks import Callback
+import tensorflow.keras.backend as K
+from tensorflow.keras.callbacks import Callback
 
 
 class SGDRScheduler(Callback):

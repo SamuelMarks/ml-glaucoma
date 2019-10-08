@@ -1,17 +1,15 @@
 from __future__ import print_function
 
 from argparse import FileType
-from sys import stdin
-
-from ml_glaucoma.cli_options.base import Configurable
-
 from itertools import islice, groupby, takewhile
 from operator import itemgetter
 from platform import python_version_tuple
+from sys import stdin
 
 from six import iteritems
 
 from ml_glaucoma import get_logger
+from ml_glaucoma.cli_options.base import Configurable
 
 if python_version_tuple()[0] == '3':
     from functools import reduce

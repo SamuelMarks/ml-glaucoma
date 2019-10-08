@@ -9,6 +9,7 @@ or model implementations. See `ml_glaucoma.problems` for model-specific adapters
 """
 
 from __future__ import absolute_import
+
 from os import environ
 
 if not environ['TF']:

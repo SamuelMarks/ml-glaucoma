@@ -5,7 +5,6 @@ import tensorflow as tf
 from efficientnet import tfkeras as efficientnet_tfkeras_models
 
 import ml_glaucoma.models.utils.tf_keras
-from ml_glaucoma.models import utils
 from ml_glaucoma.utils.helpers import get_upper_kv
 
 efficientnet_models = get_upper_kv(efficientnet_tfkeras_models)

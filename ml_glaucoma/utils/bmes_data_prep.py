@@ -16,7 +16,6 @@ from sys import modules
 import quantumrandom
 from six import iteritems, itervalues
 
-
 if python_version_tuple()[0] == '3':
     from importlib import reload
     from functools import reduce
@@ -381,7 +380,7 @@ def _log_set_stats():
     # '# shared between sets:'.ljust(just), sum(len(s0&s1) for s0, s1 in combinations((validation, test, train), 2))
     logger.debug(
         '# len(all sets):'.ljust(just) + str(sum(imap(len, (
-        datasets.train, datasets.test, datasets.validation)))))
+            datasets.train, datasets.test, datasets.validation)))))
     logger.debug('# len(total):'.ljust(just) + str(len(tbl)))
     logger.debug(
         '# len(all sets) == len(total):'.ljust(just) + str(

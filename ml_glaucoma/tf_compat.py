@@ -5,7 +5,7 @@ from __future__ import print_function
 
 from os import environ
 
-from tensorflow.python.keras.utils.losses_utils import ReductionV2
+from tensorflow.keras.utils.losses_utils import ReductionV2
 
 if not environ['TF']:
     raise NotImplementedError('tf_compat is TensorFlow only')
@@ -33,15 +33,15 @@ if is_tf_v1:
 
 
     if tf_version.version[1] == 13:
-        from tensorflow.python.keras.losses import Loss
-        from tensorflow.python.ops.losses import losses_impl
+        from tensorflow.keras.losses import Loss
+        from tensorflow.ops.losses import losses_impl
 
         tf.keras.losses.Loss = Loss
         tf.keras.losses.Reduction = ReductionV2
         del losses_impl
         del Loss
     elif tf_version.version[1] == 14:
-        from tensorflow.python.keras.utils import losses_utils
+        from tensorflow.keras.utils import losses_utils
 
         tf.keras.losses.Reduction = losses_utils.ReductionV2
         del losses_utils
@@ -51,7 +51,7 @@ else:
 
 if is_tf_v1:
     tf.nest = tf.contrib.framework.nest
-    from tensorflow.python.keras.metrics import Metric
+    from tensorflow.keras.metrics import Metric
 
     tf.keras.metrics.Metric = Metric
     del Metric

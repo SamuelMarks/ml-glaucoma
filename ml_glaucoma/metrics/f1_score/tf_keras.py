@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.keras.api._v1.keras import backend as K
-from tensorflow.python.keras.backend import get_session
+import tensorflow.keras.backend as K
+from tensorflow.keras.backend import get_session
 
 
 # Adapted from Vinicius comment in https://www.kaggle.com/c/human-protein-atlas-image-classification/discussion/73929

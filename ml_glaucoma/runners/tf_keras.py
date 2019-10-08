@@ -2,7 +2,7 @@ import os
 from sys import modules
 
 import tensorflow as tf
-from tensorflow.python.keras.utils import model_to_dot
+from tensorflow.keras.utils import model_to_dot
 
 from ml_glaucoma import callbacks as cb, runners, get_logger
 from ml_glaucoma.runners.utils import default_model_dir, batch_steps

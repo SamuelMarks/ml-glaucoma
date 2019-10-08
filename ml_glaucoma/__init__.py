@@ -9,7 +9,7 @@ from os import path, environ
 import yaml
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.54-alpha'
+__version__ = '0.0.54-beta'
 
 
 def get_logger(name=None):
@@ -24,7 +24,7 @@ logger = get_logger('root')
 environ.setdefault('TF', 'true')
 environ.setdefault('TORCH', '')
 
-if not((environ['TF'] and 1 or 0) ^ (environ['TORCH'] and 1 or 0)):
+if not ((environ['TF'] and 1 or 0) ^ (environ['TORCH'] and 1 or 0)):
     raise EnvironmentError('Only one of TensorFlow [`TF`] and PyTorch [`TORCH`] can be enabled')
 
 if environ['TF']:

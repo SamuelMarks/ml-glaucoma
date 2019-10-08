@@ -2,9 +2,9 @@ from inspect import currentframe
 
 import gin
 import tensorflow as tf
-from tensorflow.python.keras.layers import (Conv2D, MaxPooling2D, Dense,
-                                            Dropout, GlobalAveragePooling2D,
-                                            GlobalMaxPooling2D, Flatten, Activation)
+from tensorflow.keras.layers import (Conv2D, MaxPooling2D, Dense,
+                                     Dropout, GlobalAveragePooling2D,
+                                     GlobalMaxPooling2D, Flatten, Activation)
 
 import ml_glaucoma.models.utils.tf_keras
 from ml_glaucoma.models import utils

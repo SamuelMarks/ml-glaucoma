@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+
 def AucRocCallback(y_true, y_pred):
     # any tensorflow metric
     value, update_op = tf.contrib.metrics.streaming_auc(y_pred, y_true)

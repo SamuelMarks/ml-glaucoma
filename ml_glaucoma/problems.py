@@ -92,6 +92,7 @@ if environ['TF']:
         return tf.nest.map_structure(
             f, dataset.output_shapes, dataset.output_types)
 
+
     class BaseProblem(Problem):
         """
         Almost-complete basic implementation of `Problem`.
@@ -227,6 +228,7 @@ if environ['TF']:
                     logging.info('Class counts computed')
             return self._class_counts
 
+
     class TfdsProblem(BaseProblem):
         """`BaseProblem` implementation based on `tfds.core.DatasetBuilder`s."""
 
@@ -315,6 +317,7 @@ if environ['TF']:
                 # hacky fallback
                 split = 'test'
             return split
+
 
     def with_inverse_freq_weights(dataset, counts):
         """

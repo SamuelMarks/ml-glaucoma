@@ -90,7 +90,7 @@ class ConfigurableTrain(Configurable):
             # 4. Set `tensorflow` pseudo-random generator at a fixed value
             if environ['TF']:
                 import tensorflow as tf
-                import tensorflow.python.keras.backend as K
+                import tensorflow.keras.backend as K
                 tf.set_random_seed(seed)
                 session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
                 sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
