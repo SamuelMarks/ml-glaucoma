@@ -5,7 +5,7 @@ from __future__ import print_function
 
 from os import environ
 
-from tensorflow.keras.utils.losses_utils import ReductionV2
+from tensorflow.python.ops.losses.loss_reduction import ReductionV2
 
 if not environ['TF']:
     raise NotImplementedError('tf_compat is TensorFlow only')
