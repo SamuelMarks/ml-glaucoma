@@ -9,7 +9,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_datasets.public_api as tfds
 
-from ml_glaucoma.tfds_builders import transformer
+from ml_glaucoma.datasets.tfds_builders import transformer
 
 
 class RefugeTask(object):

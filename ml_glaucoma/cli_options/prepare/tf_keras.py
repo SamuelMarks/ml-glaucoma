@@ -5,9 +5,9 @@ from ml_glaucoma import problems as p
 
 def dataset_builder(bmes_init, bmes_parent_dir, builders, data_dir, dataset, download_dir, download_mode,
                     extract_dir, gray_on_disk, manual_dir, resolution):
-    for ds in set(dataset):  # remove duplicates
+    for ds in frozenset(dataset):  # remove duplicates
         if ds == 'bmes':
-            from ml_glaucoma.tfds_builders import bmes
+            from ml_glaucoma.datasets.tfds_builders import bmes
 
             builder_factory = bmes.get_bmes_builder
             if bmes_init:
@@ -24,7 +24,7 @@ def dataset_builder(bmes_init, bmes_parent_dir, builders, data_dir, dataset, dow
 
                 get_data(bmes_parent_dir, manual_dir)
         elif ds == 'refuge':
-            from ml_glaucoma.tfds_builders import refuge
+            from ml_glaucoma.datasets.tfds_builders import refuge
 
             builder_factory = refuge.get_refuge_builder
         else:

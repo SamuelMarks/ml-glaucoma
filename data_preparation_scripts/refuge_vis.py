@@ -12,7 +12,7 @@ import tensorflow_datasets as tfds
 from ml_glaucoma.problems import preprocess_example
 
 if environ['TF']:
-    from ml_glaucoma.tfds_builders.refuge import Refuge
+    from ml_glaucoma.datasets.tfds_builders.refuge import Refuge
 elif environ['TORCH']:
     def Refuge(*args, **kwargs):
         raise NotImplementedError()
