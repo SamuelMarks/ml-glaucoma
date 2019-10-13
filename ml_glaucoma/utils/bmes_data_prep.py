@@ -6,7 +6,7 @@ from fnmatch import filter as fnmatch_filter
 from functools import partial
 from itertools import chain, groupby
 from operator import itemgetter
-from os import path, remove, walk, environ, symlink, makedirs
+from os import path, remove, walk, environ, symlink, makedirs, listdir
 from platform import python_version_tuple
 from random import sample
 from shutil import rmtree
@@ -646,6 +646,47 @@ def old(no_oags, oags, skip_save):
 
     data = Data(tbl, datasets, features, feature_names, pickled_cache)
     return data
+
+
+SplitFolder = namedtuple('SplitFolder', ('split', 'folder'))
+
+
+def prepare_bmes_splits(root_dir):  # type: (str) -> SplitFolder
+    """
+    :keyword root_dir: Root directory
+    :type root_dir: ``str``
+
+    :return: SplitFolder generator
+    :rtype: ``[SplitFolder]``
+    """
+    subdirs = {'validation': 'valid'}
+
+    def process_split(split):
+        folder = path.join(root_dir, subdirs.get(split, split))
+        if not path.isdir(folder):
+            raise IOError('No manually downloaded data found at {:s}'.format(folder))
+        # assumes directory structure (filenames may vary)
+        # manual dir
+        # - test
+        #  - no_glaucoma
+        #   - neg_example1.jpg
+        #   - neg_example2.jpg
+        #  - glaucoma
+        #   - pos_example1.jpg
+        # - train
+        #   - no_glaucoma
+        #   - ...
+        # - valid
+        #   - no_glaucoma
+        #   - ...
+        num_examples = sum(
+            len(listdir(path.join(folder, dirname)))
+            for dirname in listdir(folder))
+        if num_examples == 0:
+            raise RuntimeError('No data_preparation_scripts found {}'.format(folder))
+        return SplitFolder(split=split, folder=folder)
+
+    return imap(process_split, ('train', 'validation', 'test'))
 
 
 _update_generated_types_py()

@@ -3,6 +3,12 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+from platform import python_version_tuple
+
+from ml_glaucoma.utils.bmes_data_prep import prepare_bmes_splits
+
+if python_version_tuple()[0] == '2':
+    from itertools import ifilter as filter
 
 import numpy as np
 import tensorflow as tf
@@ -68,8 +74,8 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
             manual_dir = os.path.join(manual_dir, self.name)
 
         force_download = (
-            download_config.download_mode ==
-            download.GenerateMode.FORCE_REDOWNLOAD)
+            download_config.download_mode == download.GenerateMode.FORCE_REDOWNLOAD
+        )
         return download.DownloadManager(
             dataset_name=self.name,
             download_dir=download_dir,
@@ -81,37 +87,15 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
         )
 
     def _split_generators(self, dl_manager):
-        generators = []
         manual_dir = dl_manager.manual_dir
-        subdirs = {'validation': 'valid'}
-        for split in ('train', 'validation', 'test'):
-            folder = os.path.join(manual_dir, subdirs.get(split, split))
-            if not os.path.isdir(folder):
-                raise IOError('No manually downloaded data found at {:s}'.format(folder))
-            # assumes directory structure (filenames may vary)
-            # manual dir
-            # - test
-            #  - no_glaucoma
-            #   - neg_example1.jpg
-            #   - neg_example2.jpg
-            #  - glaucoma
-            #   - pos_example1.jpg
-            # - train
-            #   - no_glaucoma
-            #   - ...
-            # - valid
-            #   - no_glaucoma
-            #   - ...
-            num_examples = sum(
-                len(os.listdir(os.path.join(folder, dirname)))
-                for dirname in os.listdir(folder))
-            if num_examples == 0:
-                raise RuntimeError('No data_preparation_scripts found {}'.format(folder))
-            generators.append(tfds.core.SplitGenerator(
-                name=split,
-                gen_kwargs=dict(folder=folder)))
 
-        return generators
+        return list(filter(
+            lambda split_folder: tfds.core.SplitGenerator(
+                name=split_folder.split,
+                gen_kwargs=dict(folder=split_folder.folder)
+            ),
+            prepare_bmes_splits(manual_dir))
+        )
 
     def _generate_examples(self, folder):
         i = -1
