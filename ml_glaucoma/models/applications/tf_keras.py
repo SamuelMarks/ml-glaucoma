@@ -7,8 +7,8 @@ import ml_glaucoma.models.utils.tf_keras
 
 
 @gin.configurable(blacklist=['inputs', 'output_spec'])
-def applications_model(inputs, output_spec, application='ResNet50',
-                       weights='imagenet', pooling='avg', final_activation='default',
+def applications_model(inputs, output_spec, application='ResNet50', weights='imagenet',
+                       pooling='avg', final_activation='default',
                        kwargs=None):
     if kwargs is None:
         kwargs = {}
