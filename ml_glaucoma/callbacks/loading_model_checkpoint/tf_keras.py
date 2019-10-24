@@ -54,7 +54,7 @@ class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
     @staticmethod
     def filename_epoch(filename):
         """Get the epoch of the given file/path."""
-        assert (filename.endswith('.h5'))
+        assert filename.endswith('.h5')
         return int(filename[-7:-3])
 
     def on_train_begin(self, logs=None):

@@ -5,8 +5,9 @@ from torchvision import models
 
 def train(epochs, *args, **kwargs):
     # TODO: Split this up into the Problem object, and the whole module structure!
-    device = torch.device('cuda' if torch.cuda.is_available()
-                          else 'cpu')
+    device = torch.device(
+        'cuda' if torch.cuda.is_available() else 'cpu'
+    )
 
     model = models.resnet50(pretrained=True)
     print(model)
@@ -56,13 +57,19 @@ def train(epochs, *args, **kwargs):
         train_losses.append(running_loss / len(trainloader))
         test_losses.append(test_loss / len(testloader))
 
-        print(f"Epoch {epoch + 1}/{epochs}.. "
-              f"Train loss: {running_loss / print_every:.3f}.. "
-              f"Test loss: {test_loss / len(testloader):.3f}.. "
-              f"Test accuracy: {accuracy / len(testloader):.3f}")
+        print("Epoch {epoch}/{epochs}.. "
+              "Train loss: {train_loss:.3f}.. "
+              "Test loss: {test_loss:.3f}.. "
+              "Test accuracy: {test_accuracy:.3f}".format(epoch=epoch + 1, epochs=epochs,
+                                                          running_loss=running_loss,
+                                                          print_every=print_every,
+                                                          test_loss=test_loss / len(testloader),
+                                                          train_loss=running_loss / print_every,
+                                                          testloader=testloader,
+                                                          test_accuracy=accuracy / len(testloader),
+                                                          accuracy=accuracy))
         running_loss = 0
         model.train()
-
 
     torch.save(model, 'aerialmodel.pth')
     raise NotImplementedError()

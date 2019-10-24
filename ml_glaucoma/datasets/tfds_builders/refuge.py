@@ -170,7 +170,7 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                     seg = _load_image(annotations.open(segmentation_path))
                     seg = _seg_to_label(seg)
                     image_res = fundus.shape[:2]
-                    assert (seg.shape[:2] == image_res)
+                    assert seg.shape[:2] == image_res
                     _transformer = self.builder_config.transformer(image_res)
                     if _transformer is not None:
                         xy = _transformer.transform_point(xy)

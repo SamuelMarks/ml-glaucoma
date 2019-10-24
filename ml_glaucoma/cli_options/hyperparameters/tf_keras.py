@@ -1,3 +1,5 @@
+from abc import ABC
+
 import tensorflow as tf
 
 from ml_glaucoma import losses as losses_module, metrics as metrics_module, problems as p
@@ -12,6 +14,7 @@ valid_losses.update({loss_name: getattr(tf.losses, loss_name)
                      for loss_name in dir(tf.losses)
                      if not loss_name.startswith('_') and loss_name == 'Reduction'})
 valid_losses.update(get_upper_kv(losses_module))
+
 SUPPORTED_LOSSES = tuple(valid_losses.keys())
 
 valid_metrics = {metric: getattr(tf.keras.metrics, metric)
@@ -24,7 +27,7 @@ valid_optimizers = get_upper_kv(tf.keras.optimizers)
 SUPPORTED_OPTIMIZERS = tuple(valid_optimizers.keys())
 
 
-class ConfigurableProblemBase(Configurable):
+class ConfigurableProblemBase(Configurable, ABC):
     def build_self(self, builders, map_fn, loss, metrics,
                    precision_thresholds, recall_thresholds,
                    shuffle_buffer, use_inverse_freq_weights,
@@ -88,3 +91,13 @@ class ConfigurableProblemBase(Configurable):
 # Cleanup namespace
 for obj in losses_module, metrics_module, get_upper_kv:
     del obj
+
+__all__ = [
+    'ConfigurableProblemBase',
+    'valid_losses',
+    'SUPPORTED_LOSSES',
+    'valid_metrics',
+    'SUPPORTED_METRICS',
+    'valid_optimizers',
+    'SUPPORTED_OPTIMIZERS'
+]

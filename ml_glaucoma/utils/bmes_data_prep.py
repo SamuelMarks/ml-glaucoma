@@ -651,7 +651,7 @@ def old(no_oags, oags, skip_save):
 SplitFolder = namedtuple('SplitFolder', ('split', 'folder'))
 
 
-def prepare_bmes_splits(root_dir):  # type: (str) -> SplitFolder
+def prepare_bmes_splits(root_dir):  # type: (str) -> Iterator[SplitFolder]
     """
     :keyword root_dir: Root directory
     :type root_dir: ``str``
@@ -660,6 +660,8 @@ def prepare_bmes_splits(root_dir):  # type: (str) -> SplitFolder
     :rtype: ``[SplitFolder]``
     """
     subdirs = {'validation': 'valid'}
+
+    assert root_dir is not None
 
     def process_split(split):
         folder = path.join(root_dir, subdirs.get(split, split))

@@ -1,12 +1,14 @@
 # See ml-glaucoma/ml_glaucoma/cli_options/train.py for other hyperparameters
 from __future__ import absolute_import
 
+from abc import ABC
 from os import environ
 
 from yaml import load as yaml_load
 
 from ml_glaucoma import get_logger
 from ml_glaucoma.cli_options import ConfigurableMapFn
+from ml_glaucoma.cli_options.base import Configurable
 
 if environ['TF']:
     from ml_glaucoma.cli_options.hyperparameters.tf_keras import *
@@ -18,7 +20,7 @@ else:
 logger = get_logger(__file__.partition('.')[0])
 
 
-class ConfigurableProblem(ConfigurableProblemBase):
+class ConfigurableProblem(ConfigurableProblemBase, ABC):
     def __init__(self, builders, map_fn=None):
         if map_fn is None:
             map_fn = ConfigurableMapFn()

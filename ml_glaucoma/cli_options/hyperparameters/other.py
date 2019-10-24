@@ -19,3 +19,5 @@ class ConfigurableProblemBase(Configurable):
 
 
 del Configurable
+
+__all__ = ['ConfigurableProblemBase', 'SUPPORTED_LOSSES', 'SUPPORTED_METRICS', 'SUPPORTED_OPTIMIZERS']
