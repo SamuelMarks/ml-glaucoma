@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from collections import deque
 from datetime import datetime
 from itertools import islice
@@ -48,3 +46,7 @@ def find_nth(s, x, n=0, overlap=False):
         if i < 0:
             break
     return i
+
+
+def sorted_enumerate(seq):
+    return tuple(i for (v, i) in sorted((v, i) for (i, v) in enumerate(seq)))
