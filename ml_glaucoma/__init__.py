@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import absolute_import
 
 import logging
 from logging.config import dictConfig as _dictConfig
@@ -9,7 +8,7 @@ from os import path, environ
 import yaml
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.54-delta'
+__version__ = '0.0.55'
 
 
 def get_logger(name=None):
