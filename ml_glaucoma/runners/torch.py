@@ -1,6 +1,8 @@
 import torch
-from torch import nn, optim
+from torch import nn, optim, FloatTensor
 from torchvision import models
+
+from ml_glaucoma.utils import pp
 
 
 def train(epochs, *args, **kwargs):
@@ -11,6 +13,8 @@ def train(epochs, *args, **kwargs):
 
     model = models.resnet50(pretrained=True)
     print(model)
+    print('train::kwargs')
+    pp(kwargs)
 
     for param in model.parameters():
         param.requires_grad = False
@@ -53,7 +57,7 @@ def train(epochs, *args, **kwargs):
                     ps = torch.exp(logps)
                     top_p, top_class = ps.topk(1, dim=1)
                     equals = top_class == labels.view(*top_class.shape)
-                accuracy += torch.mean(equals.type(torch.FloatTensor)).item()
+                accuracy += torch.mean(equals.type(FloatTensor)).item()
         train_losses.append(running_loss / len(trainloader))
         test_losses.append(test_loss / len(testloader))
 

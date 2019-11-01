@@ -6,7 +6,7 @@ Resolved in master branch, though required for earlier versions.
 Note there's a @memoize on `tfds.core.download.checksums._checksum_paths()`,
 so this should be imported before any other `tfds` usage.
 """
-from __future__ import absolute_import
+
 from __future__ import division
 from __future__ import print_function
 

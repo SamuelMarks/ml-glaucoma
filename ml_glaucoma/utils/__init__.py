@@ -50,3 +50,8 @@ def find_nth(s, x, n=0, overlap=False):
 
 def sorted_enumerate(seq):
     return tuple(i for (v, i) in sorted((v, i) for (i, v) in enumerate(seq)))
+
+
+def obj_to_d(obj):
+    return obj if type(obj) is dict else dict((k, getattr(obj, k))
+                                              for k in dir(obj) if not k.startswith('_'))

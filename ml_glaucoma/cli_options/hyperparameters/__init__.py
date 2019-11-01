@@ -1,5 +1,5 @@
 # See ml-glaucoma/ml_glaucoma/cli_options/train.py for other hyperparameters
-from __future__ import absolute_import
+
 
 from abc import ABC
 from os import environ
@@ -84,18 +84,21 @@ class ConfigurableOptimizer(Configurable):
             '-lr', '--learning_rate', default=1e-3, type=float,
             help='base optimizer learning rate')
         parser.add_argument(
-            '--optimiser_params', default={}, type=yaml_load,
+            '--optimizer_params', default={}, type=yaml_load,
             help='Extra optimiser args, e.g.: \'{epsilon: 1e-7, amsgrad: true}\''
         )
 
-    def build(self, optimizer, learning_rate, optimiser_params, **kwargs):
-        if 'lr' in optimiser_params:
+    def build(self, optimizer, learning_rate, optimizer_params=None, **kwargs):
+        if optimizer_params is None:
+            optimizer_params = {}
+        elif 'lr' in optimizer_params:
             logger.warn('Learning rate is being replaced by `--learning_rate` value or its default')
 
-        optimiser_params['lr'] = learning_rate
-        return valid_optimizers[optimizer](**optimiser_params)
+        optimizer_params['lr'] = learning_rate
 
-    def build_self(self, learning_rate, optimiser_params, exp_lr_decay, **kwargs):
+        return valid_optimizers[optimizer](**optimizer_params)
+
+    def build_self(self, learning_rate, optimizer_params, exp_lr_decay, **kwargs):
         raise NotImplementedError
 
 

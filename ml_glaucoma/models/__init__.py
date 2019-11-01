@@ -6,7 +6,6 @@ def get_model(inputs, output_spec, **kwargs) and be annotated with
 `@gin.configurable`. The function is responsible for adding all losses except
 for those associated with data labels (e.g. regularization losses).
 """
-from __future__ import absolute_import
 
 from os import environ
 
