@@ -8,7 +8,7 @@ from os import path, environ
 import yaml
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.56'
+__version__ = '0.0.57'
 
 
 def get_logger(name=None):
