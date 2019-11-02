@@ -1,7 +1,7 @@
 from abc import ABC
 
 import tensorflow as tf
-from tensorflow_addons.metrics import F1Score
+import tensorflow_addons as tfa
 
 from ml_glaucoma import losses as losses_module, metrics as metrics_module, problems as p
 from ml_glaucoma.cli_options.base import Configurable
@@ -60,7 +60,7 @@ class ConfigurableProblemBase(Configurable, ABC):
                            name='fn{:d}'.format(int(100 * t)))
                        for t in precision_thresholds
                    ] + [
-                       F1Score(num_classes=2, average='micro')
+                       tfa.metrics.F1Score(num_classes=2, average='micro')
                    ] + [
                        tf.keras.metrics.Precision(
                            thresholds=[t],
