@@ -194,8 +194,8 @@ def vis(problem, split='train'):
     for fundus, label in problem.get_dataset(split=split):
         if fundus.shape[-1] == 1:
             fundus = tf.squeeze(fundus, axis=-1)
-        fundus -= tf.reduce_min(fundus, axis=(0, 1))
-        fundus /= tf.reduce_max(fundus, axis=(0, 1))
+        fundus -= tf.reduce_min(input_tensor=fundus, axis=(0, 1))
+        fundus /= tf.reduce_max(input_tensor=fundus, axis=(0, 1))
         plt.imshow(fundus.numpy())
         plt.title('Glaucoma' if label.numpy() else 'Non-glaucoma')
         plt.show()

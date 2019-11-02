@@ -8,7 +8,7 @@ tqdm
 tflearn
 h5py==2.9.0
 scipy
-#tensorflow==1.14.0 # omitting because you should pick `tensorflow-gpu` or compile your own (compile preferred)
+#tensorflow==2.0.0 # omitting because you should compile your own
 opencv-python
 scikit-learn
 urllib3[secure]

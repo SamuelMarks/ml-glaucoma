@@ -1,7 +1,6 @@
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras.backend as K
-from tensorflow.keras.backend import get_session
 
 
 # Adapted from Vinicius comment in https://www.kaggle.com/c/human-protein-atlas-image-classification/discussion/73929
@@ -25,7 +24,8 @@ class F1Metric(tf.keras.metrics.Metric):
         self.local_variables = None
 
     def reset_states(self):
-        get_session().run(tf.variables_initializer(self.local_variables))
+        # get_session().run(...
+        tf.compat.v1.variables_initializer(self.local_variables)
 
     @staticmethod
     def metric_variable(shape, dtype, validate_shape=True, name=None):
@@ -33,7 +33,7 @@ class F1Metric(tf.keras.metrics.Metric):
             np.zeros(shape),
             dtype=dtype,
             trainable=False,
-            collections=[tf.GraphKeys.LOCAL_VARIABLES],
+            # collections=[tf.compat.v1.GraphKeys.LOCAL_VARIABLES],
             validate_shape=validate_shape,
             name=name,
         )
@@ -49,14 +49,14 @@ class F1Metric(tf.keras.metrics.Metric):
             shape=[self.num_classes], dtype=tf.int64, validate_shape=False, name='fn_mac'
         )
 
-        up_tp_mac = tf.assign_add(self.tp_mac, tf.count_nonzero(y_pred * y_true, axis=0))
+        up_tp_mac = tf.compat.v1.assign_add(self.tp_mac, tf.math.count_nonzero(y_pred * y_true, axis=0))
         self.add_update(up_tp_mac)
-        up_fp_mac = tf.assign_add(self.fp_mac, tf.count_nonzero(y_pred * (y_true - 1), axis=0))
+        up_fp_mac = tf.compat.v1.assign_add(self.fp_mac, tf.math.count_nonzero(y_pred * (y_true - 1), axis=0))
         self.add_update(up_fp_mac)
-        up_fn_mac = tf.assign_add(self.fn_mac, tf.count_nonzero((y_pred - 1) * y_true, axis=0))
+        up_fn_mac = tf.compat.v1.assign_add(self.fn_mac, tf.math.count_nonzero((y_pred - 1) * y_true, axis=0))
         self.add_update(up_fn_mac)
 
-        self.local_variables = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES)
+        self.local_variables = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.LOCAL_VARIABLES)
 
     def __call__(self, y_true, y_pred, **kwargs):
         rounded_pred = K.cast(K.greater_equal(y_pred, self.threshold), 'float32')
@@ -64,5 +64,5 @@ class F1Metric(tf.keras.metrics.Metric):
         prec_mac = self.tp_mac / (self.tp_mac + self.fp_mac)
         rec_mac = self.tp_mac / (self.tp_mac + self.fn_mac)
         f1_mac = 2 * prec_mac * rec_mac / (prec_mac + rec_mac)
-        f1_mac = tf.reduce_mean(tf.where(tf.is_nan(f1_mac), tf.zeros_like(f1_mac), f1_mac))
+        f1_mac = tf.reduce_mean(input_tensor=tf.compat.v1.where(tf.math.is_nan(f1_mac), tf.zeros_like(f1_mac), f1_mac))
         return f1_mac

@@ -32,17 +32,14 @@ from sas7bdat import SAS7BDAT
 
 import numpy as np
 
-if environ['TF']:
-    from tensorflow.contrib.learn.python.learn.datasets.base import Datasets
-else:
-    Datasets = namedtuple('Datasets', ('train', 'validation', 'test'))
-
 from ml_glaucoma import get_logger
 from ml_glaucoma.utils import run_once, it_consumes, pp, redis_cursor
 from ml_glaucoma.utils.cache import Cache
 
 logger = get_logger(modules[__name__].__name__)
 # logger.setLevel(CRITICAL)
+
+Datasets = namedtuple('Datasets', ('train', 'validation', 'test'))
 
 pickled_cache = {}
 just = 50

@@ -16,7 +16,7 @@ def log_parser(infile, top, threshold, by_diff, directory, tag='epoch_val_auc'):
                    map(lambda fname: path.join(infile, fname), listdir(infile))))
 
     sorted_values = sorted(enumerate(v.simple_value
-                                     for e in tf.train.summary_iterator(infile)
+                                     for e in tf.compat.v1.train.summary_iterator(infile)
                                      for v in e.summary.value
                                      if v.tag == tag), key=itemgetter(1), reverse=True)
 

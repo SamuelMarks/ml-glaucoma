@@ -152,9 +152,9 @@ class BaseProblem(Problem):
                     false_counts, true_counts = _counts
                     label = args[1]
                     false_counts, true_counts = tf.cond(
-                        label,
-                        lambda: (false_counts, true_counts + 1),
-                        lambda: (false_counts + 1, true_counts))
+                        pred=label,
+                        true_fn=lambda: (false_counts, true_counts + 1),
+                        false_fn=lambda: (false_counts + 1, true_counts))
                     return false_counts, true_counts
 
                 counts = ds.reduce(
@@ -269,7 +269,7 @@ def with_inverse_freq_weights(dataset, counts):
         weights corresponds to a scaled reciprocal of counts.
     """
     counts = tf.constant(counts, tf.float32)
-    class_weights = tf.reduce_mean(counts, keepdims=True) / counts
+    class_weights = tf.reduce_mean(input_tensor=counts, keepdims=True) / counts
 
     def map_fn(inputs, labels):
         weights = class_weights[tf.cast(labels, tf.int32)]
@@ -342,11 +342,11 @@ def preprocess_example(image, labels,
         apply = tf.random.uniform((), dtype=tf.float32) < prob
         if apply_to_labels:
             return tf.cond(
-                apply,
-                lambda: (fn(img), fn(_labels)),
-                lambda: (img, _labels))
+                pred=apply,
+                true_fn=lambda: (fn(img), fn(_labels)),
+                false_fn=lambda: (img, _labels))
         else:
-            return tf.cond(apply, lambda: fn(img), lambda: img), _labels
+            return tf.cond(pred=apply, true_fn=lambda: fn(img), false_fn=lambda: img), _labels
 
     if maybe_horizontal_flip:
         image, labels = maybe_apply(
@@ -355,22 +355,22 @@ def preprocess_example(image, labels,
         image, labels = maybe_apply(
             image, labels, tf.image.flip_up_down, labels_are_images)
     if pad_to_square:
-        input_res = tf.shape(image)[-3:-1]
-        max_dim = tf.reduce_max(input_res)
+        input_res = tf.shape(input=image)[-3:-1]
+        max_dim = tf.reduce_max(input_tensor=input_res)
         pad_total = max_dim - input_res
         pad_left = pad_total // 2
         pad_right = pad_total - pad_left
         num_batch_dims = image.shape.ndims - 3  # probably zero
-        pad_left = tf.pad(pad_left, [[num_batch_dims, 1]])
-        pad_right = tf.pad(pad_right, [[num_batch_dims, 1]])
+        pad_left = tf.pad(tensor=pad_left, paddings=[[num_batch_dims, 1]])
+        pad_right = tf.pad(tensor=pad_right, paddings=[[num_batch_dims, 1]])
         paddings = tf.stack((pad_left, pad_right), axis=1)
-        image = tf.pad(image, paddings)
+        image = tf.pad(tensor=image, paddings=paddings)
         if labels_are_images:
-            labels = tf.pad(labels, paddings)
+            labels = tf.pad(tensor=labels, paddings=paddings)
     if resolution is not None:
         def resize(img):
             img = tf.expand_dims(img, axis=0)
-            img = tf.image.resize_area(img, resolution, align_corners=True)
+            img = tf.image.resize(img, resolution, method=tf.image.ResizeMethod.AREA)
             img = tf.squeeze(img, axis=0)
             return img
 
@@ -379,7 +379,7 @@ def preprocess_example(image, labels,
             labels = resize(image)
 
     if not use_rgb:
-        image = tf.reduce_mean(image, axis=-1, keepdims=True)
+        image = tf.reduce_mean(input_tensor=image, axis=-1, keepdims=True)
     # image = tf.cast(image, tf.float32)
     image = tf.image.convert_image_dtype(image, tf.float32)
     if per_image_standardization:

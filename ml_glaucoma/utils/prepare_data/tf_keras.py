@@ -5,9 +5,9 @@ import ml_glaucoma.runners.tf_keras
 
 def prepare_data(data_obj, pixels):
     def _parse_function(filename, label):
-        image = tf.image.decode_jpeg(tf.read_file(filename), channels=3)
+        image = tf.image.decode_jpeg(tf.io.read_file(filename), channels=3)
         print(image.shape)
-        image_resized = tf.image.resize_images(image, [pixels, pixels])
+        image_resized = tf.image.resize(image, [pixels, pixels])
         print(image_resized.shape)
         return image_resized, label
 

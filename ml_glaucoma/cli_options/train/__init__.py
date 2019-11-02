@@ -89,9 +89,9 @@ class ConfigurableTrain(Configurable):
             if environ['TF']:
                 import tensorflow as tf
                 import tensorflow.keras.backend as K
-                tf.set_random_seed(seed)
-                session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
-                sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+                tf.compat.v1.set_random_seed(seed)
+                session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+                sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
                 K.set_session(sess)
             elif environ['TORCH']:
                 import torch

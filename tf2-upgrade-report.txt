@@ -1,0 +1,1200 @@
+TensorFlow 2.0 Upgrade Script
+-----------------------------
+Converted 139 files
+Detected 10 issues that require attention
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+File: ml-glaucoma/ml_glaucoma/tf_compat.py
+--------------------------------------------------------------------------------
+ml-glaucoma/ml_glaucoma/tf_compat.py:53:14: ERROR: Using member tf.contrib.framework.nest in deprecated module tf.contrib. tf.contrib.framework.nest cannot be converted automatically. tf.contrib will not be distributed with TensorFlow 2.0, please consider an alternative in non-contrib TensorFlow, a community-maintained repository such as tensorflow/addons, or fork the required code.
+--------------------------------------------------------------------------------
+File: ml-glaucoma/ml_glaucoma/callbacks/auc_roc/tf_keras.py
+--------------------------------------------------------------------------------
+ml-glaucoma/ml_glaucoma/callbacks/auc_roc/tf_keras.py:6:23: ERROR: Using member tf.contrib.metrics.streaming_auc in deprecated module tf.contrib. tf.contrib.metrics.streaming_auc cannot be converted automatically. tf.contrib will not be distributed with TensorFlow 2.0, please consider an alternative in non-contrib TensorFlow, a community-maintained repository such as tensorflow/addons, or fork the required code.
+--------------------------------------------------------------------------------
+File: ml-glaucoma/ml_glaucoma/problems/tf_keras.py
+--------------------------------------------------------------------------------
+ml-glaucoma/ml_glaucoma/problems/tf_keras.py:373:18: WARNING: tf.image.resize_area called with align_corners argument, requires manual check: align_corners is not supported by tf.image.resize, the new default transformation is close to what v1 provided. If you require exactly the same transformation as before, use compat.v1.image.resize_area.
+--------------------------------------------------------------------------------
+File: ml-glaucoma/ml_glaucoma/utils/bmes_data_prep.py
+--------------------------------------------------------------------------------
+ml-glaucoma/ml_glaucoma/utils/bmes_data_prep.py:192:21: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+ml-glaucoma/ml_glaucoma/utils/bmes_data_prep.py:247:8: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+ml-glaucoma/ml_glaucoma/utils/bmes_data_prep.py:295:21: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+ml-glaucoma/ml_glaucoma/utils/bmes_data_prep.py:579:8: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+ml-glaucoma/ml_glaucoma/utils/bmes_data_prep.py:595:4: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+ml-glaucoma/ml_glaucoma/utils/bmes_data_prep.py:621:8: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+--------------------------------------------------------------------------------
+File: ml-glaucoma/ml_glaucoma/runners/torch.py
+--------------------------------------------------------------------------------
+ml-glaucoma/ml_glaucoma/runners/torch.py:78:4: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+================================================================================
+Detailed log follows:
+
+================================================================================
+================================================================================
+Input tree: 'ml-glaucoma/ml_glaucoma'
+================================================================================
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/tfds_checksums.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/tfds_checksums.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/aliases.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/aliases.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/gin_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/gin_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/__main__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/__main__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/tf_compat.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/tf_compat.py'
+--------------------------------------------------------------------------------
+
+53:14: ERROR: Using member tf.contrib.framework.nest in deprecated module tf.contrib. tf.contrib.framework.nest cannot be converted automatically. tf.contrib will not be distributed with TensorFlow 2.0, please consider an alternative in non-contrib TensorFlow, a community-maintained repository such as tensorflow/addons, or fork the required code.
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/prepare.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/prepare.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/metrics/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/metrics/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/metrics/f1_score/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/metrics/f1_score/tf_keras.py'
+--------------------------------------------------------------------------------
+
+28:26: INFO: Renamed 'tf.variables_initializer' to 'tf.compat.v1.variables_initializer'
+36:25: INFO: Renamed 'tf.GraphKeys' to 'tf.compat.v1.GraphKeys'
+52:20: INFO: Renamed 'tf.assign_add' to 'tf.compat.v1.assign_add'
+52:47: INFO: Renamed 'tf.count_nonzero' to 'tf.math.count_nonzero'
+54:20: INFO: Renamed 'tf.assign_add' to 'tf.compat.v1.assign_add'
+54:47: INFO: Renamed 'tf.count_nonzero' to 'tf.math.count_nonzero'
+56:20: INFO: Renamed 'tf.assign_add' to 'tf.compat.v1.assign_add'
+56:47: INFO: Renamed 'tf.count_nonzero' to 'tf.math.count_nonzero'
+59:31: INFO: Renamed 'tf.get_collection' to 'tf.compat.v1.get_collection'
+59:49: INFO: Renamed 'tf.GraphKeys' to 'tf.compat.v1.GraphKeys'
+67:17: INFO: Added keywords to args of function 'tf.reduce_mean'
+67:32: INFO: Renamed 'tf.where' to 'tf.compat.v1.where'
+67:41: INFO: Renamed 'tf.is_nan' to 'tf.math.is_nan'
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/metrics/f1_score/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/metrics/f1_score/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/metrics/f1_score/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/metrics/f1_score/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/metrics/f1_score/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/metrics/f1_score/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/jaccard_distance/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/jaccard_distance/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/jaccard_distance/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/jaccard_distance/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/jaccard_distance/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/jaccard_distance/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/jaccard_distance/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/jaccard_distance/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/pair_loss/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/pair_loss/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/pair_loss/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/pair_loss/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/pair_loss/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/pair_loss/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/pair_loss/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/pair_loss/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/yogi_opt/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/yogi_opt/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/yogi_opt/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/yogi_opt/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/yogi_opt/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/yogi_opt/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/yogi_opt/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/yogi_opt/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/adabound/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/adabound/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/adabound/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/adabound/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/adabound/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/adabound/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/adabound/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/adabound/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/binary_crossentropy_with_ranking/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/binary_crossentropy_with_ranking/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/binary_crossentropy_with_ranking/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/binary_crossentropy_with_ranking/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/binary_crossentropy_with_ranking/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/binary_crossentropy_with_ranking/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/binary_crossentropy_with_ranking/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/binary_crossentropy_with_ranking/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/dice_loss/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/dice_loss/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/dice_loss/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/dice_loss/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/dice_loss/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/dice_loss/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/dice_loss/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/dice_loss/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/soft_auc/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/soft_auc/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/soft_auc/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/soft_auc/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/soft_auc/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/soft_auc/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/soft_auc/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/soft_auc/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/smooth_l1/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/smooth_l1/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/smooth_l1/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/smooth_l1/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/smooth_l1/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/smooth_l1/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/smooth_l1/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/smooth_l1/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/kappa_loss/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/kappa_loss/tf_keras.py'
+--------------------------------------------------------------------------------
+
+17:9: INFO: `name` passed to `name_scope`. Because you may be re-entering an existing scope, it is not safe to convert automatically,  the v2 name_scope does not support re-entering scopes by name.
+
+17:9: INFO: Renamed 'tf.name_scope' to 'tf.compat.v1.name_scope'
+18:17: INFO: Changed tf.to_float call to tf.cast(..., dtype=tf.float32).
+19:20: INFO: Changed tf.to_float call to tf.cast(..., dtype=tf.float32).
+20:46: INFO: Added keywords to args of function 'tf.transpose'
+21:33: INFO: Changed tf.to_float call to tf.cast(..., dtype=tf.float32).
+25:50: INFO: Added keywords to args of function 'tf.reduce_sum'
+27:50: INFO: Added keywords to args of function 'tf.reduce_sum'
+29:23: INFO: Added keywords to args of function 'tf.reduce_sum'
+30:23: INFO: Added keywords to args of function 'tf.reduce_sum'
+32:29: INFO: Added keywords to args of function 'tf.transpose'
+34:14: INFO: Added keywords to args of function 'tf.reduce_sum'
+35:16: INFO: Added keywords to args of function 'tf.reduce_sum'
+37:30: INFO: Changed tf.to_float call to tf.cast(..., dtype=tf.float32).
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/kappa_loss/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/kappa_loss/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/kappa_loss/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/kappa_loss/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/losses/kappa_loss/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/losses/kappa_loss/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/exponential_decay_lr_schedule.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/exponential_decay_lr_schedule.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/backends/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/backends/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/backends/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/backends/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/backends/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/backends/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/backends/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/backends/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/loading_model_checkpoint/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/loading_model_checkpoint/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/loading_model_checkpoint/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/loading_model_checkpoint/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/loading_model_checkpoint/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/loading_model_checkpoint/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/loading_model_checkpoint/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/loading_model_checkpoint/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/sgdr_scheduler/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/sgdr_scheduler/tf_keras.py'
+--------------------------------------------------------------------------------
+
+68:32: INFO: Renamed 'tf.ceil' to 'tf.math.ceil'
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/sgdr_scheduler/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/sgdr_scheduler/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/sgdr_scheduler/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/sgdr_scheduler/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/sgdr_scheduler/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/sgdr_scheduler/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/auc_roc/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/auc_roc/tf_keras.py'
+--------------------------------------------------------------------------------
+
+6:23: ERROR: Using member tf.contrib.metrics.streaming_auc in deprecated module tf.contrib. tf.contrib.metrics.streaming_auc cannot be converted automatically. tf.contrib will not be distributed with TensorFlow 2.0, please consider an alternative in non-contrib TensorFlow, a community-maintained repository such as tensorflow/addons, or fork the required code.
+9:30: INFO: Renamed 'tf.local_variables' to 'tf.compat.v1.local_variables'
+14:8: INFO: Renamed 'tf.add_to_collection' to 'tf.compat.v1.add_to_collection'
+14:29: INFO: Renamed 'tf.GraphKeys' to 'tf.compat.v1.GraphKeys'
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/auc_roc/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/auc_roc/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/auc_roc/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/auc_roc/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/callbacks/auc_roc/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/callbacks/auc_roc/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/datasets/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/datasets/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/datasets/torch/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/datasets/torch/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/datasets/torch/bmes.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/datasets/torch/bmes.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/datasets/tfds_builders/refuge.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/datasets/tfds_builders/refuge.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/datasets/tfds_builders/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/datasets/tfds_builders/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/datasets/tfds_builders/transformer.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/datasets/tfds_builders/transformer.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/datasets/tfds_builders/bmes.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/datasets/tfds_builders/bmes.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/problems/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/problems/tf_keras.py'
+--------------------------------------------------------------------------------
+
+154:48: INFO: Added keywords to args of function 'tf.cond'
+272:20: INFO: Added keywords to args of function 'tf.reduce_mean'
+344:19: INFO: Added keywords to args of function 'tf.cond'
+349:19: INFO: Added keywords to args of function 'tf.cond'
+358:20: INFO: Added keywords to args of function 'tf.shape'
+359:18: INFO: Added keywords to args of function 'tf.reduce_max'
+364:19: INFO: Added keywords to args of function 'tf.pad'
+365:20: INFO: Added keywords to args of function 'tf.pad'
+367:16: INFO: Added keywords to args of function 'tf.pad'
+369:21: INFO: Added keywords to args of function 'tf.pad'
+373:18: WARNING: tf.image.resize_area called with align_corners argument, requires manual check: align_corners is not supported by tf.image.resize, the new default transformation is close to what v1 provided. If you require exactly the same transformation as before, use compat.v1.image.resize_area.
+373:18: INFO: Changed tf.image.resize_area call to tf.image.resize(..., method=tf.image.ResizeMethod.AREA).
+382:16: INFO: Added keywords to args of function 'tf.reduce_mean'
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/problems/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/problems/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/problems/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/problems/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/problems/shared.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/problems/shared.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/problems/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/problems/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/utils/cache.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/utils/cache.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/utils/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/utils/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/utils/bmes_data_prep.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/utils/bmes_data_prep.py'
+--------------------------------------------------------------------------------
+
+192:21: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+247:8: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+295:21: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+579:8: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+595:4: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+621:8: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/utils/generated_types.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/utils/generated_types.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/utils/helpers.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/utils/helpers.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/utils/prepare_data/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/utils/prepare_data/tf_keras.py'
+--------------------------------------------------------------------------------
+
+8:37: INFO: Renamed 'tf.read_file' to 'tf.io.read_file'
+10:24: INFO: Renamed 'tf.image.resize_images' to 'tf.image.resize'
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/utils/prepare_data/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/utils/prepare_data/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/utils/prepare_data/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/utils/prepare_data/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/utils/prepare_data/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/utils/prepare_data/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/dr/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/dr/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/dr/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/dr/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/dr/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/dr/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/dr/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/dr/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/utils/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/utils/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/utils/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/utils/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/utils/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/utils/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/utils/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/utils/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/efficientnet/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/efficientnet/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/efficientnet/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/efficientnet/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/efficientnet/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/efficientnet/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/efficientnet/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/efficientnet/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/dc/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/dc/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/dc/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/dc/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/dc/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/dc/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/dc/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/dc/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/squeeze_excite_resnet/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/squeeze_excite_resnet/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/squeeze_excite_resnet/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/squeeze_excite_resnet/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/squeeze_excite_resnet/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/squeeze_excite_resnet/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/squeeze_excite_resnet/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/squeeze_excite_resnet/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/applications/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/applications/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/applications/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/applications/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/applications/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/applications/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/models/applications/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/models/applications/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/augment.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/augment.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/evaluate.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/evaluate.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/base.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/base.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/logparser/tf.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/logparser/tf.py'
+--------------------------------------------------------------------------------
+
+19:46: INFO: Renamed 'tf.train.summary_iterator' to 'tf.compat.v1.train.summary_iterator'
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/logparser/keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/logparser/keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/logparser/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/logparser/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/logparser/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/logparser/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/logparser/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/logparser/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/prepare/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/prepare/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/prepare/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/prepare/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/prepare/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/prepare/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/prepare/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/prepare/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/train/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/train/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/train/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/train/__init__.py'
+--------------------------------------------------------------------------------
+
+92:16: INFO: Renamed 'tf.set_random_seed' to 'tf.compat.v1.set_random_seed'
+93:31: INFO: Renamed 'tf.ConfigProto' to 'tf.compat.v1.ConfigProto'
+94:23: INFO: Renamed 'tf.Session' to 'tf.compat.v1.Session'
+94:40: INFO: Renamed 'tf.get_default_graph' to 'tf.compat.v1.get_default_graph'
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/train/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/train/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/train/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/train/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/hyperparameters/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/hyperparameters/tf_keras.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/hyperparameters/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/hyperparameters/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/hyperparameters/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/hyperparameters/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/cli_options/hyperparameters/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/cli_options/hyperparameters/torch.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/runners/tf_keras.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/runners/tf_keras.py'
+--------------------------------------------------------------------------------
+
+197:18: INFO: Added keywords to args of function 'tf.reduce_min'
+198:18: INFO: Added keywords to args of function 'tf.reduce_max'
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/runners/__init__.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/runners/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/runners/other.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/runners/other.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/runners/utils.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/runners/utils.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'ml-glaucoma/ml_glaucoma/runners/torch.py'
+ outputting to 'ml-glaucoma/ml_glaucoma2/runners/torch.py'
+--------------------------------------------------------------------------------
+
+78:4: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+--------------------------------------------------------------------------------
+
