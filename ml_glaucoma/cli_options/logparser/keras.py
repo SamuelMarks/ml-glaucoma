@@ -15,7 +15,7 @@ if python_version_tuple()[0] == '3':
 logger = get_logger(__file__)
 
 
-def log_parser(infile, top, threshold, by_diff):
+def log_parser(infile, top, threshold, by_diff, directory):
     # This one is useful for simple Keras output
     epoch2stat = {
         key: val

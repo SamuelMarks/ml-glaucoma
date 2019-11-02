@@ -6,7 +6,9 @@ import tensorflow as tf
 from ml_glaucoma.utils import sorted_enumerate
 
 
-def log_parser(infile, top, threshold, by_diff, tag='epoch_val_auc'):
+def log_parser(infile, top, threshold, by_diff, directory, tag='epoch_val_auc'):
+    if directory is not None and path.isdir(directory):
+        infile = directory
     if not isinstance(infile, IOBase) and path.isdir(infile):
         infile = next(fname for fname in listdir(infile)
                       if path.isfile(fname) and fname.rpartition(path.extsep)[2] not in frozenset(('h5', 'dot')))
