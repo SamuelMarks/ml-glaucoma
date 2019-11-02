@@ -3,8 +3,6 @@ from os import path, listdir
 
 import tensorflow as tf
 
-from ml_glaucoma.utils import sorted_enumerate
-
 
 def log_parser(infile, top, threshold, by_diff, directory, tag='epoch_val_auc'):
     if directory is not None and path.isdir(directory):
@@ -23,8 +21,8 @@ def log_parser(infile, top, threshold, by_diff, directory, tag='epoch_val_auc'):
                 i += 1
                 print('model-{:04d}.h5'.format(i), v.simple_value, sep='\t')
 
-    sorted_vals = sorted_enumerate(v.simple_value
-                                   for e in tf.train.summary_iterator(infile)
-                                   for v in e.summary.value
-                                   if v.tag == tag)
-    print(sorted_vals)
+    sorted_vals = tuple(v.simple_value
+                        for e in tf.train.summary_iterator(infile)
+                        for v in e.summary.value
+                        if v.tag == tag)
+    return sorted_vals
