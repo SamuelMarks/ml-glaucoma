@@ -25,4 +25,5 @@ def log_parser(infile, top, threshold, by_diff, directory, tag='epoch_val_auc'):
                         for e in tf.train.summary_iterator(infile)
                         for v in e.summary.value
                         if v.tag == tag)
+    print(sorted_vals)
     return sorted_vals
