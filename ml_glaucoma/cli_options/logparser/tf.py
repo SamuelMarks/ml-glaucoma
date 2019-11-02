@@ -18,7 +18,7 @@ def log_parser(infile, top, threshold, by_diff, directory, tag='epoch_val_auc'):
     sorted_values = sorted(enumerate(v.simple_value
                                      for e in tf.train.summary_iterator(infile)
                                      for v in e.summary.value
-                                     if v.tag == tag), key=itemgetter(1))
+                                     if v.tag == tag), key=itemgetter(1), reverse=True)
 
     print('\n'.join('model-{k:04d}.h5\t{v}'.format(k=k, v=v) for k, v in sorted_values[:top]))
 
