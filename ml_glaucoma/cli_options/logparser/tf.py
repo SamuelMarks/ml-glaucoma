@@ -34,5 +34,5 @@ def log_parser(infile, top, threshold, by_diff, directory, tag='epoch_val_auc'):
 
         if len(sorted_values):
             dirn = path.dirname(directory)
-            print('\n'.join('{dirn}model-{k:04d}.h5\t{v}'.format(dirn=dirn.rpartition(path.sep)[2].ljust(8), k=k, v=v)
+            print('\n'.join('{dirn}model-{k:04d}.h5\t{v}'.format(dirn=dirn.rpartition(path.sep)[2].ljust(34), k=k, v=v)
                             for k, v in sorted_values[:top]))
