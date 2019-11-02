@@ -60,7 +60,7 @@ class ConfigurableProblemBase(Configurable, ABC):
                            name='fn{:d}'.format(int(100 * t)))
                        for t in precision_thresholds
                    ] + [
-                       F1Score(num_classes=2, average=None)
+                       F1Score(num_classes=2, average='micro')
                    ] + [
                        tf.keras.metrics.Precision(
                            thresholds=[t],
