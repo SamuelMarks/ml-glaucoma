@@ -1,10 +1,10 @@
 from abc import ABC
 
 import tensorflow as tf
+from tensorflow_addons.metrics import F1Score
 
 from ml_glaucoma import losses as losses_module, metrics as metrics_module, problems as p
 from ml_glaucoma.cli_options.base import Configurable
-from ml_glaucoma.metrics import F1Metric
 from ml_glaucoma.utils.helpers import get_upper_kv
 
 valid_losses = {loss: getattr(tf.keras.losses, loss)
@@ -60,11 +60,7 @@ class ConfigurableProblemBase(Configurable, ABC):
                            name='fn{:d}'.format(int(100 * t)))
                        for t in precision_thresholds
                    ] + [
-                       F1Metric(
-                           num_classes=2,
-                           threshold=t,
-                           name='f1{:d}'.format(int(100 * t)))
-                       for t in precision_thresholds
+                       F1Score(num_classes=2, average=None)
                    ] + [
                        tf.keras.metrics.Precision(
                            thresholds=[t],
@@ -74,7 +70,8 @@ class ConfigurableProblemBase(Configurable, ABC):
                        tf.keras.metrics.Recall(
                            thresholds=[r],
                            name='recall{:d}'.format(int(100 * r)))
-                       for r in recall_thresholds]
+                       for r in recall_thresholds
+                   ]
 
         kwargs = dict(
             loss=(tf.keras.losses.deserialize(dict(class_name=loss, config={})) if loss in dir(tf.keras.losses)
