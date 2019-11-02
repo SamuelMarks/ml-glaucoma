@@ -19,7 +19,7 @@ class ConfigurableLogParser(Configurable):
         parser.description = 'Show metrics from output. Default: per epoch sensitivity & specificity.'
         parser.add_argument('infile', nargs='?', type=FileType('r'), default=stdin,
                             help='File to work from. Defaults to stdin. So can pipe.')
-        parser.add_argument('-d', '--dir', help='Directory. Searches here rather than infile.')
+        parser.add_argument('-d', '--directory', help='Directory. Searches here rather than infile.')
         parser.add_argument('--threshold', help='E.g.: 0.7 for sensitivity & specificity >= 70%%', default='0.7',
                             type=float)
         parser.add_argument('--top', help='Show top k results', default=5, type=int)
