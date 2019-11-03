@@ -5,15 +5,16 @@ from os import path, listdir
 import tensorflow as tf
 
 
-def log_parser(infile, top, threshold, by_diff, directory, tag='epoch_val_auc'):
+def log_parser(infile, top, threshold, by_diff, directory,
+               tag='epoch_val_auc'):  # type: (IOBase, int, int, int, str, str) -> None
     if directory is not None and path.isdir(directory):
-        infile = directory
+        infile = directory  # type: str
 
-    files = []
+    files = []  # type: [str]
 
     def process_dir(_directory):
         for fname in listdir(_directory):
-            full_path = path.join(_directory, fname)
+            full_path = path.join(_directory, fname)  # type: str
             if path.isfile(full_path) and full_path.rpartition(path.extsep
                                                                )[2] not in frozenset(('h5', 'dot',
                                                                                       'profile-empty', 'trace')):
@@ -34,5 +35,6 @@ def log_parser(infile, top, threshold, by_diff, directory, tag='epoch_val_auc'):
 
         if len(sorted_values):
             dirn = path.dirname(directory)
-            print('\n'.join('{dirn}model-{k:04d}.h5\t{v}'.format(dirn=dirn.rpartition(path.sep)[2].ljust(34), k=k, v=v)
+            print('\n'.join('{dirn}\tmodel-{k:04d}.h5\t{v}'.format(dirn=dirn.rpartition(path.sep)[2].ljust(34),
+                                                                   k=k, v=v)
                             for k, v in sorted_values[:top]))
