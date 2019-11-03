@@ -1,6 +1,7 @@
 from io import IOBase
 from operator import itemgetter
 from os import path, listdir
+from sys import stderr
 
 import tensorflow as tf
 from tensorflow_core.python.lib.io.tf_record import tf_record_iterator
@@ -33,10 +34,10 @@ def log_parser(infile, top, threshold, by_diff, directory,
         try:
             total_images += sum(1 for _ in tf_record_iterator(fname))  # Check corrupted tf records
         except:
-            print("{} in {} is corrupted".format(fname, directory))
+            print("{} in {} is corrupted".format(fname, directory), file=stderr)
         else:
-            print("{} in {} is not corrupted".format(fname, directory))
-        print("Succeed, tf records found for {} images".format(total_images))
+            print("{} in {} is not corrupted".format(fname, directory), file=stderr)
+        print("Succeed, tf records found for {} images".format(total_images), file=stderr)
 
         sorted_values = sorted(enumerate(v.simple_value
                                          for e in tf.compat.v1.train.summary_iterator(fname)
