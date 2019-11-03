@@ -34,6 +34,8 @@ def log_parser(infile, top, threshold, by_diff, directory,
             total_images += sum(1 for _ in tf_record_iterator(fname))  # Check corrupted tf records
         except:
             print("{} in {} is corrupted".format(fname, directory))
+        else:
+            print("{} in {} is not corrupted".format(fname, directory))
         print("Succeed, tf records found for {} images".format(total_images))
 
         sorted_values = sorted(enumerate(v.simple_value
