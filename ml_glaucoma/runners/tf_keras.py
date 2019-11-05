@@ -165,7 +165,10 @@ def train(problem, batch_size, epochs,
         print('{} ({}) had a best AUC of {}'.format(dire, callbacks[-1].log_dir, best_runs))
         #  if not next((True for run in best_runs if run < delete_lt), False):
         if best_runs[0][1] < delete_lt:
-            print('Insufficient AUC for storage, removing h5 files to save disk space. `dire`:', dire)
+            print('Insufficient AUC ({}) for storage, removing h5 files to save disk space. `dire`:'.format(
+                best_runs[0][1]), dire)
+            if os.path.isfile(dire):
+                dire = os.path.dirname(dire)
             for fname in os.listdir(dire):
                 full_path = os.path.join(dire, fname)
                 if os.path.isfile(full_path) and full_path.endswith('h5'):
