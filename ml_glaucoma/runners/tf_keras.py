@@ -170,6 +170,8 @@ def train(problem, batch_size, epochs,
                 full_path = os.path.join(dire, fname)
                 if os.path.isfile(full_path) and full_path.endswith('h5'):
                     os.remove(full_path)
+        else:
+            print('{} >= {}; so not removing h5 files'.format(best_runs[0][1], delete_lt))
 
     if continuous:
         train.run += 1
@@ -183,7 +185,8 @@ def train(problem, batch_size, epochs,
             suffix_s = '{}'.format(suffix)
 
             if callbacks[-1].log_dir.endswith(suffix_s):
-                tensorboard_log_dir = '{}{}'.format((tensorboard_log_dir or callbacks[-1].log_dir)[:-len(suffix_s)], suffix + 1)
+                tensorboard_log_dir = '{}{}'.format((tensorboard_log_dir or callbacks[-1].log_dir)[:-len(suffix_s)],
+                                                    suffix + 1)
                 model_dir = '{}{}'.format((model_dir or tensorboard_log_dir)[:-len(suffix_s)], suffix + 1)
                 callbacks[-1].log_dir = '{}{}'.format(callbacks[-1].log_dir[:-len(suffix_s)], suffix + 1)
             else:
@@ -191,9 +194,6 @@ def train(problem, batch_size, epochs,
                 model_dir = '{}_again{}'.format(model_dir or tensorboard_log_dir, suffix_s)
                 callbacks[-1].log_dir = '{}_again{}'.format(callbacks[-1].log_dir, suffix_s)
 
-            callbacks[-1].log_dir = (
-                '{}{}'.format(callbacks[-1].log_dir[:-len(suffix_s)], suffix + 1)
-            ) if callbacks[-1].log_dir.endswith(suffix_s) else '{}_again{}'.format(callbacks[-1].log_dir, suffix_s)
             print('New log_dir:', callbacks[-1].log_dir)
             return train(problem=problem, batch_size=batch_size, epochs=epochs,
                          model_fn=model_fn, optimizer=optimizer, class_weight=class_weight,
@@ -272,6 +272,5 @@ def vis(problem, split='train'):
 
 
 # Cleanup namespace
-for obj in (modules, tf, model_to_dot, cb, runners, get_logger,
-            default_model_dir, batch_steps):
-    del obj
+del (modules, tf, model_to_dot, cb, runners, get_logger,
+     default_model_dir, batch_steps)
