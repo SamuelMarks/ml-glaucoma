@@ -160,10 +160,11 @@ def train(problem, batch_size, epochs,
     )
 
     if delete_lt is not None:
-        dire, best_runs = log_parser(directory=callbacks[-1].log_dir, top=1, tag='epoch_auc',
-                                     infile=None, by_diff=None, threshold=None)
-        print('{} had a best AUC of {}'.format(callbacks[-1].log_dir, best_runs))
-        if not next((True for run in best_runs if run < delete_lt), False):
+        dire, best_runs = log_parser(directory=os.path.join(callbacks[-1].log_dir, 'validation'), top=1,
+                                     tag='epoch_auc', infile=None, by_diff=None, threshold=None)
+        print('{} ({}) had a best AUC of {}'.format(dire, callbacks[-1].log_dir, best_runs))
+        #  if not next((True for run in best_runs if run < delete_lt), False):
+        if best_runs[0] < delete_lt:
             print('Insufficient AUC for storage, removing h5 files to save disk space. `dire`:', dire)
             for fname in os.listdir(dire):
                 full_path = os.path.join(dire, fname)
