@@ -88,7 +88,8 @@ class ConfigurableTrain(Configurable):
                    callbacks, checkpoint_freq, summary_freq,
                    lr_schedule, tb_log_dir, class_weight,
                    write_images, seed, disable_gpu,
-                   continuous, model_dir_autoincrement, **_kwargs):
+                   continuous, model_dir_autoincrement, delete_lt,
+                   **_kwargs):
         if disable_gpu:
             environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
@@ -131,5 +132,6 @@ class ConfigurableTrain(Configurable):
             tensorboard_log_dir=tb_log_dir,
             write_images=write_images,
             continuous=continuous,
-            model_dir_autoincrement=model_dir_autoincrement
+            model_dir_autoincrement=model_dir_autoincrement,
+            delete_lt=delete_lt
         )
