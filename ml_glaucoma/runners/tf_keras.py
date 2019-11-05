@@ -272,5 +272,4 @@ def vis(problem, split='train'):
 
 
 # Cleanup namespace
-del (modules, tf, model_to_dot, cb, runners, get_logger,
-     default_model_dir, batch_steps)
+# del modules, cb, runners, get_logger
