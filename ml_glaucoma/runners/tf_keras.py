@@ -147,49 +147,54 @@ def train(problem, batch_size, epochs,
         sep=''
     )
 
-    run = 0
-    while True:
-        result = model.fit(
-            train_ds,
-            epochs=epochs,
-            class_weight=class_weight,
-            verbose=verbose,
-            callbacks=callbacks,
-            validation_data=val_ds,
-            steps_per_epoch=train_steps,
-            validation_steps=validation_steps,
-            initial_epoch=initial_epoch,
-        )
+    result = model.fit(
+        train_ds,
+        epochs=epochs,
+        class_weight=class_weight,
+        verbose=verbose,
+        callbacks=callbacks,
+        validation_data=val_ds,
+        steps_per_epoch=train_steps,
+        validation_steps=validation_steps,
+        initial_epoch=initial_epoch,
+    )
 
-        if delete_lt is not None:
-            dire, best_runs = log_parser(directory=callbacks[-1].log_dir, top=1, tag='epoch_auc',
-                                         infile=None, by_diff=None, threshold=None)
-            print('{} had a best AUC of {}'.format(callbacks[-1].log_dir, best_runs))
-            if not next((True for run in best_runs if run < delete_lt), False):
-                print('Insufficient AUC for storage, removing h5 files to save disk space. `dire`:', dire)
-                for fname in os.listdir(dire):
-                    full_path = os.path.join(dire, fname)
-                    if os.path.isfile(full_path) and full_path.endswith('h5'):
-                        os.remove(full_path)
+    if delete_lt is not None:
+        dire, best_runs = log_parser(directory=callbacks[-1].log_dir, top=1, tag='epoch_auc',
+                                     infile=None, by_diff=None, threshold=None)
+        print('{} had a best AUC of {}'.format(callbacks[-1].log_dir, best_runs))
+        if not next((True for run in best_runs if run < delete_lt), False):
+            print('Insufficient AUC for storage, removing h5 files to save disk space. `dire`:', dire)
+            for fname in os.listdir(dire):
+                full_path = os.path.join(dire, fname)
+                if os.path.isfile(full_path) and full_path.endswith('h5'):
+                    os.remove(full_path)
 
-        if continuous:
-            run += 1
-            print('------------------------\n'
-                  '|        RUN\t{}        \n'
-                  '------------------------'.format(run), sep='')
+    if continuous:
+        train.run += 1
+        print('------------------------\n'
+              '|        RUN\t{}        \n'
+              '------------------------'.format(train.run), sep='')
 
-            if model_dir_autoincrement is True or model_dir_autoincrement is None:
-                reversed_log_dir = callbacks[-1].log_dir[::-1]
-                suffix = int(''.join(takewhile(lambda s: s.isdigit(), reversed_log_dir))[::-1] or 0)
-                suffix_s = '{}'.format(suffix)
-                callbacks[-1].log_dir = (
-                    '{}{}'.format(callbacks[-1].log_dir[:-len(suffix_s)], suffix + 1)
-                ) if callbacks[-1].log_dir.endswith(suffix_s) else '{}_again{}'.format(callbacks[-1].log_dir, suffix_s)
-                print('New log_dir:', callbacks[-1].log_dir)
+        if model_dir_autoincrement is True or model_dir_autoincrement is None:
+            reversed_log_dir = callbacks[-1].log_dir[::-1]
+            suffix = int(''.join(takewhile(lambda s: s.isdigit(), reversed_log_dir))[::-1] or 0)
+            suffix_s = '{}'.format(suffix)
+            callbacks[-1].log_dir = (
+                '{}{}'.format(callbacks[-1].log_dir[:-len(suffix_s)], suffix + 1)
+            ) if callbacks[-1].log_dir.endswith(suffix_s) else '{}_again{}'.format(callbacks[-1].log_dir, suffix_s)
+            print('New log_dir:', callbacks[-1].log_dir)
+            return train(problem=problem, batch_size=batch_size, epochs=epochs,
+                         model_fn=model_fn, optimizer=optimizer, class_weight=class_weight,
+                         model_dir=model_dir, callbacks=callbacks, verbose=verbose,
+                         checkpoint_freq=checkpoint_freq, summary_freq=summary_freq, lr_schedule=lr_schedule,
+                         tensorboard_log_dir=tensorboard_log_dir, write_images=write_images, continuous=continuous,
+                         delete_lt=delete_lt, model_dir_autoincrement=model_dir_autoincrement)
         else:
-            break
+            return result
 
-    return result
+
+train.run = 0
 
 
 def evaluate(problem, batch_size, model_fn, optimizer, model_dir=None):
