@@ -78,9 +78,17 @@ class ConfigurableTrain(Configurable):
             help='delete *.h5 files that are less than this threshold'
         )
 
-    def build_self(self, problem, batch_size, epochs, model_fn, optimizer, model_dir,
-                   callbacks, checkpoint_freq, summary_freq, lr_schedule, tb_log_dir,
-                   class_weight, write_images, seed, disable_gpu, continuous, **_kwargs):
+        parser.add_argument(
+            '--model-dir-autoincrement', action='store_true', default=True,
+            help='autoincrement rather than overwrite the model dir (when --continuous is set)'
+        )
+
+    def build_self(self, problem, batch_size, epochs,
+                   model_fn, optimizer, model_dir,
+                   callbacks, checkpoint_freq, summary_freq,
+                   lr_schedule, tb_log_dir, class_weight,
+                   write_images, seed, disable_gpu,
+                   continuous, model_dir_autoincrement, **_kwargs):
         if disable_gpu:
             environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
@@ -122,5 +130,6 @@ class ConfigurableTrain(Configurable):
             lr_schedule=lr_schedule,
             tensorboard_log_dir=tb_log_dir,
             write_images=write_images,
-            continuous=continuous
+            continuous=continuous,
+            model_dir_autoincrement=model_dir_autoincrement
         )

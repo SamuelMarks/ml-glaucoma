@@ -142,8 +142,8 @@ def train(problem, batch_size, epochs,
 
     print(
         'optimizer:'.ljust(14), optimizer.__class__.__name__,
-        '\nloss:'.ljust(15), problem.loss,
-        '\ntotal_epochs:'.ljust(15), epochs, '\n',
+        '\nloss:'.ljust(15), problem.loss.__class__.__name__,
+        '\ntotal_epochs:'.ljust(15), epochs, '\n\n',
         sep=''
     )
 
@@ -166,7 +166,7 @@ def train(problem, batch_size, epochs,
                                          infile=None, by_diff=None, threshold=None)
             print('{} had a best AUC of {}'.format(callbacks[-1].log_dir, best_runs))
             if not next((True for run in best_runs if run < delete_lt), False):
-                print('Insufficient AUC for storage, removing h5 files to save disk space')
+                print('Insufficient AUC for storage, removing h5 files to save disk space. `dire`:', dire)
                 for fname in os.listdir(dire):
                     full_path = os.path.join(dire, fname)
                     if os.path.isfile(full_path) and full_path.endswith('h5'):
@@ -178,13 +178,14 @@ def train(problem, batch_size, epochs,
                   '|        RUN\t{}        \n'
                   '------------------------'.format(run), sep='')
 
-            if model_dir_autoincrement:
+            if model_dir_autoincrement is True or model_dir_autoincrement is None:
                 reversed_log_dir = callbacks[-1].log_dir[::-1]
                 suffix = int(''.join(takewhile(lambda s: s.isdigit(), reversed_log_dir))[::-1] or 0)
                 suffix_s = '{}'.format(suffix)
                 callbacks[-1].log_dir = (
                     reversed_log_dir.replace(suffix_s, '{}'.format(suffix + 1))[::-1]
                 ) if callbacks[-1].log_dir.endswith(suffix_s) else '{}_again{}'.format(callbacks[-1].log_dir, suffix_s)
+                print('New log_dir:', callbacks[-1].log_dir)
         else:
             break
 
