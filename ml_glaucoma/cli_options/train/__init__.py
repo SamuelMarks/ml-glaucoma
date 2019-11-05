@@ -79,7 +79,7 @@ class ConfigurableTrain(Configurable):
         )
 
         parser.add_argument(
-            '--model-dir-autoincrement', action='store_true', default=True,
+            '--model-dir-autoincrement', type=bool, default=True,
             help='autoincrement rather than overwrite the model dir (when --continuous is set)'
         )
 

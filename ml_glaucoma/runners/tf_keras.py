@@ -183,7 +183,7 @@ def train(problem, batch_size, epochs,
                 suffix = int(''.join(takewhile(lambda s: s.isdigit(), reversed_log_dir))[::-1] or 0)
                 suffix_s = '{}'.format(suffix)
                 callbacks[-1].log_dir = (
-                    reversed_log_dir.replace(suffix_s, '{}'.format(suffix + 1))[::-1]
+                    '{}{}'.format(callbacks[-1].log_dir[:-len(suffix_s)], suffix + 1)
                 ) if callbacks[-1].log_dir.endswith(suffix_s) else '{}_again{}'.format(callbacks[-1].log_dir, suffix_s)
                 print('New log_dir:', callbacks[-1].log_dir)
         else:
