@@ -180,6 +180,16 @@ def train(problem, batch_size, epochs,
             reversed_log_dir = callbacks[-1].log_dir[::-1]
             suffix = int(''.join(takewhile(lambda s: s.isdigit(), reversed_log_dir))[::-1] or 0)
             suffix_s = '{}'.format(suffix)
+
+            if callbacks[-1].log_dir.endswith(suffix_s):
+                callbacks[-1].log_dir = '{}{}'.format(callbacks[-1].log_dir[:-len(suffix_s)], suffix + 1)
+                tensorboard_log_dir = '{}{}'.format(tensorboard_log_dir[:-len(suffix_s)], suffix + 1)
+                model_dir = '{}{}'.format(model_dir[:-len(suffix_s)], suffix + 1)
+            else:
+                callbacks[-1].log_dir = '{}_again{}'.format(callbacks[-1].log_dir, suffix_s)
+                tensorboard_log_dir = '{}_again{}'.format(tensorboard_log_dir, suffix_s)
+                model_dir = '{}_again{}'.format(model_dir, suffix_s)
+
             callbacks[-1].log_dir = (
                 '{}{}'.format(callbacks[-1].log_dir[:-len(suffix_s)], suffix + 1)
             ) if callbacks[-1].log_dir.endswith(suffix_s) else '{}_again{}'.format(callbacks[-1].log_dir, suffix_s)
