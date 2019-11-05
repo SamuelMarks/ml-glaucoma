@@ -172,17 +172,19 @@ def train(problem, batch_size, epochs,
                 dire = os.path.dirname(dire)
             print('dire1:', dire)
             root = os.path.splitdrive(os.getcwd())[0] or '/'
-            i=2
+            i = 2
             while not os.path.isfile(os.path.join(dire, 'model-0001.h5')):
-                i+=1
+                i += 1
                 dire = os.path.dirname(dire)
                 print('dire{}:'.format(i), dire)
                 if dire == root:
                     raise EnvironmentError('No h5 files generated')
 
+            print('os.listdir({}):'.format(dire), os.listdir(dire))
             for fname in os.listdir(dire):
                 full_path = os.path.join(dire, fname)
                 if os.path.isfile(full_path) and full_path.endswith('h5'):
+                    print('Removing:', full_path)
                     os.remove(full_path)
         else:
             print('{} >= {}; so not removing h5 files'.format(best_runs[0][1], delete_lt))
@@ -283,7 +285,6 @@ def vis(problem, split='train'):
         plt.imshow(fundus.numpy())
         plt.title('Glaucoma' if label.numpy() else 'Non-glaucoma')
         plt.show()
-
 
 # Cleanup namespace
 # del modules, cb, runners, get_logger
