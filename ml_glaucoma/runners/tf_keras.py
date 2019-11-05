@@ -182,13 +182,13 @@ def train(problem, batch_size, epochs,
             suffix_s = '{}'.format(suffix)
 
             if callbacks[-1].log_dir.endswith(suffix_s):
+                tensorboard_log_dir = '{}{}'.format((tensorboard_log_dir or callbacks[-1].log_dir)[:-len(suffix_s)], suffix + 1)
                 model_dir = '{}{}'.format((model_dir or tensorboard_log_dir)[:-len(suffix_s)], suffix + 1)
                 callbacks[-1].log_dir = '{}{}'.format(callbacks[-1].log_dir[:-len(suffix_s)], suffix + 1)
-                tensorboard_log_dir = '{}{}'.format(tensorboard_log_dir[:-len(suffix_s)], suffix + 1)
             else:
+                tensorboard_log_dir = '{}_again{}'.format(tensorboard_log_dir or callbacks[-1].log_dir, suffix_s)
                 model_dir = '{}_again{}'.format(model_dir or tensorboard_log_dir, suffix_s)
                 callbacks[-1].log_dir = '{}_again{}'.format(callbacks[-1].log_dir, suffix_s)
-                tensorboard_log_dir = '{}_again{}'.format(tensorboard_log_dir, suffix_s)
 
             callbacks[-1].log_dir = (
                 '{}{}'.format(callbacks[-1].log_dir[:-len(suffix_s)], suffix + 1)
