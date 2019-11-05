@@ -1,5 +1,6 @@
 import os
 from itertools import takewhile
+from pathlib import Path
 from sys import modules
 
 import tensorflow as tf
@@ -167,25 +168,23 @@ def train(problem, batch_size, epochs,
         if best_runs[0][1] < delete_lt:
             print('Insufficient AUC ({}) for storage, removing h5 files to save disk space. `dire`:'.format(
                 best_runs[0][1]), dire)
-            print('dire0:', dire)
             if os.path.isfile(dire):
                 dire = os.path.dirname(dire)
-            print('dire1:', dire)
             root = os.path.splitdrive(os.getcwd())[0] or '/'
-            i = 2
             while not os.path.isfile(os.path.join(dire, 'model-0001.h5')):
-                i += 1
                 dire = os.path.dirname(dire)
-                print('dire{}:'.format(i), dire)
                 if dire == root:
                     raise EnvironmentError('No h5 files generated')
 
-            print('os.listdir({}):'.format(dire), os.listdir(dire))
             for fname in os.listdir(dire):
                 full_path = os.path.join(dire, fname)
                 if os.path.isfile(full_path) and full_path.endswith('h5'):
                     print('Removing:', full_path)
                     os.remove(full_path)
+                    if os.path.isfile(full_path):
+                        Path(full_path).unlink()
+                    else:
+                        print('Successfully removed file')
         else:
             print('{} >= {}; so not removing h5 files'.format(best_runs[0][1], delete_lt))
 
