@@ -169,6 +169,8 @@ def train(problem, batch_size, epochs,
                 best_runs[0][1]), dire)
             if os.path.isfile(dire):
                 dire = os.path.dirname(dire)
+            if not os.path.isfile(os.path.join(dire, 'model-0015.h5')):
+                dire = os.path.dirname(dire)
             for fname in os.listdir(dire):
                 full_path = os.path.join(dire, fname)
                 if os.path.isfile(full_path) and full_path.endswith('h5'):
