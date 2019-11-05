@@ -6,6 +6,7 @@ import tensorflow as tf
 from tensorflow.python.keras.utils import model_to_dot
 
 from ml_glaucoma import callbacks as cb, runners, get_logger
+from ml_glaucoma.cli_options.logparser.tf import log_parser
 from ml_glaucoma.runners.utils import default_model_dir, batch_steps
 
 logger = get_logger(modules[__name__].__name__)
@@ -134,14 +135,15 @@ def train(problem, batch_size, epochs,
             print('graphviz diagram of model generated to:', dotfile)
     except ImportError:
         logger.warn('Install graphviz and pydot to generate graph')
+
     if model.name == 'model':
         model._name = os.path.basename(model_dir)
-    print(model.summary())
-    logger.info('optimizer: {}'.format(optimizer))
+    model.summary()
+
     print(
-        'optimizer:'.ljust(14), optimizer,
-        '\ntotal_epochs:'.ljust(15), epochs,
-        '\nloss:'.ljust(15), problem.loss, '\n',
+        'optimizer:'.ljust(14), optimizer.__name__,
+        '\nloss:'.ljust(15), problem.loss,
+        '\ntotal_epochs:'.ljust(15), epochs, '\n',
         sep=''
     )
 
@@ -158,13 +160,23 @@ def train(problem, batch_size, epochs,
             validation_steps=validation_steps,
             initial_epoch=initial_epoch,
         )
+
+        if delete_lt is not None:
+            dire, best_runs = log_parser(directory=callbacks[-1].log_dir, top=1, tag='epoch_auc',
+                                         infile=None, by_diff=None, threshold=None)
+            print('{} had a best AUC of {}'.format(callbacks[-1].log_dir, best_runs))
+            if not next((True for run in best_runs if run < delete_lt), False):
+                print('Insufficient AUC for storage, removing h5 files to save disk space')
+                for fname in os.listdir(dire):
+                    full_path = os.path.join(dire, fname)
+                    if os.path.isfile(full_path) and full_path.endswith('h5'):
+                        os.remove(full_path)
+
         if continuous:
             run += 1
             print('------------------------\n'
                   '|        RUN\t{}        \n'
                   '------------------------'.format(run), sep='')
-
-            # TODO: Check previous AUC against threshold, and delete all *.h5 files if AUC < threshold
 
             if model_dir_autoincrement:
                 reversed_log_dir = callbacks[-1].log_dir[::-1]

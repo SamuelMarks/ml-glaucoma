@@ -73,6 +73,10 @@ class ConfigurableTrain(Configurable):
             '--continuous', action='store_true',
             help='after each successful train, run again'
         )
+        parser.add_argument(
+            '--delete-lt', type=float,
+            help='delete *.h5 files that are less than this threshold'
+        )
 
     def build_self(self, problem, batch_size, epochs, model_fn, optimizer, model_dir,
                    callbacks, checkpoint_freq, summary_freq, lr_schedule, tb_log_dir,

@@ -8,7 +8,7 @@ from tensorflow_core.python.lib.io.tf_record import tf_record_iterator
 
 
 def log_parser(infile, top, threshold, by_diff, directory,
-               tag='epoch_val_auc'):  # type: (IOBase, int, int, int, str, str) -> None
+               tag='epoch_val_auc'):  # type: (IOBase, int, int, int, str, str) -> (str, [float])
     if directory is not None and path.isdir(directory):
         infile = directory  # type: str
 
@@ -29,6 +29,7 @@ def log_parser(infile, top, threshold, by_diff, directory,
     elif path.isdir(directory):
         process_dir(directory)
 
+    last_result = None
     for fname in files:
         total_images = 0
         try:
@@ -49,3 +50,6 @@ def log_parser(infile, top, threshold, by_diff, directory,
             print('\n'.join('{dirn}\tmodel-{k:04d}.h5\t{v}'.format(dirn=dirn.rpartition(path.sep)[2].ljust(34),
                                                                    k=k, v=v)
                             for k, v in sorted_values[:top]))
+            last_result = fname, sorted_values[:top]
+
+    return last_result
