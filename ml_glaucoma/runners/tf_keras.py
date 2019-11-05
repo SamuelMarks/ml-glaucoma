@@ -141,7 +141,7 @@ def train(problem, batch_size, epochs,
     model.summary()
 
     print(
-        'optimizer:'.ljust(14), optimizer.__name__,
+        'optimizer:'.ljust(14), optimizer.__class__.__name__,
         '\nloss:'.ljust(15), problem.loss,
         '\ntotal_epochs:'.ljust(15), epochs, '\n',
         sep=''
