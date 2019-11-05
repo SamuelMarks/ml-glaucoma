@@ -69,10 +69,14 @@ class ConfigurableTrain(Configurable):
             '--disable-gpu', action='store_true',
             help='Set the seed, combine with `--disable-gpu` to disable GPU for added determinism'
         )
+        parser.add_argument(
+            '--continuous', action='store_true',
+            help='after each successful train, run again'
+        )
 
     def build_self(self, problem, batch_size, epochs, model_fn, optimizer, model_dir,
                    callbacks, checkpoint_freq, summary_freq, lr_schedule, tb_log_dir,
-                   class_weight, write_images, seed, disable_gpu, **_kwargs):
+                   class_weight, write_images, seed, disable_gpu, continuous, **_kwargs):
         if disable_gpu:
             environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
@@ -114,4 +118,5 @@ class ConfigurableTrain(Configurable):
             lr_schedule=lr_schedule,
             tensorboard_log_dir=tb_log_dir,
             write_images=write_images,
+            continuous=continuous
         )

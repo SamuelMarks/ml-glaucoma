@@ -1,4 +1,5 @@
 import os
+from itertools import takewhile
 from sys import modules
 
 import tensorflow as tf
@@ -10,10 +11,12 @@ from ml_glaucoma.runners.utils import default_model_dir, batch_steps
 logger = get_logger(modules[__name__].__name__)
 
 
-def train(problem, batch_size, epochs, model_fn, optimizer, class_weight=None,
-          model_dir=None, callbacks=None, verbose=True, checkpoint_freq=5,
-          summary_freq=10, lr_schedule=None,
-          tensorboard_log_dir=None, write_images=False):
+def train(problem, batch_size, epochs,
+          model_fn, optimizer, class_weight=None,
+          model_dir=None, callbacks=None, verbose=True,
+          checkpoint_freq=5, summary_freq=10, lr_schedule=None,
+          tensorboard_log_dir=None, write_images=False, continuous=False,
+          delete_lt=None, model_dir_autoincrement=True):
     """
     Train a model on the given problem
 
@@ -65,6 +68,18 @@ def train(problem, batch_size, epochs, model_fn, optimizer, class_weight=None,
     :param write_images: passed to `tf.keras.callbacks.TensorBoard`
     :param write_images: bool
 
+    :param write_images: passed to `tf.keras.callbacks.TensorBoard`
+    :param write_images: bool
+
+    :param continuous: after each successful train, run again
+    :param continuous: bool
+
+    :param delete_lt: delete *.h5 files that are less than this threshold
+    :param delete_lt: float
+
+    :param model_dir_autoincrement: Autoincrement the model dir, if it ends in a number, increment, else append new
+    :param model_dir_autoincrement: bool
+
     :return `History` object as returned by `model.fit`
     :rtype ``tf.keras.History``
     """
@@ -88,8 +103,6 @@ def train(problem, batch_size, epochs, model_fn, optimizer, class_weight=None,
         optimizer=optimizer,
         loss=problem.loss,
         metrics=problem.metrics)
-
-    logger.info('optimizer: {}'.format(optimizer))
 
     train_steps = batch_steps(
         problem.examples_per_epoch('train'), batch_size)
@@ -124,18 +137,45 @@ def train(problem, batch_size, epochs, model_fn, optimizer, class_weight=None,
     if model.name == 'model':
         model._name = os.path.basename(model_dir)
     print(model.summary())
-
-    return model.fit(
-        train_ds,
-        epochs=epochs,
-        class_weight=class_weight,
-        verbose=verbose,
-        callbacks=callbacks,
-        validation_data=val_ds,
-        steps_per_epoch=train_steps,
-        validation_steps=validation_steps,
-        initial_epoch=initial_epoch,
+    logger.info('optimizer: {}'.format(optimizer))
+    print(
+        'optimizer:'.ljust(14), optimizer,
+        '\ntotal_epochs:'.ljust(15), epochs,
+        '\nloss:'.ljust(15), problem.loss, '\n',
+        sep=''
     )
+
+    run = 0
+    while True:
+        result = model.fit(
+            train_ds,
+            epochs=epochs,
+            class_weight=class_weight,
+            verbose=verbose,
+            callbacks=callbacks,
+            validation_data=val_ds,
+            steps_per_epoch=train_steps,
+            validation_steps=validation_steps,
+            initial_epoch=initial_epoch,
+        )
+        if continuous:
+            run += 1
+            print('------------------------\n'
+                  '|        RUN\t{}        \n'
+                  '------------------------'.format(run), sep='')
+
+            # TODO: Check previous AUC against threshold, and delete all *.h5 files if AUC < threshold
+
+            if model_dir_autoincrement:
+                reversed_log_dir = callbacks[-1].log_dir[::-1]
+                suffix = int(''.join(takewhile(lambda s: s.isdigit(), reversed_log_dir))[::-1] or 0)
+                callbacks[-1].log_dir = (
+                    reversed_log_dir.replace('{}'.format(suffix), '{}'.format(suffix + 1))[::-1]
+                ) if callbacks[-1].log_dir.endswith(suffix) else '{}_again{}'.format(callbacks[-1].log_dir, suffix)
+        else:
+            break
+
+    return result
 
 
 def evaluate(problem, batch_size, model_fn, optimizer, model_dir=None):

@@ -9,7 +9,7 @@ from ml_glaucoma.utils.helpers import get_upper_kv
 
 valid_losses = {loss: getattr(tf.keras.losses, loss)
                 for loss in dir(tf.keras.losses)
-                if not loss.startswith('_')}
+                if not loss.startswith('_') and loss not in frozenset(('Loss', 'get', 'deserialize'))}
 valid_losses.update({loss_name: getattr(tf.losses, loss_name)
                      for loss_name in dir(tf.losses)
                      if not loss_name.startswith('_') and loss_name == 'Reduction'})
