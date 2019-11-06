@@ -29,3 +29,5 @@ if not ((environ['TF'] and 1 or 0) ^ (environ['TORCH'] and 1 or 0)):
 if environ['TF']:
     import ml_glaucoma.tf_compat
     import ml_glaucoma.tfds_checksums
+
+logging.getLogger('dataset_builder').setLevel(logging.WARNING)

@@ -12,6 +12,7 @@ from ml_glaucoma.cli_options.logparser.tf import log_parser
 from ml_glaucoma.runners.utils import default_model_dir, batch_steps
 
 logger = get_logger(modules[__name__].__name__)
+logging.getLogger('dataset_builder').setLevel(logging.WARNING)
 
 
 def train(problem, batch_size, epochs,
@@ -180,12 +181,9 @@ def train(problem, batch_size, epochs,
             for fname in os.listdir(dire):
                 full_path = os.path.join(dire, fname)
                 if os.path.isfile(full_path) and full_path.endswith('h5'):
-                    print('Removing:', full_path)
                     os.remove(full_path)
                     if os.path.isfile(full_path):
                         Path(full_path).unlink()
-                    else:
-                        print('Successfully removed file')
         else:
             print('{} >= {}; so not removing h5 files'.format(best_runs[0][1], delete_lt))
 
