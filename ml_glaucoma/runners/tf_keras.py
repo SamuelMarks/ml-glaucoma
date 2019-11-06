@@ -1,3 +1,4 @@
+import logging
 import os
 from itertools import takewhile
 from pathlib import Path
@@ -163,11 +164,11 @@ def train(problem, batch_size, epochs,
     if delete_lt is not None:
         dire, best_runs = log_parser(directory=os.path.join(callbacks[-1].log_dir, 'validation'), top=1,
                                      tag='epoch_auc', infile=None, by_diff=None, threshold=None)
-        print('{} ({}) had a best AUC of {}'.format(dire, callbacks[-1].log_dir, best_runs))
+        print('{} ({}) had a best_runs of {}'.format(dire, callbacks[-1].log_dir, best_runs))
         #  if not next((True for run in best_runs if run < delete_lt), False):
         if best_runs[0][1] < delete_lt:
-            print('Insufficient AUC ({}) for storage, removing h5 files to save disk space. `dire`:'.format(
-                best_runs[0][1]), dire)
+            print('Insufficient AUC ({}) for storage, '
+                  'removing h5 files to save disk space. `dire`:'.format(best_runs[0][1]), dire)
             if os.path.isfile(dire):
                 dire = os.path.dirname(dire)
             root = os.path.splitdrive(os.getcwd())[0] or '/'
@@ -216,8 +217,8 @@ def train(problem, batch_size, epochs,
                          checkpoint_freq=checkpoint_freq, summary_freq=summary_freq, lr_schedule=lr_schedule,
                          tensorboard_log_dir=tensorboard_log_dir, write_images=write_images, continuous=continuous,
                          delete_lt=delete_lt, model_dir_autoincrement=model_dir_autoincrement)
-        else:
-            return result
+    else:
+        return result
 
 
 train.run = 0
