@@ -15,6 +15,7 @@ valid_bases_upper = frozenset((model.upper() for model in valid_bases))
 
 
 def parse_line(line):
+    optimizer_params = {}
     name, epoch, value = filter(None, line.rstrip().split())
     name, epoch, value = name.rstrip(), int(epoch[6:-3]), float(value)
 
@@ -164,5 +165,5 @@ def parse_line(line):
             locals().get('epochs'), locals().get('transfer', ''),
             locals().get('loss', 'BinaryCrossentropy'),
             locals().get('optimizer', 'Adam'),
-            update_d({'lr': 1e-3}, locals().get('optimizer_params', {})),
+            update_d({'lr': 1e-3}, optimizer_params),
             locals().get('base', 'transfer'))
