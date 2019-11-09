@@ -1,0 +1,7 @@
+import ml_glaucoma.models.transfer
+
+model_fn = @applications_model
+transfer_model.transfer = %transfer
+transfer = 'ResNet50'
+transfer_model.final_activation = %final_activation
+final_activation = 'default'

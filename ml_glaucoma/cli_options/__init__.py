@@ -6,6 +6,7 @@ from ml_glaucoma.cli_options.augment import ConfigurableMapFn
 from ml_glaucoma.cli_options.evaluate import ConfigurableEvaluate
 from ml_glaucoma.cli_options.hyperparameters import (ConfigurableProblem, ConfigurableModelFn,
                                                      ConfigurableOptimizer, ConfigurableExponentialDecayLrSchedule)
+from ml_glaucoma.cli_options.info import ConfigurableInfo
 from ml_glaucoma.cli_options.logparser import ConfigurableLogParser, log_parser
 from ml_glaucoma.cli_options.prepare import ConfigurableBuilders
 from ml_glaucoma.cli_options.train import ConfigurableTrain
@@ -59,5 +60,11 @@ def get_parser():
     log_parser_configurable = ConfigurableLogParser()
     log_parser_configurable.fill(parser_parser)
     _commands['parser'] = log_parser_configurable
+
+    # INFO
+    info_parser = subparsers.add_parser('info', help=ConfigurableInfo.description)
+    info_configurable = ConfigurableInfo()
+    info_configurable.fill(info_parser)
+    _commands['info'] = info_configurable
 
     return _parser, _commands

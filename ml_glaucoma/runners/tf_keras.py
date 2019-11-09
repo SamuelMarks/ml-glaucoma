@@ -2,6 +2,7 @@ import logging
 import os
 from itertools import takewhile
 from pathlib import Path
+from stat import S_IWOTH, S_IWGRP, S_IWRITE
 from sys import modules
 
 import tensorflow as tf
@@ -9,6 +10,7 @@ from tensorflow.python.keras.utils import model_to_dot
 
 from ml_glaucoma import callbacks as cb, runners, get_logger
 from ml_glaucoma.cli_options.logparser.tf import log_parser
+from ml_glaucoma.cli_options.logparser.utils import parse_line
 from ml_glaucoma.runners.utils import default_model_dir, batch_steps
 
 logger = get_logger(modules[__name__].__name__)
@@ -90,8 +92,8 @@ def train(problem, batch_size, epochs,
     optimizer = optimizer  # type: tf.keras.optimizers.Optimizer
     if model_dir is None:
         model_dir = default_model_dir()
-    if model_dir is not None:
-        model_dir = os.path.expanduser(model_dir)
+    model_dir = os.path.expanduser(model_dir)
+
     if not os.path.isdir(model_dir):
         os.makedirs(model_dir)
 
@@ -143,8 +145,12 @@ def train(problem, batch_size, epochs,
         model._name = os.path.basename(model_dir)
     model.summary()
 
+    parse_line(os.path.basename(model_dir))
+
     print(
-        'optimizer:'.ljust(14), optimizer.__class__.__name__,
+        'dataset:'.ljust(14), model._name.partition('_')[0],
+        'transfer:'.ljust(15), model._name,
+        '\noptimizer:'.ljust(15), optimizer.__class__.__name__,
         '\nloss:'.ljust(15), problem.loss.__class__.__name__,
         '\ntotal_epochs:'.ljust(15), epochs, '\n\n',
         sep=''
@@ -184,6 +190,12 @@ def train(problem, batch_size, epochs,
                     os.remove(full_path)
                     if os.path.isfile(full_path):
                         Path(full_path).unlink()
+
+            # Read only the directory
+            mode = os.stat(dire).st_mode
+            ro_mask = 0o777 ^ (S_IWRITE | S_IWGRP | S_IWOTH)
+            os.chmod(dire, mode & ro_mask)
+
         else:
             print('{} >= {}; so not removing h5 files'.format(best_runs[0][1], delete_lt))
 

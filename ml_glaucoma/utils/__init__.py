@@ -55,3 +55,11 @@ def sorted_enumerate(seq):
 def obj_to_d(obj):
     return obj if type(obj) is dict else dict((k, getattr(obj, k))
                                               for k in dir(obj) if not k.startswith('_'))
+
+
+def update_d(d, arg=None, **kwargs):
+    if arg:
+        d.update(arg)
+    if kwargs:
+        d.update(kwargs)
+    return d
