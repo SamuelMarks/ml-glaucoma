@@ -30,9 +30,10 @@ if environ['TF']:
                                    for attr in get_upper_kv(se_resnet)})
 
     valid_models = frozenset({
-        k: v for k, v in iterkeys(model_name2model)
-        if k not in frozenset(dir(tf.keras.layers) + ['Model']) and not k.isupper()
+        attr for attr in iterkeys(model_name2model)
+        if attr not in frozenset(dir(tf.keras.layers) + ['Model']) and not attr.isupper()
     })
+
 elif environ['TORCH']:
     from ml_glaucoma.models.applications.torch import applications_model
 

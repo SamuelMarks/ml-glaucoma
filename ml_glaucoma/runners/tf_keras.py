@@ -145,11 +145,11 @@ def train(problem, batch_size, epochs,
         model._name = os.path.basename(model_dir)
     model.summary()
 
-    parse_line(os.path.basename(model_dir))
+    parsed_line = parse_line(os.path.basename(model_dir))
 
     print(
-        'dataset:'.ljust(14), model._name.partition('_')[0],
-        'transfer:'.ljust(15), model._name,
+        'dataset:'.ljust(14), parsed_line.dataset,
+        '\ntransfer:'.ljust(15), parsed_line.transfer,
         '\noptimizer:'.ljust(15), optimizer.__class__.__name__,
         '\nloss:'.ljust(15), problem.loss.__class__.__name__,
         '\ntotal_epochs:'.ljust(15), epochs, '\n\n',

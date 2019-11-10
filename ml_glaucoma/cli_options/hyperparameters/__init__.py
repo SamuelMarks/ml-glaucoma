@@ -7,7 +7,7 @@ from os import environ
 from yaml import load as yaml_load
 
 from ml_glaucoma import get_logger
-from ml_glaucoma.cli_options import ConfigurableMapFn
+from ml_glaucoma.cli_options.augment import ConfigurableMapFn
 from ml_glaucoma.cli_options.base import Configurable
 
 if environ['TF']:

@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 from ml_glaucoma.cli_options.hyperparameters import SUPPORTED_LOSSES, SUPPORTED_OPTIMIZERS
 from ml_glaucoma.models import valid_models
 from ml_glaucoma.utils import update_d
@@ -16,8 +18,11 @@ valid_bases_upper = frozenset((model.upper() for model in valid_bases))
 
 def parse_line(line):
     optimizer_params = {}
-    name, epoch, value = filter(None, line.rstrip().split())
-    name, epoch, value = name.rstrip(), int(epoch[6:-3]), float(value)
+    if line.count(' ') == 0:
+        name, epoch, value = line, 0, 0
+    else:
+        name, epoch, value = filter(None, line.rstrip().split())
+        name, epoch, value = name.rstrip(), int(epoch[6:-3]), float(value)
 
     split_name = name.split('_')
     ds = split_name[0]
@@ -159,11 +164,19 @@ def parse_line(line):
     )
     '''
 
-    assert locals().get('base') is not None or locals().get('transfer') is not None, 'Unknown model'
+    base, transfer = locals().get('base'), locals().get('transfer')
+    assert base is not None or transfer is not None, 'Unknown model'
 
-    return (ds, epoch, value,
-            locals().get('epochs'), locals().get('transfer', ''),
-            locals().get('loss', 'BinaryCrossentropy'),
-            locals().get('optimizer', 'Adam'),
-            update_d({'lr': 1e-3}, optimizer_params),
-            locals().get('base', 'transfer'))
+    return ParsedLine(dataset=ds,
+                      epoch=epoch,
+                      value=value,
+                      epochs=locals().get('epochs'),
+                      transfer=transfer,
+                      loss=locals().get('loss', 'BinaryCrossentropy'),
+                      optimizer=locals().get('optimizer', 'Adam'),
+                      optimizer_params=update_d({'lr': 1e-3}, optimizer_params),
+                      base=base or 'transfer')
+
+
+ParsedLine = namedtuple('ParsedLine', ('dataset', 'epoch', 'value', 'epochs', 'transfer',
+                                       'loss', 'optimizer', 'optimizer_params', 'base'))
