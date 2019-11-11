@@ -15,16 +15,16 @@ valid_losses.update({loss_name: getattr(tf.losses, loss_name)
                      if not loss_name.startswith('_') and loss_name == 'Reduction'})
 valid_losses.update(get_upper_kv(losses_module))
 
-SUPPORTED_LOSSES = tuple(valid_losses.keys())
+SUPPORTED_LOSSES = tuple(sorted(valid_losses.keys()))
 
 valid_metrics = {metric: getattr(tf.keras.metrics, metric)
                  for metric in dir(tf.keras.metrics)
                  if not metric.startswith('_') and metric not in frozenset(('serialize', 'deserialize', 'get'))}
 valid_metrics.update(get_upper_kv(metrics_module))
-SUPPORTED_METRICS = tuple(valid_metrics.keys())
+SUPPORTED_METRICS = tuple(sorted(valid_metrics.keys()))
 
 valid_optimizers = get_upper_kv(tf.keras.optimizers)
-SUPPORTED_OPTIMIZERS = tuple(valid_optimizers.keys())
+SUPPORTED_OPTIMIZERS = tuple(sorted(valid_optimizers.keys()))
 
 
 class ConfigurableProblemBase(Configurable, ABC):

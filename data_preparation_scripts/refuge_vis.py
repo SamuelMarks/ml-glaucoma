@@ -4,7 +4,6 @@ from __future__ import print_function
 import functools
 from os import environ
 
-import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow_datasets as tfds
 
@@ -26,9 +25,11 @@ dataset = builder.as_dataset(as_supervised=True, split='validation')
 dataset = dataset.map(functools.partial(
     preprocess_example, pad_to_square=True, resolution=(256, 256)))
 
-for image, label in tfds.as_numpy(dataset):
-    image -= np.min(image)
-    image /= np.max(image)
-    plt.imshow(image)
-    print('label: {}'.format(label))
-    plt.show()
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+    for image, label in tfds.as_numpy(dataset):
+        image -= np.min(image)
+        image /= np.max(image)
+        plt.imshow(image)
+        print('label: {}'.format(label))
+        plt.show()

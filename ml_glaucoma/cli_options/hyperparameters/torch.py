@@ -11,16 +11,16 @@ from ml_glaucoma.utils.helpers import get_upper_kv
 
 valid_losses = {}
 valid_losses.update(get_upper_kv(losses_module))
-SUPPORTED_LOSSES = tuple(valid_losses.keys())
+SUPPORTED_LOSSES = tuple(sorted(valid_losses.keys()))
 
 # TODO: Figure out what metrics are in PyTorch, e.g.: [TensorBoard](https://pytorch.org/docs/stable/tensorboard.html)
 # (or maybe just invent them!)
 valid_metrics = {}
-SUPPORTED_METRICS = tuple(valid_metrics.keys())
+SUPPORTED_METRICS = tuple(sorted(valid_metrics.keys()))
 
 valid_optimizers = {}
 valid_optimizers.update(get_upper_kv(optimizer_module))
-SUPPORTED_OPTIMIZERS = tuple(valid_optimizers.keys())
+SUPPORTED_OPTIMIZERS = tuple(sorted(valid_optimizers.keys()))
 
 
 class ConfigurableProblemBase(Configurable, ABC):

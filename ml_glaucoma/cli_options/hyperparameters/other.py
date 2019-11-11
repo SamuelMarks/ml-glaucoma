@@ -1,13 +1,13 @@
 from ml_glaucoma.cli_options.base import Configurable
 
 valid_losses = {}
-SUPPORTED_LOSSES = tuple()
+SUPPORTED_LOSSES = tuple(sorted(valid_losses.keys()))
 
 valid_metrics = {}
-SUPPORTED_METRICS = tuple()
+SUPPORTED_METRICS = tuple(sorted(valid_metrics.keys()))
 
 valid_optimizers = {}
-SUPPORTED_OPTIMIZERS = tuple()
+SUPPORTED_OPTIMIZERS = tuple(sorted(valid_optimizers.keys()))
 
 
 class ConfigurableProblemBase(Configurable):

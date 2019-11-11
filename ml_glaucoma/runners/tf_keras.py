@@ -14,7 +14,7 @@ from ml_glaucoma.cli_options.logparser.utils import parse_line
 from ml_glaucoma.runners.utils import default_model_dir, batch_steps
 
 logger = get_logger(modules[__name__].__name__)
-logging.getLogger('dataset_builder').setLevel(logging.WARNING)
+#logging.getLogger('dataset_builder').setLevel(logging.WARNING)
 
 
 def train(problem, batch_size, epochs,

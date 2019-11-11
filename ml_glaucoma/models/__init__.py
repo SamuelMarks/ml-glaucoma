@@ -9,7 +9,7 @@ for those associated with data labels (e.g. regularization losses).
 
 from os import environ
 
-from six import iterkeys
+from six import iteritems
 
 from ml_glaucoma.utils.helpers import get_upper_kv
 
@@ -22,17 +22,15 @@ if environ['TF']:
     from ml_glaucoma.models.applications.tf_keras import applications_model
     from ml_glaucoma.utils import update_d
 
-    model_name2model = update_d({attr: getattr(tf.keras.applications, attr)
-                                 for attr in get_upper_kv(tf.keras.applications)},
-                                {attr: getattr(efficient_net, attr)
-                                 for attr in get_upper_kv(efficient_net)},
-                                **{attr: getattr(se_resnet, attr)
-                                   for attr in get_upper_kv(se_resnet)})
-
-    valid_models = frozenset({
-        attr for attr in iterkeys(model_name2model)
+    valid_models = {
+        attr: obj for attr, obj in iteritems(update_d({attr: getattr(tf.keras.applications, attr)
+                                                       for attr in get_upper_kv(tf.keras.applications)},
+                                                      {attr: getattr(efficient_net, attr)
+                                                       for attr in get_upper_kv(efficient_net)},
+                                                      **{attr: getattr(se_resnet, attr)
+                                                         for attr in get_upper_kv(se_resnet)}))
         if attr not in frozenset(dir(tf.keras.layers) + ['Model']) and not attr.isupper()
-    })
+    }
 
 elif environ['TORCH']:
     from ml_glaucoma.models.applications.torch import applications_model
