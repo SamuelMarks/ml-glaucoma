@@ -8,6 +8,7 @@ from ml_glaucoma.cli_options.hyperparameters import (ConfigurableProblem, Config
                                                      ConfigurableOptimizer, ConfigurableExponentialDecayLrSchedule)
 from ml_glaucoma.cli_options.info import ConfigurableInfo
 from ml_glaucoma.cli_options.logparser import ConfigurableLogParser, log_parser
+from ml_glaucoma.cli_options.pipeline import ConfigurablePipeline
 from ml_glaucoma.cli_options.prepare import ConfigurableBuilders
 from ml_glaucoma.cli_options.train import ConfigurableTrain
 
@@ -66,5 +67,11 @@ def get_parser():
     info_configurable = ConfigurableInfo()
     info_configurable.fill(info_parser)
     _commands['info'] = info_configurable
+
+    # PIPELINE
+    pipeline_parser = subparsers.add_parser('pipeline', help=ConfigurablePipeline.description)
+    pipeline_configurable = ConfigurablePipeline()
+    pipeline_configurable.fill(pipeline_parser)
+    _commands['pipeline'] = pipeline_configurable
 
     return _parser, _commands

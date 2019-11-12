@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 
-
-import logging
-from logging.config import dictConfig as _dictConfig
+import logging.config
 from os import path, environ
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.64'
+__version__ = '0.0.65-alpha'
 
 
 def get_logger(name=None):
     logging.config.fileConfig(path.join(path.dirname(__file__), '_data', 'logging.conf'))
     return logging.getLogger(name=name)
+
 
 logging.getLogger('matplotlib').disabled = True
 logger = get_logger('root')
