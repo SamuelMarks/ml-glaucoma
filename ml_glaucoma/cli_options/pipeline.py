@@ -1,13 +1,12 @@
 from argparse import FileType
 from datetime import datetime
-from functools import reduce
 from json import dumps, loads
 
 from six import iteritems
 from yaml import safe_load as safe_yaml_load
 
 from ml_glaucoma.cli_options.base import Configurable
-from ml_glaucoma.utils import update_d, pp
+from ml_glaucoma.utils import update_d
 
 
 class ConfigurablePipeline(Configurable):
@@ -78,50 +77,24 @@ class ConfigurablePipeline(Configurable):
                 incoming_shape = last_shape
                 options.update(last_options_line)
 
-        smallest_obj = lambda prev, obj: obj if obj[next(iter(obj.keys()))] < prev[next(iter(prev.keys()))] else prev
-        get_smallest_obj = lambda l: reduce(smallest_obj, l[1:], l[0])
-        smallest_per_category = {k: get_smallest_obj(v)
-                                 for k, v in iteritems(options)
-                                 if not k.startswith('_')}
-        print('<smallest_per_category>')
-        pp(smallest_per_category)
-        print('</smallest_per_category>')
+        def get_sorted_options(options_dict):
+            return {name: list(map(dict, value))
+                    for name, value in map(lambda kv: (kv[0], sorted(map(lambda e: tuple(e.items()),
+                                                                         kv[1]), key=lambda a: a[0][1])),
+                                           filter(lambda kv: not kv[0].startswith('_'), iteritems(options_dict)))}
 
-        smallest_category = tuple(map(
-            lambda k: {k[0]: {k[1][0][0]: k[1][0][1]}},
-            sorted(((k, tuple(iteritems(v)))
-                    for k, v in iteritems(smallest_per_category)),
-                   key=lambda k: k[1][0])
-        ))
-        print('<smallest_category>')
-        pp(smallest_category)
-        print('</smallest_category>')
-        exit(5)
+        options = get_sorted_options(options)
+        next_key = next(iter(options[key][0].keys()))
+        options[key][0][next_key] += 0.5
+        options['_next_key'] = next_key
 
-        def replace_and_increment(category, element):
-            if type(element) is not dict:
-                return element
-            next_key = next(iter(element.keys()))
-
-            if category in smallest_category and next_key in smallest_category[category]:
-                smallest_per_category[category][next_key] += 0.5
-                return smallest_per_category[category]
-            return element
-
-        increment_obj = lambda obj: {k: [replace_and_increment(k, e)
-                                         for e in v]
-                                     for k, v in iteritems(obj)
-                                     if not k.startswith('_')}
-
-        incremented_obj = increment_obj(options)
-        options.update(incremented_obj)
-        log(incremented_obj)
+        log(options)
 
         print('training...')
 
-        incremented_obj = increment_obj(options)
-
-        pp(incremented_obj)
+        options[key][0][next_key] += 0.5
+        del options['_next_key']
+        log(options)
 
         # TODO: Check if option was last one tried, and if so, skip to next one
         '''
