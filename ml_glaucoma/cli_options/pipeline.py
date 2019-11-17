@@ -5,6 +5,7 @@ from json import dumps, loads
 from six import iteritems
 from yaml import safe_load as safe_yaml_load
 
+import ml_glaucoma.cli_options.parser
 from ml_glaucoma.cli_options.base import Configurable
 from ml_glaucoma.utils import update_d
 
@@ -39,7 +40,7 @@ class ConfigurablePipeline(Configurable):
     def build(self, **kwargs):
         return self.build_self(**kwargs)
 
-    def build_self(self, logfile, cmd, key, options):
+    def build_self(self, logfile, cmd, key, options, rest):
         log = lambda obj: logfile.write(
             '{}\n'.format(dumps(update_d({'_dt': datetime.utcnow().isoformat().__str__()}, obj))))
 
@@ -79,24 +80,33 @@ class ConfigurablePipeline(Configurable):
 
         def get_sorted_options(options_dict):
             return {name: list(map(dict, value))
-                    for name, value in map(lambda kv: (kv[0], sorted(map(lambda e: tuple(e.items()),
-                                                                         kv[1]), key=lambda a: a[0][1])),
+                    for name, value in map(lambda kv: (kv[0], sorted(map(lambda e: tuple(e.items()), kv[1]),
+                                                                     key=lambda a: a[0][1])),
                                            filter(lambda kv: not kv[0].startswith('_'), iteritems(options_dict)))}
 
-        options = get_sorted_options(options)
+        options.update(get_sorted_options(options))
         next_key = next(iter(options[key][0].keys()))
         options[key][0][next_key] += 0.5
         options['_next_key'] = next_key
 
         log(options)
 
-        print('training...')
+        print('-------------------------------------------\n',
+              '|                training…                |\n',
+              '-------------------------------------------', sep='')
+
+        cli_resp = ml_glaucoma.cli_options.parser.cli_handler(rest)
+        print('cli_resp:', cli_resp, ';')
+
+        print('-------------------------------------------\n',
+              '|            finished training.           |\n',
+              '-------------------------------------------', sep='')
 
         options[key][0][next_key] += 0.5
         del options['_next_key']
         log(options)
 
-        # TODO: Check if option was last one tried, and if so, skip to next one
+        # TODO: Check if option was last one tried—by checking if 0.5—and if so, skip to next one
         '''
         for k, v in iteritems(options):
             logfile.writeline(dumps(dict(dt=datetime.now(), option=k)))
