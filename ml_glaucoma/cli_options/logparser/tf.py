@@ -39,7 +39,7 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
         else:
             pass
             # print("{} in {} is not corrupted".format(fname, directory), file=stderr)
-        print("Succeed, tf records found for {} images".format(total_images), file=stderr)
+        # print("Succeed, tf records found for {} images".format(total_images), file=stderr)
 
         sorted_values = sorted(enumerate(v.simple_value
                                          for e in tf.compat.v1.train.summary_iterator(fname)
