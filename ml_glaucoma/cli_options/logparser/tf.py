@@ -37,7 +37,8 @@ def log_parser(infile, top, threshold, by_diff, directory,
         except:
             print("{} in {} is corrupted".format(fname, directory), file=stderr)
         else:
-            print("{} in {} is not corrupted".format(fname, directory), file=stderr)
+            pass
+            # print("{} in {} is not corrupted".format(fname, directory), file=stderr)
         print("Succeed, tf records found for {} images".format(total_images), file=stderr)
 
         sorted_values = sorted(enumerate(v.simple_value
