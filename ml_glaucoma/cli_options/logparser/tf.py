@@ -7,8 +7,8 @@ import tensorflow as tf
 from tensorflow_core.python.lib.io.tf_record import tf_record_iterator
 
 
-def log_parser(infile, top, threshold, by_diff, directory,
-               tag='epoch_val_auc'):  # type: (IOBase, int, int, int, str, str) -> (str, [(float, float)])
+def log_parser(infile, top, threshold, by_diff, directory, rest,
+               tag='epoch_val_auc'):  # type: (IOBase, int, int, int, str, [str], str) -> (str, [(float, float)])
     if directory is not None and path.isdir(directory):
         infile = directory  # type: str
 
