@@ -95,6 +95,13 @@ class ConfigurablePipeline(Configurable):
               '|                training…                |\n',
               '-------------------------------------------', sep='')
 
+        assert rest[0] == 'train'
+        try:
+            idx = rest.find(key)
+            rest[idx + 1] = next_key
+        except ValueError:
+            rest += ['--{key}'.format(key=key), next_key]
+
         cli_resp = ml_glaucoma.cli_options.parser.cli_handler(rest)
         print('cli_resp:', cli_resp, ';')
 
