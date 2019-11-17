@@ -1,7 +1,5 @@
-import logging
 import os
 from itertools import takewhile
-from pathlib import Path
 from stat import S_IWOTH, S_IWGRP, S_IWRITE
 from sys import modules
 
@@ -14,7 +12,9 @@ from ml_glaucoma.cli_options.logparser.utils import parse_line
 from ml_glaucoma.runners.utils import default_model_dir, batch_steps
 
 logger = get_logger(modules[__name__].__name__)
-#logging.getLogger('dataset_builder').setLevel(logging.WARNING)
+
+
+# logging.getLogger('dataset_builder').setLevel(logging.WARNING)
 
 
 def train(problem, batch_size, epochs,
@@ -153,6 +153,7 @@ def train(problem, batch_size, epochs,
         '\noptimizer:'.ljust(15), optimizer.__class__.__name__,
         '\nloss:'.ljust(15), problem.loss.__class__.__name__,
         '\ntotal_epochs:'.ljust(15), epochs, '\n\n',
+        '_________________________________________________________________\n',
         sep=''
     )
 
@@ -170,7 +171,7 @@ def train(problem, batch_size, epochs,
 
     if delete_lt is not None:
         dire, best_runs = log_parser(directory=os.path.join(callbacks[-1].log_dir, 'validation'), top=1,
-                                     tag='epoch_auc', infile=None, by_diff=None, threshold=None)
+                                     tag='epoch_auc', infile=None, by_diff=None, threshold=None, rest=None)
         print('{} ({}) had a best_runs of {}'.format(dire, callbacks[-1].log_dir, best_runs))
         #  if not next((True for run in best_runs if run < delete_lt), False):
         if best_runs[0][1] < delete_lt:
@@ -189,9 +190,11 @@ def train(problem, batch_size, epochs,
                 if os.path.isfile(full_path) and full_path.endswith('h5'):
                     os.remove(full_path)
                     if os.path.isfile(full_path):
+                        from pathlib import Path
+
                         Path(full_path).unlink()
 
-            # Read only the directory
+            # Make directory read-only
             mode = os.stat(dire).st_mode
             ro_mask = 0o777 ^ (S_IWRITE | S_IWGRP | S_IWOTH)
             os.chmod(dire, mode & ro_mask)
