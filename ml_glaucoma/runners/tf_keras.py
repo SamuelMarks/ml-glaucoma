@@ -1,5 +1,4 @@
 import os
-from itertools import takewhile
 from stat import S_IWOTH, S_IWGRP, S_IWRITE
 from sys import modules
 
@@ -21,8 +20,7 @@ def train(problem, batch_size, epochs,
           model_fn, optimizer, class_weight=None,
           model_dir=None, callbacks=None, verbose=True,
           checkpoint_freq=5, summary_freq=10, lr_schedule=None,
-          tensorboard_log_dir=None, write_images=False, continuous=False,
-          delete_lt=None, model_dir_autoincrement=True):
+          tensorboard_log_dir=None, write_images=False, delete_lt=None):
     """
     Train a model on the given problem
 
@@ -77,14 +75,8 @@ def train(problem, batch_size, epochs,
     :param write_images: passed to `tf.keras.callbacks.TensorBoard`
     :param write_images: bool
 
-    :param continuous: after each successful train, run again
-    :param continuous: bool
-
     :param delete_lt: delete *.h5 files that are less than this threshold
     :param delete_lt: float
-
-    :param model_dir_autoincrement: Autoincrement the model dir, if it ends in a number, increment, else append new
-    :param model_dir_autoincrement: bool
 
     :return `History` object as returned by `model.fit`
     :rtype ``tf.keras.History``
@@ -201,40 +193,6 @@ def train(problem, batch_size, epochs,
 
         else:
             print('{} >= {}; so not removing h5 files'.format(best_runs[0][1], delete_lt))
-
-    if continuous:
-        train.run += 1
-        print('------------------------\n'
-              '|        RUN\t{}        \n'
-              '------------------------'.format(train.run), sep='')
-
-        if model_dir_autoincrement is True or model_dir_autoincrement is None:
-            reversed_log_dir = callbacks[-1].log_dir[::-1]
-            suffix = int(''.join(takewhile(lambda s: s.isdigit(), reversed_log_dir))[::-1] or 0)
-            suffix_s = '{}'.format(suffix)
-
-            if callbacks[-1].log_dir.endswith(suffix_s):
-                tensorboard_log_dir = '{}{}'.format((tensorboard_log_dir or callbacks[-1].log_dir)[:-len(suffix_s)],
-                                                    suffix + 1)
-                model_dir = '{}{}'.format((model_dir or tensorboard_log_dir)[:-len(suffix_s)], suffix + 1)
-                callbacks[-1].log_dir = '{}{}'.format(callbacks[-1].log_dir[:-len(suffix_s)], suffix + 1)
-            else:
-                tensorboard_log_dir = '{}_again{}'.format(tensorboard_log_dir or callbacks[-1].log_dir, suffix_s)
-                model_dir = '{}_again{}'.format(model_dir or tensorboard_log_dir, suffix_s)
-                callbacks[-1].log_dir = '{}_again{}'.format(callbacks[-1].log_dir, suffix_s)
-
-            print('New log_dir:', callbacks[-1].log_dir)
-            return train(problem=problem, batch_size=batch_size, epochs=epochs,
-                         model_fn=model_fn, optimizer=optimizer, class_weight=class_weight,
-                         model_dir=model_dir, callbacks=callbacks, verbose=verbose,
-                         checkpoint_freq=checkpoint_freq, summary_freq=summary_freq, lr_schedule=lr_schedule,
-                         tensorboard_log_dir=tensorboard_log_dir, write_images=write_images, continuous=continuous,
-                         delete_lt=delete_lt, model_dir_autoincrement=model_dir_autoincrement)
-    else:
-        return result
-
-
-train.run = 0
 
 
 def evaluate(problem, batch_size, model_fn, optimizer, model_dir=None):

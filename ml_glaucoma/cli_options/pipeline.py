@@ -1,13 +1,19 @@
 from argparse import FileType
 from datetime import datetime
+from functools import partial
+from itertools import takewhile
 from json import dumps, loads
+from sys import modules
 
 from six import iteritems
 from yaml import safe_load as safe_yaml_load
 
 import ml_glaucoma.cli_options.parser
+from ml_glaucoma import get_logger
 from ml_glaucoma.cli_options.base import Configurable
 from ml_glaucoma.utils import update_d
+
+logger = get_logger(modules[__name__].__name__.rpartition('.')[0])
 
 
 class ConfigurablePipeline(Configurable):
@@ -20,9 +26,6 @@ class ConfigurablePipeline(Configurable):
         parser.add_argument(
             '-l', '--logfile', type=FileType('a'), required=True,
             help='logfile to checkpoint whence in the pipeline')
-        parser.add_argument(
-            '-c', '--cmd', required=True,
-            help='Command to run, e.g.: `train`')
         parser.add_argument(
             '--options', type=safe_yaml_load, required=True,
             help='Object of items to replace argument with, e.g.:'
@@ -40,7 +43,7 @@ class ConfigurablePipeline(Configurable):
     def build(self, **kwargs):
         return self.build_self(**kwargs)
 
-    def build_self(self, logfile, cmd, key, options, rest):
+    def build_self(self, logfile, key, options, rest):
         log = lambda obj: logfile.write(
             '{}\n'.format(dumps(update_d({'_dt': datetime.utcnow().isoformat().__str__()}, obj))))
 
@@ -50,9 +53,6 @@ class ConfigurablePipeline(Configurable):
         )
         with open(logfile.name, 'rt') as f:
             prev_logfile_lines = f.readlines()
-
-        if cmd != 'train':
-            raise NotImplementedError
 
         train_kwargs = options.pop('train_kwargs', {})
 
@@ -92,30 +92,79 @@ class ConfigurablePipeline(Configurable):
         log(options)
 
         print('-------------------------------------------\n',
-              '|                training…                |\n',
-              '-------------------------------------------', sep='')
+              '|                {cmd}ing…                |\n',
+              '-------------------------------------------'.format(cmd=rest[0]), sep='')
 
-        assert rest[0] == 'train'
-        try:
-            idx = rest.find(key)
-            rest[idx + 1] = next_key
-        except ValueError:
-            rest += ['--{key}'.format(key=key), next_key]
+        if rest[0] != 'train':
+            raise NotImplementedError
 
-        cli_resp = ml_glaucoma.cli_options.parser.cli_handler(rest)
+        cli_resp = self._handle_rest(key, next_key, rest)
         print('cli_resp:', cli_resp, ';')
 
         print('-------------------------------------------\n',
-              '|            finished training.           |\n',
-              '-------------------------------------------', sep='')
+              '|            finished {cmd}ing.           |\n',
+              '-------------------------------------------'.format(cmd=rest[0]), sep='')
 
         options[key][0][next_key] += 0.5
         del options['_next_key']
         log(options)
 
-        # TODO: Check if option was last one tried—by checking if 0.5—and if so, skip to next one
-        '''
-        for k, v in iteritems(options):
-            logfile.writeline(dumps(dict(dt=datetime.now(), option=k)))
-            train(**{k: v})  # TODO: Add default args, figure out how to get same args as `train` from `argv`
-        '''
+        # TODO: Checkpointing: Check if option was last one tried—by checking if 0.5—and if so, skip to next one
+
+    @staticmethod
+    def _handle_rest(key, next_key, rest):
+        assert rest[0] == 'train'
+
+        def upsert_cli_arg(arg, value, cli):
+            if not arg.startswith('-'):
+                arg = '--{arg}'.format(arg=arg)
+            try:
+                idx = cli.index(arg)
+                cli[idx + 1] = value
+            except ValueError:
+                cli += [arg, value]
+            return cli
+
+        upsert_rest_arg = partial(upsert_cli_arg, cli=rest)
+        try:
+            model_dir = rest[rest.index('--model_dir') + 1]
+        except ValueError:
+            model_dir = None
+
+        if model_dir is None:
+            logger.warn('model_dir is None, so not incrementing it')
+        else:
+            try:
+                tensorboard_log_dir = rest[rest.index('--tb_log_dir') + 1]
+            except ValueError:
+                tensorboard_log_dir = model_dir
+
+            reversed_log_dir = model_dir[::-1]
+            suffix = int(''.join(takewhile(lambda s: s.isdigit(), reversed_log_dir))[::-1] or 0)
+            suffix_s = '{}'.format(suffix)
+            run = suffix + 1
+            print('------------------------\n'
+                  '|        RUN\t{}        \n'
+                  '------------------------'.format(run), sep='')
+            if model_dir.endswith(suffix_s):
+                tensorboard_log_dir = '{}{}'.format(tensorboard_log_dir[:-len(suffix_s)], run)
+                model_dir = '{}{}'.format(model_dir[:-len(suffix_s)], run)
+            else:
+                tensorboard_log_dir = '{}_again{}'.format(tensorboard_log_dir, suffix_s)
+                model_dir = '{}_again{}'.format(model_dir, suffix_s)
+            print('New model_dir:', model_dir)
+            # Replace with incremented dirs
+            for arg in 'model_dir', 'tensorboard_log_dir':
+                upsert_rest_arg(arg=arg, value=locals()[arg])
+
+        # Replace with pipeline argument. Change next line with more complicated—i.e.: more than 1 option change—mods.
+        upsert_rest_arg(key, next_key)
+
+        print('Running command:', rest)
+
+        try:
+            cli_resp = ml_glaucoma.cli_options.parser.cli_handler(rest)
+        except Exception as e:
+            cli_resp = e
+
+        return cli_resp

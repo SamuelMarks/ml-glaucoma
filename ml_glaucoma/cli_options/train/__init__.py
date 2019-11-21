@@ -70,17 +70,8 @@ class ConfigurableTrain(Configurable):
             help='Set the seed, combine with `--disable-gpu` to disable GPU for added determinism'
         )
         parser.add_argument(
-            '--continuous', action='store_true',
-            help='after each successful train, run again'
-        )
-        parser.add_argument(
             '--delete-lt', type=float,
             help='delete *.h5 files that are less than this threshold'
-        )
-
-        parser.add_argument(
-            '--model-dir-autoincrement', type=bool, default=True,
-            help='autoincrement rather than overwrite the model dir (when --continuous is set)'
         )
 
     def build_self(self, problem, batch_size, epochs,
@@ -88,8 +79,7 @@ class ConfigurableTrain(Configurable):
                    callbacks, checkpoint_freq, summary_freq,
                    lr_schedule, tb_log_dir, class_weight,
                    write_images, seed, disable_gpu,
-                   continuous, model_dir_autoincrement, delete_lt,
-                   **_kwargs):
+                   delete_lt, **_kwargs):
         if disable_gpu:
             environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
