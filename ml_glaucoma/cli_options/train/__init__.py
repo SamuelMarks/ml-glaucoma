@@ -121,7 +121,5 @@ class ConfigurableTrain(Configurable):
             lr_schedule=lr_schedule,
             tensorboard_log_dir=tb_log_dir,
             write_images=write_images,
-            continuous=continuous,
-            model_dir_autoincrement=model_dir_autoincrement,
             delete_lt=delete_lt
         )
