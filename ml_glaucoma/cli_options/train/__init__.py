@@ -1,4 +1,4 @@
-from os import environ
+from os import environ, path, listdir
 
 from yaml import load as yaml_load
 
@@ -106,6 +106,11 @@ class ConfigurableTrain(Configurable):
                 torch.manual_seed(seed)
                 torch.backends.cudnn.deterministic = True
                 torch.backends.cudnn.benchmark = False
+
+        if path.isdir(model_dir) and len(listdir(model_dir)) > 0:
+            raise EnvironmentError('\'{model_dir}\' unexpectedly has contents; try using another dir'.format(
+                model_dir=model_dir
+            ))
 
         return ml_glaucoma.runners.train(
             callbacks=[] if callbacks is None else list(map(lambda callback: valid_callbacks[callback], callbacks)),
