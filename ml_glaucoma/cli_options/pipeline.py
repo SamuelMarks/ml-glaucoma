@@ -34,7 +34,7 @@ class ConfigurablePipeline(Configurable):
                  '      "optimizers": [ { "Adadelta": 0 }, { "Adagrad": 0 }, { "Adam": 0 } ] }'
         )
         parser.add_argument(
-            '-k', '--key',
+            '-k', '--key', required=True,
             help='Start looping through from this key, '
                  'e.g.: `optimizers` will iterate through the optimizer key first, '
                  'then the next key (alphanumerically sorted)'
@@ -91,8 +91,8 @@ class ConfigurablePipeline(Configurable):
 
         log(options)
 
-        print('-------------------------------------------\n',
-              '|                {cmd}ing…                |\n',
+        print('-------------------------------------------\n'
+              '|                {cmd}ing…                |\n'
               '-------------------------------------------'.format(cmd=rest[0]), sep='')
 
         if rest[0] != 'train':
@@ -101,8 +101,8 @@ class ConfigurablePipeline(Configurable):
         cli_resp = self._handle_rest(key, next_key, rest)
         print('cli_resp:', cli_resp, ';')
 
-        print('-------------------------------------------\n',
-              '|            finished {cmd}ing.           |\n',
+        print('-------------------------------------------\n'
+              '|            finished {cmd}ing.           |\n'
               '-------------------------------------------'.format(cmd=rest[0]), sep='')
 
         options[key][0][next_key] += 0.5
@@ -142,9 +142,12 @@ class ConfigurablePipeline(Configurable):
             reversed_log_dir = model_dir[::-1]
             suffix = int(''.join(takewhile(lambda s: s.isdigit(), reversed_log_dir))[::-1] or 0)
             suffix_s = '{}'.format(suffix)
+            if not reversed_log_dir.startswith(reversed_log_dir[:len(suffix_s)] + '_again'[::-1]):
+                suffix = 0
+                suffix_s = '{}'.format(suffix)
             run = suffix + 1
             print('------------------------\n'
-                  '|        RUN\t{}        \n'
+                  '|        RUN\t{}     |\n'
                   '------------------------'.format(run), sep='')
             if model_dir.endswith(suffix_s):
                 tensorboard_log_dir = '{}{}'.format(tensorboard_log_dir[:-len(suffix_s)], run)
@@ -152,7 +155,7 @@ class ConfigurablePipeline(Configurable):
             else:
                 tensorboard_log_dir = '{}_again{}'.format(tensorboard_log_dir, suffix_s)
                 model_dir = '{}_again{}'.format(model_dir, suffix_s)
-            print('New model_dir:', model_dir)
+            print('New model_dir:'.ljust(16), model_dir)
             # Replace with incremented dirs
             for arg in 'model_dir', 'tensorboard_log_dir':
                 upsert_rest_arg(arg=arg, value=locals()[arg])
@@ -160,7 +163,9 @@ class ConfigurablePipeline(Configurable):
         # Replace with pipeline argument. Change next line with more complicated—i.e.: more than 1 option change—mods.
         upsert_rest_arg(key, next_key)
 
-        print('Running command:', rest)
+        print('Running command:'.ljust(16), '{} {}'.format(
+            rest[0], ' '.join(map(lambda r: r if r.startswith('-') else '\'{}\''.format(r),
+                                  rest[1:]))))
 
         try:
             cli_resp = ml_glaucoma.cli_options.parser.cli_handler(rest)
