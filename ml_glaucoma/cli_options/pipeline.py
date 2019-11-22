@@ -89,7 +89,12 @@ class ConfigurablePipeline(Configurable):
         options[key][0][next_key] += 0.5
         options['_next_key'] = next_key
 
-        log(options)
+        log({'options': options})
+
+        for k, v in options.items():
+            if not k.startswith('_'):
+                value = next(iter(v[0].keys()))
+                ConfigurablePipeline._upsert_cli_arg(cli=rest, arg=key, value=value)
 
         print('-------------------------------------------\n'
               '|                {cmd}ing…                |\n'
@@ -112,20 +117,22 @@ class ConfigurablePipeline(Configurable):
         # TODO: Checkpointing: Check if option was last one tried—by checking if 0.5—and if so, skip to next one
 
     @staticmethod
+    def _upsert_cli_arg(arg, value, cli):
+        if not arg.startswith('-'):
+            arg = '--{arg}'.format(arg=arg)
+        try:
+            idx = cli.index(arg)
+            cli[idx + 1] = value
+        except ValueError:
+            cli += [arg, value]
+        return cli
+
+    @staticmethod
     def _handle_rest(key, next_key, rest):
         assert rest[0] == 'train'
 
-        def upsert_cli_arg(arg, value, cli):
-            if not arg.startswith('-'):
-                arg = '--{arg}'.format(arg=arg)
-            try:
-                idx = cli.index(arg)
-                cli[idx + 1] = value
-            except ValueError:
-                cli += [arg, value]
-            return cli
+        upsert_rest_arg = partial(ConfigurablePipeline._upsert_cli_arg, cli=rest)
 
-        upsert_rest_arg = partial(upsert_cli_arg, cli=rest)
         try:
             model_dir = rest[rest.index('--model_dir') + 1]
         except ValueError:
