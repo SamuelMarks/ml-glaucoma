@@ -1,13 +1,9 @@
 from argparse import FileType
-from sys import modules
 
 from yaml import safe_load as safe_yaml_load
 
-from ml_glaucoma import get_logger
 from ml_glaucoma.cli_options.base import Configurable
 from ml_glaucoma.cli_options.pipeline.runner import pipeline_runner
-
-logger = get_logger(modules[__name__].__name__.rpartition('.')[0])
 
 
 class ConfigurablePipeline(Configurable):

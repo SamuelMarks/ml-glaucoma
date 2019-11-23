@@ -3,12 +3,15 @@ from functools import partial
 from itertools import takewhile
 from json import dumps, loads
 from os import environ, path, listdir
-from sys import stderr
+from sys import stderr, modules
 
 from six import iteritems
 
 import ml_glaucoma.cli_options.parser
+from ml_glaucoma import get_logger
 from ml_glaucoma.utils import update_d
+
+logger = get_logger(modules[__name__].__name__.rpartition('.')[0])
 
 
 def pipeline_runner(logfile, key, options, replacement_options, threshold, rest):
@@ -184,16 +187,20 @@ def _increment_directory_suffixes(model_dir, namespace, upsert_rest_arg):
           '|        RUN {:3d}       |\n'
           '------------------------'.format(run), sep='')
     run_s = '{:03d}'.format(suffix)
-    print('model_dir:'.ljust(20), model_dir)
-    print('tensorboard_log_dir:'.ljust(20), tensorboard_log_dir)
+
+    print('model_dir:'.ljust(25), model_dir)
+    print('tensorboard_log_dir:'.ljust(25), tensorboard_log_dir)
+
     if model_dir.endswith(suffix_s):
         tensorboard_log_dir = ''.join((tensorboard_log_dir[:-len(suffix_s)], run_s))
         model_dir = ''.join((model_dir[:-len(suffix_s)], run_s))
     else:
         tensorboard_log_dir = '{}_again{}'.format(tensorboard_log_dir, suffix_s)
         model_dir = '{}_again{}'.format(model_dir, suffix_s)
+
     suffix, model_dir = _get_next_avail_dir(model_dir)
     _, tensorboard_log_dir = _get_next_avail_dir(tensorboard_log_dir, suffix)
+
     # Replace with incremented dirs
     for arg in 'model_dir', 'tensorboard_log_dir':
         upsert_rest_arg(arg=arg, value=locals()[arg])
@@ -205,13 +212,13 @@ def _get_next_avail_dir(directory, starting_suffix=None):  # type: (str, int) ->
     if starting_suffix is not None:
         suffix_s = '{:03d}'.format(starting_suffix)
         directory, _, fname = directory.rpartition(path.sep)
-        directory = path.join(directory, ''.join((fname[:len(suffix_s)], suffix_s)))
+        directory = path.join(directory, ''.join((fname[:-len(suffix_s)], suffix_s)))
 
     while path.isdir(directory) and len(listdir(directory)) > 0:
         directory, _, fname = directory.rpartition(path.sep)
         suffix = int(''.join(takewhile(lambda s: s.isdigit(), fname[::-1]))[::-1] or 0) + 1
         suffix_s = '{:03d}'.format(suffix)
         assert suffix < 999
-        directory = path.join(directory, ''.join((fname[:len(suffix_s)], suffix_s)))
+        directory = path.join(directory, ''.join((fname[:-len(suffix_s)], suffix_s)))
 
     return suffix, directory
