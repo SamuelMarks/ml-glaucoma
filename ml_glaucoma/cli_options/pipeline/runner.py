@@ -101,12 +101,12 @@ def _prepare_options(key, log, logfile, options, rest):
     return next_key
 
 
-def _handle_model_change(rest, upsert_rest_arg, value):
-    model = value
+def _handle_model_change(rest, upsert_rest_arg, model):
     namespace = ml_glaucoma.cli_options.parser.cli_handler(rest, return_namespace=True)
     upsert_rest_arg(
         arg='--model_file',
-        value=path.join(path.dirname(path.dirname(path.dirname(__file__))), 'model_configs', 'transfer.gin')
+        value=path.join(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))),
+                        'model_configs', 'transfer.gin')
     )
     model_dir = namespace.model_dir
     _maybe_suffix = model_dir.rpartition('_')[2]
