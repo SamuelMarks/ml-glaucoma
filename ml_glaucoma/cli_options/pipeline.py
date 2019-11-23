@@ -115,9 +115,6 @@ class ConfigurablePipeline(Configurable):
 
                     model_dir = namespace.model_dir
 
-                    optimizer = None if namespace.optimizer == 'Adam' else namespace.optimizer
-                    loss = None if namespace.loss == 'BinaryCrossentropy' else namespace.lossj
-
                     _maybe_suffix = model_dir.rpartition('_')[2]
                     _maybe_suffix = _maybe_suffix if _maybe_suffix.startswith('again') else None
 
@@ -125,8 +122,9 @@ class ConfigurablePipeline(Configurable):
                         _maybe_suffix = '{}{:03d}'.format(_maybe_suffix[:len('again')],
                                                           int(_maybe_suffix[len('again'):]) + 1)
 
-                    _join_with = lambda: '_'.join(filter(None, (namespace.dataset[0].replace('refuge', 'gon'), model,
-                                                                optimizer, loss,
+                    _join_with = lambda: '_'.join(filter(None, (namespace.dataset[0].replace('refuge', 'gon'),
+                                                                model,
+                                                                namespace.optimizer, namespace.loss,
                                                                 'epochs', '{:03d}'.format(namespace.epochs),
                                                                 _maybe_suffix)))
 
@@ -139,7 +137,7 @@ class ConfigurablePipeline(Configurable):
 
                     upsert_rest_arg(
                         arg='--model_param',
-                        value="application = '{model}'".format(model=model)
+                        value='transfer = "{model}"'.format(model=model)
                     )
                 else:
                     upsert_rest_arg(arg=k, value=value)
@@ -171,6 +169,9 @@ class ConfigurablePipeline(Configurable):
             log(options)
 
         # TODO: Checkpointing: Check if option was last one tried—by checking if 0.5—and if so, skip to next one
+
+    def set_defaults(self, kwargs):
+        pass
 
     @staticmethod
     def _upsert_cli_arg(arg, value, cli):
@@ -246,14 +247,14 @@ class ConfigurablePipeline(Configurable):
 
         if starting_suffix is not None:
             suffix_s = '{:03d}'.format(starting_suffix)
-            directory = path.join(path.dirname(directory),
-                                  ''.join((path.basename(directory)[:len(suffix_s)], suffix_s)))
+            directory, _, fname = directory.rpartition(path.sep)
+            directory = path.join(directory, ''.join((fname[:len(suffix_s)], suffix_s)))
 
         while path.isdir(directory) and len(listdir(directory)) > 0:
-            base = path.basename(directory)
-            suffix = int(''.join(takewhile(lambda s: s.isdigit(), base[::-1]))[::-1] or 0) + 1
+            directory, _, fname = directory.rpartition(path.sep)
+            suffix = int(''.join(takewhile(lambda s: s.isdigit(), fname[::-1]))[::-1] or 0) + 1
             suffix_s = '{:03d}'.format(suffix)
             assert suffix < 999
-            directory = path.join(path.dirname(directory), ''.join((base[:len(suffix_s)], suffix_s)))
+            directory = path.join(directory, ''.join((fname[:len(suffix_s)], suffix_s)))
 
         return suffix, directory
