@@ -13,10 +13,14 @@ from ml_glaucoma.cli_options.prepare import ConfigurableBuilders
 from ml_glaucoma.cli_options.train import ConfigurableTrain
 
 
-def cli_handler(cmd=None):
+def cli_handler(cmd=None, return_namespace=False):
     parser, commands = get_parser()
     args, rest = parser.parse_known_args(cmd)
-    kwargs = dict(args._get_kwargs(), rest=rest)
+
+    if return_namespace:
+        return args
+
+    kwargs = dict(vars(args), rest=rest)
     command = kwargs.pop('command')
     if command is None:
         raise ReferenceError('You must specify a command. Append `--help` for details.')

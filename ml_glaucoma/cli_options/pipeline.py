@@ -3,7 +3,8 @@ from datetime import datetime
 from functools import partial
 from itertools import takewhile
 from json import dumps, loads
-from sys import modules
+from os import environ, path, listdir
+from sys import modules, stderr
 
 from six import iteritems
 from yaml import safe_load as safe_yaml_load
@@ -11,7 +12,7 @@ from yaml import safe_load as safe_yaml_load
 import ml_glaucoma.cli_options.parser
 from ml_glaucoma import get_logger
 from ml_glaucoma.cli_options.base import Configurable
-from ml_glaucoma.utils import update_d
+from ml_glaucoma.utils import update_d, pp
 
 logger = get_logger(modules[__name__].__name__.rpartition('.')[0])
 
@@ -34,6 +35,10 @@ class ConfigurablePipeline(Configurable):
                  '      "optimizers": [ { "Adadelta": 0 }, { "Adagrad": 0 }, { "Adam": 0 } ] }'
         )
         parser.add_argument(
+            '--replacement-options', type=safe_yaml_load,
+            help='Replacement options, e.g.: {models}'
+        )
+        parser.add_argument(
             '-k', '--key', required=True,
             help='Start looping through from this key, '
                  'e.g.: `optimizers` will iterate through the optimizer key first, '
@@ -43,7 +48,7 @@ class ConfigurablePipeline(Configurable):
     def build(self, **kwargs):
         return self.build_self(**kwargs)
 
-    def build_self(self, logfile, key, options, rest):
+    def build_self(self, logfile, key, options, replacement_options, rest):
         log = lambda obj: logfile.write(
             '{}\n'.format(dumps(update_d({'_dt': datetime.utcnow().isoformat().__str__()}, obj))))
 
@@ -53,8 +58,6 @@ class ConfigurablePipeline(Configurable):
         )
         with open(logfile.name, 'rt') as f:
             prev_logfile_lines = f.readlines()
-
-        train_kwargs = options.pop('train_kwargs', {})
 
         get_shape = lambda obj: {
             k: list(map(lambda o: next(iter(o.keys())), v)) if type(v) is list and type(v[0]) is dict else v
@@ -91,10 +94,48 @@ class ConfigurablePipeline(Configurable):
 
         log({'options': options})
 
+        upsert_rest_arg = partial(ConfigurablePipeline._upsert_cli_arg, cli=rest)
         for k, v in options.items():
             if not k.startswith('_'):
                 value = next(iter(v[0].keys()))
-                ConfigurablePipeline._upsert_cli_arg(cli=rest, arg=key, value=value)
+
+                if k == 'models':
+                    model = value
+
+                    namespace = ml_glaucoma.cli_options.parser.cli_handler(rest, return_namespace=True)
+
+                    upsert_rest_arg(
+                        arg='--model_file',
+                        value=path.join(path.dirname(path.dirname(__file__)), 'model_configs', 'transfer.gin')
+                    )
+
+                    model_dir = namespace.model_dir
+
+                    optimizer = None if namespace.optimizer == 'Adam' else namespace.optimizer
+                    loss = None if namespace.loss == 'BinaryCrossentropy' else namespace.lossj
+
+                    _maybe_suffix = model_dir.rpartition('_')[2]
+                    _maybe_suffix = _maybe_suffix if _maybe_suffix.startswith('again') else None
+
+                    _join_with = '_'.join(filter(None, (namespace.dataset[0], model,
+                                                        optimizer, loss,
+                                                        'epochs', namespace.epochs,
+                                                        _maybe_suffix)))
+                    model_dir = path.join(path.dirname(model_dir)
+                                          if path.isdir(model_dir) and len(listdir(model_dir)) > 0
+                                          else model_dir,
+                                          _join_with)
+                    upsert_rest_arg(
+                        arg='--model_dir',
+                        value=model_dir
+                    )
+
+                    upsert_rest_arg(
+                        arg='--model_param',
+                        value="application = '{model}'".format(model=model)
+                    )
+                else:
+                    upsert_rest_arg(arg=k, value=value)
 
         print('-------------------------------------------\n'
               '|                {cmd}ing…                |\n'
@@ -103,7 +144,12 @@ class ConfigurablePipeline(Configurable):
         if rest[0] != 'train':
             raise NotImplementedError
 
-        cli_resp = self._handle_rest(key, next_key, rest)
+        err, cli_resp = self._handle_rest(key, next_key, rest, options)
+        if err is not None:
+            if environ.get('NO_EXCEPTIONS'):
+                print(err, file=stderr)
+            else:
+                raise err
         print('cli_resp:', cli_resp, ';')
 
         print('-------------------------------------------\n'
@@ -128,7 +174,7 @@ class ConfigurablePipeline(Configurable):
         return cli
 
     @staticmethod
-    def _handle_rest(key, next_key, rest):
+    def _handle_rest(key, next_key, rest, options):
         assert rest[0] == 'train'
 
         upsert_rest_arg = partial(ConfigurablePipeline._upsert_cli_arg, cli=rest)
@@ -148,17 +194,18 @@ class ConfigurablePipeline(Configurable):
 
             reversed_log_dir = model_dir[::-1]
             suffix = int(''.join(takewhile(lambda s: s.isdigit(), reversed_log_dir))[::-1] or 0)
-            suffix_s = '{}'.format(suffix)
+            suffix_s = '{:03d}'.format(suffix)
             if not reversed_log_dir.startswith(reversed_log_dir[:len(suffix_s)] + '_again'[::-1]):
                 suffix = 0
-                suffix_s = '{}'.format(suffix)
+                suffix_s = '{:03d}'.format(suffix)
             run = suffix + 1
             print('------------------------\n'
-                  '|        RUN\t{}     |\n'
+                  '|        RUN {:3d} |\n'
                   '------------------------'.format(run), sep='')
+            run_s = '{:03d}'.format(suffix)
             if model_dir.endswith(suffix_s):
-                tensorboard_log_dir = '{}{}'.format(tensorboard_log_dir[:-len(suffix_s)], run)
-                model_dir = '{}{}'.format(model_dir[:-len(suffix_s)], run)
+                tensorboard_log_dir = ''.join((tensorboard_log_dir[:-len(suffix_s)], run_s))
+                model_dir = ''.join((model_dir[:-len(suffix_s)], run_s))
             else:
                 tensorboard_log_dir = '{}_again{}'.format(tensorboard_log_dir, suffix_s)
                 model_dir = '{}_again{}'.format(model_dir, suffix_s)
@@ -174,9 +221,10 @@ class ConfigurablePipeline(Configurable):
             rest[0], ' '.join(map(lambda r: r if r.startswith('-') else '\'{}\''.format(r),
                                   rest[1:]))))
 
+        err, cli_resp = None, None
         try:
             cli_resp = ml_glaucoma.cli_options.parser.cli_handler(rest)
         except Exception as e:
-            cli_resp = e
+            err = e
 
-        return cli_resp
+        return err, cli_resp
