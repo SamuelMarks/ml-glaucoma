@@ -109,7 +109,7 @@ def _handle_model_change(rest, upsert_rest_arg, model):
     upsert_rest_arg(
         arg='--model_file',
         value=path.join(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))),
-                        'model_configs', 'transfer.gin')
+                        'model_configs', 'applications.gin')
     )
     model_dir = namespace.model_dir
     _maybe_suffix = model_dir.rpartition('_')[2]
@@ -129,7 +129,7 @@ def _handle_model_change(rest, upsert_rest_arg, model):
     )
     upsert_rest_arg(
         arg='--model_param',
-        value='transfer = "{model}"'.format(model=model)
+        value='application = "{model}"'.format(model=model)
     )
 
 
