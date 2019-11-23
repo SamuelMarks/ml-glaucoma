@@ -88,6 +88,8 @@ class ConfigurableTrain(Configurable):
                    write_images, seed, disable_gpu,
                    delete_lt, **_kwargs):
 
+        print('ConfigurableTrain::model_fn:', model_fn, ';')
+
         if disable_gpu:
             environ['CUDA_VISIBLE_DEVICES'] = '-1'
 

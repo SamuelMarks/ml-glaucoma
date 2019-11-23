@@ -149,7 +149,7 @@ def train(problem, batch_size, epochs,
         sep=''
     )
 
-    result = model.fit(
+    fit_result = model.fit(
         train_ds,
         epochs=epochs,
         class_weight=class_weight,
@@ -193,6 +193,8 @@ def train(problem, batch_size, epochs,
 
         else:
             print('{} >= {}; so not removing h5 files'.format(best_runs[0][1], delete_lt))
+
+    return fit_result
 
 
 def evaluate(problem, batch_size, model_fn, optimizer, model_dir=None):
