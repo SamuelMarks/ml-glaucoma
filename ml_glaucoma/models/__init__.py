@@ -19,8 +19,6 @@ if environ['TF']:
     import efficientnet.tfkeras as efficient_net
     from keras_squeeze_excite_network import se_resnet
 
-    from ml_glaucoma.models.applications.tf_keras import applications_model
-    from ml_glaucoma.models.transfer.tf_keras import transfer_model
     from ml_glaucoma.utils import update_d
 
     valid_models = {
@@ -34,12 +32,6 @@ if environ['TF']:
     }
 
 elif environ['TORCH']:
-    from ml_glaucoma.models.applications.torch import applications_model
-    from ml_glaucoma.models.transfer.torch import transfer_model
-
     valid_models = frozenset()
 else:
-    from ml_glaucoma.models.applications import applications_model
-    from ml_glaucoma.models.transfer import transfer_model
-
     valid_models = frozenset()
