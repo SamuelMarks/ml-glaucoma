@@ -210,6 +210,10 @@ class ConfigurablePipeline(Configurable):
             else:
                 tensorboard_log_dir = '{}_again{}'.format(tensorboard_log_dir, suffix_s)
                 model_dir = '{}_again{}'.format(model_dir, suffix_s)
+
+            suffix, model_dir = ConfigurablePipeline._get_next_avail_dir(model_dir)
+            _, tensorboard_log_dir = ConfigurablePipeline._get_next_avail_dir(tensorboard_log_dir, suffix)
+
             # Replace with incremented dirs
             for arg in 'model_dir', 'tensorboard_log_dir':
                 upsert_rest_arg(arg=arg, value=locals()[arg])
@@ -228,3 +232,21 @@ class ConfigurablePipeline(Configurable):
             err = e
 
         return err, cli_resp
+
+    @staticmethod
+    def _get_next_avail_dir(directory, starting_suffix=None):  # type: (str, int) -> (int, str)
+        suffix = starting_suffix
+
+        if starting_suffix is not None:
+            suffix_s = '{:03d}'.format(starting_suffix)
+            directory = path.join(path.dirname(directory),
+                                  ''.join((path.basename(directory)[:len(suffix_s)], suffix_s)))
+
+        while path.isdir(directory) and len(listdir(directory)) > 0:
+            base = path.basename(directory)
+            suffix = int(''.join(takewhile(lambda s: s.isdigit(), base[::-1]))[::-1] or 0) + 1
+            suffix_s = '{:03d}'.format(suffix)
+            assert suffix < 999
+            directory = path.join(path.dirname(directory), ''.join((base[:len(suffix_s)], suffix_s)))
+
+        return suffix, directory
