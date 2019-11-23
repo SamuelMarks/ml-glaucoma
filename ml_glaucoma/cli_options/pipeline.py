@@ -125,7 +125,7 @@ class ConfigurablePipeline(Configurable):
                         _maybe_suffix = '{}{:03d}'.format(_maybe_suffix[:len('again')],
                                                           int(_maybe_suffix[len('again'):]) + 1)
 
-                    _join_with = lambda: '_'.join(filter(None, (namespace.dataset[0], model,
+                    _join_with = lambda: '_'.join(filter(None, (namespace.dataset[0].replace('refuge', 'gon'), model,
                                                                 optimizer, loss,
                                                                 'epochs', '{:03d}'.format(namespace.epochs),
                                                                 _maybe_suffix)))
