@@ -109,14 +109,14 @@ def _prepare_options(key, log, logfile, options, rest):
 def _handle_model_change(rest, upsert_rest_arg, model):
     namespace = ml_glaucoma.cli_options.parser.cli_handler(rest, return_namespace=True)
 
+    gin_file = path.join(gettempdir(), 'applications.gin')
     copyfile(src=path.join(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))),
                            'model_configs', 'applications.gin'),
-             dst=path.join(gettempdir(), 'applications.gin'))
+             dst=gin_file)
 
     upsert_rest_arg(
         arg='--model_file',
-        value=path.join(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))),
-                        'model_configs', 'applications.gin')
+        value=gin_file
     )
     model_dir = namespace.model_dir
     _maybe_suffix = model_dir.rpartition('_')[2]
