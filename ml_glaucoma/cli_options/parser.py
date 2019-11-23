@@ -18,14 +18,26 @@ def cli_handler(cmd=None, return_namespace=False):
     args, rest = parser.parse_known_args(cmd)
 
     if return_namespace:
+        cmd = commands[args.command]
+
+        kwargs = vars(args)
+        cmd.set_defaults(kwargs)
+        for attr in dir(args):
+            if not attr.startswith('_'):
+                setattr(args, attr, kwargs[attr])
+
         return args
 
     kwargs = dict(vars(args), rest=rest)
+
     command = kwargs.pop('command')
     if command is None:
         raise ReferenceError('You must specify a command. Append `--help` for details.')
 
-    return commands[command].build(**kwargs)
+    cmd = commands[command]
+    cmd.set_defaults(kwargs)
+
+    return cmd.build(**kwargs)
 
 
 def get_parser():

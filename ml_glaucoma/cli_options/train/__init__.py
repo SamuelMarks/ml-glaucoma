@@ -4,6 +4,7 @@ from yaml import load as yaml_load
 
 import ml_glaucoma.runners
 from ml_glaucoma.cli_options.base import Configurable
+from ml_glaucoma.utils import pp
 
 if environ['TF']:
     from ml_glaucoma.cli_options.train.tf_keras import *
@@ -57,7 +58,7 @@ class ConfigurableTrain(Configurable):
             '--summary_freq', type=int, default=10,
             help='batch frequency at which to save tensorboard summaries')
         parser.add_argument(
-            '-tb', '--tb_log_dir',
+            '-tb', '--tensorboard_log_dir',
             help='tensorboard_log_dir (defaults to model_dir)')
         parser.add_argument(
             '--write_images', action='store_true',
@@ -74,12 +75,19 @@ class ConfigurableTrain(Configurable):
             help='delete *.h5 files that are less than this threshold'
         )
 
+    def set_defaults(self, kwargs):
+        if kwargs['tensorboard_log_dir'] is None:
+            kwargs['tensorboard_log_dir'] = kwargs['model_dir']
+        elif kwargs['model_dir'] is None:
+            kwargs['model_dir'] = kwargs['tensorboard_log_dir']
+
     def build_self(self, problem, batch_size, epochs,
                    model_fn, optimizer, model_dir,
                    callbacks, checkpoint_freq, summary_freq,
-                   lr_schedule, tb_log_dir, class_weight,
+                   lr_schedule, tensorboard_log_dir, class_weight,
                    write_images, seed, disable_gpu,
                    delete_lt, **_kwargs):
+
         if disable_gpu:
             environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
@@ -124,7 +132,7 @@ class ConfigurableTrain(Configurable):
             checkpoint_freq=checkpoint_freq,
             summary_freq=summary_freq,
             lr_schedule=lr_schedule,
-            tensorboard_log_dir=tb_log_dir,
+            tensorboard_log_dir=tensorboard_log_dir,
             write_images=write_images,
             delete_lt=delete_lt
         )

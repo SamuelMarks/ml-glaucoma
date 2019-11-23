@@ -12,7 +12,7 @@ from yaml import safe_load as safe_yaml_load
 import ml_glaucoma.cli_options.parser
 from ml_glaucoma import get_logger
 from ml_glaucoma.cli_options.base import Configurable
-from ml_glaucoma.utils import update_d, pp
+from ml_glaucoma.utils import update_d
 
 logger = get_logger(modules[__name__].__name__.rpartition('.')[0])
 
@@ -117,14 +117,17 @@ class ConfigurablePipeline(Configurable):
                     _maybe_suffix = model_dir.rpartition('_')[2]
                     _maybe_suffix = _maybe_suffix if _maybe_suffix.startswith('again') else None
 
-                    _join_with = '_'.join(filter(None, (namespace.dataset[0], model,
-                                                        optimizer, loss,
-                                                        'epochs', namespace.epochs,
-                                                        _maybe_suffix)))
-                    model_dir = path.join(path.dirname(model_dir)
-                                          if path.isdir(model_dir) and len(listdir(model_dir)) > 0
-                                          else model_dir,
-                                          _join_with)
+                    if _maybe_suffix:
+                        _maybe_suffix = '{}{:03d}'.format(_maybe_suffix[:len('again')],
+                                                          int(_maybe_suffix[len('again'):]) + 1)
+
+                    _join_with = lambda: '_'.join(filter(None, (namespace.dataset[0], model,
+                                                                optimizer, loss,
+                                                                'epochs', '{:03d}'.format(namespace.epochs),
+                                                                _maybe_suffix)))
+
+                    model_dir = path.join(model_dir, _join_with())
+
                     upsert_rest_arg(
                         arg='--model_dir',
                         value=model_dir
@@ -179,18 +182,14 @@ class ConfigurablePipeline(Configurable):
 
         upsert_rest_arg = partial(ConfigurablePipeline._upsert_cli_arg, cli=rest)
 
-        try:
-            model_dir = rest[rest.index('--model_dir') + 1]
-        except ValueError:
-            model_dir = None
+        namespace = ml_glaucoma.cli_options.parser.cli_handler(rest, return_namespace=True)
+
+        model_dir = namespace.model_dir
 
         if model_dir is None:
             logger.warn('model_dir is None, so not incrementing it')
         else:
-            try:
-                tensorboard_log_dir = rest[rest.index('--tb_log_dir') + 1]
-            except ValueError:
-                tensorboard_log_dir = model_dir
+            tensorboard_log_dir = namespace.tensorboard_log_dir
 
             reversed_log_dir = model_dir[::-1]
             suffix = int(''.join(takewhile(lambda s: s.isdigit(), reversed_log_dir))[::-1] or 0)
@@ -200,16 +199,17 @@ class ConfigurablePipeline(Configurable):
                 suffix_s = '{:03d}'.format(suffix)
             run = suffix + 1
             print('------------------------\n'
-                  '|        RUN {:3d} |\n'
+                  '|        RUN {:3d}       |\n'
                   '------------------------'.format(run), sep='')
             run_s = '{:03d}'.format(suffix)
+            print('model_dir:'.ljust(20), model_dir)
+            print('tensorboard_log_dir:'.ljust(20), tensorboard_log_dir)
             if model_dir.endswith(suffix_s):
                 tensorboard_log_dir = ''.join((tensorboard_log_dir[:-len(suffix_s)], run_s))
                 model_dir = ''.join((model_dir[:-len(suffix_s)], run_s))
             else:
                 tensorboard_log_dir = '{}_again{}'.format(tensorboard_log_dir, suffix_s)
                 model_dir = '{}_again{}'.format(model_dir, suffix_s)
-            print('New model_dir:'.ljust(16), model_dir)
             # Replace with incremented dirs
             for arg in 'model_dir', 'tensorboard_log_dir':
                 upsert_rest_arg(arg=arg, value=locals()[arg])

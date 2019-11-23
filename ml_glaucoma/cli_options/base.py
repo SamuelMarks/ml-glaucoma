@@ -23,6 +23,10 @@ class Configurable(object):
         return self.build_self(**kwargs)
 
     @abstractmethod
+    def set_defaults(self, kwargs):
+        pass
+
+    @abstractmethod
     def fill_self(self, parser):
         raise NotImplementedError
 
