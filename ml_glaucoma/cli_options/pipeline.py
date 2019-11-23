@@ -130,7 +130,7 @@ class ConfigurablePipeline(Configurable):
                                                                 'epochs', '{:03d}'.format(namespace.epochs),
                                                                 _maybe_suffix)))
 
-                    model_dir = path.join(model_dir, _join_with())
+                    model_dir = path.join(path.dirname(model_dir), _join_with())
 
                     upsert_rest_arg(
                         arg='--model_dir',
