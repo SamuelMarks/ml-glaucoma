@@ -44,11 +44,15 @@ class ConfigurablePipeline(Configurable):
                  'e.g.: `optimizers` will iterate through the optimizer key first, '
                  'then the next key (alphanumerically sorted)'
         )
+        parser.add_argument(
+            '--threshold', default=1,
+            help='Number of loops to run through. Defaults to 1.'
+        )
 
     def build(self, **kwargs):
         return self.build_self(**kwargs)
 
-    def build_self(self, logfile, key, options, replacement_options, rest):
+    def build_self(self, logfile, key, options, replacement_options, threshold, rest):
         log = lambda obj: logfile.write(
             '{}\n'.format(dumps(update_d({'_dt': datetime.utcnow().isoformat().__str__()}, obj))))
 
@@ -140,28 +144,31 @@ class ConfigurablePipeline(Configurable):
                 else:
                     upsert_rest_arg(arg=k, value=value)
 
-        print('-------------------------------------------\n'
-              '|                {cmd}ing…                |\n'
-              '-------------------------------------------'.format(cmd=rest[0]), sep='')
+        actual_run = 0
+        while actual_run < threshold:
+            actual_run += 1
+            print('-------------------------------------------\n'
+                  '|                {cmd}ing…                |\n'
+                  '-------------------------------------------'.format(cmd=rest[0]), sep='')
 
-        if rest[0] != 'train':
-            raise NotImplementedError
+            if rest[0] != 'train':
+                raise NotImplementedError
 
-        err, cli_resp = self._handle_rest(key, next_key, rest, options)
-        if err is not None:
-            if environ.get('NO_EXCEPTIONS'):
-                print(err, file=stderr)
-            else:
-                raise err
-        print('cli_resp:', cli_resp, ';')
+            err, cli_resp = self._handle_rest(key, next_key, rest, options)
+            if err is not None:
+                if environ.get('NO_EXCEPTIONS'):
+                    print(err, file=stderr)
+                else:
+                    raise err
+            print('cli_resp:', cli_resp, ';')
 
-        print('-------------------------------------------\n'
-              '|            finished {cmd}ing.           |\n'
-              '-------------------------------------------'.format(cmd=rest[0]), sep='')
+            print('-------------------------------------------\n'
+                  '|            finished {cmd}ing.           |\n'
+                  '-------------------------------------------'.format(cmd=rest[0]), sep='')
 
-        options[key][0][next_key] += 0.5
-        del options['_next_key']
-        log(options)
+            options[key][0][next_key] += 0.5
+            del options['_next_key']
+            log(options)
 
         # TODO: Checkpointing: Check if option was last one tried—by checking if 0.5—and if so, skip to next one
 
