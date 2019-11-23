@@ -10,7 +10,6 @@ import ml_glaucoma.models.utils.tf_keras
 def applications_model(inputs, output_spec, application='ResNet50', weights='imagenet',
                        pooling='avg', final_activation='default',
                        kwargs=None):
-    raise AssertionError('applications_model')
     if kwargs is None:
         kwargs = {}
     features, = getattr(tf.keras.applications, application)(
