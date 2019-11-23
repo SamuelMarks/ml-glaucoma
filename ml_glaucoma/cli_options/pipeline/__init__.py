@@ -34,7 +34,7 @@ class ConfigurablePipeline(Configurable):
                  'then the next key (alphanumerically sorted)'
         )
         parser.add_argument(
-            '--threshold', default=1,
+            '--threshold', default=1, type=int,
             help='Number of loops to run through. Defaults to 1.'
         )
 
