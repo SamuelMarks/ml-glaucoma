@@ -3,7 +3,9 @@ from functools import partial
 from itertools import takewhile
 from json import dumps, loads
 from os import environ, path, listdir
+from shutil import copyfile
 from sys import stderr, modules
+from tempfile import gettempdir
 
 from six import iteritems
 
@@ -21,7 +23,7 @@ def pipeline_runner(logfile, key, options, replacement_options, threshold, rest)
     log({'options': options})
     next_key = _prepare_options(key, log, logfile, options, rest)
 
-    _execute_command(key, log, next_key, options, rest, threshold)
+    return _execute_command(key, log, next_key, options, rest, threshold)
 
     # TODO: Checkpointing: Check if option was last one tried—by checking if 0.5—and if so, skip to next one
 
@@ -106,6 +108,11 @@ def _prepare_options(key, log, logfile, options, rest):
 
 def _handle_model_change(rest, upsert_rest_arg, model):
     namespace = ml_glaucoma.cli_options.parser.cli_handler(rest, return_namespace=True)
+
+    copyfile(src=path.join(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))),
+                           'model_configs', 'applications.gin'),
+             dst=path.join(gettempdir(), 'applications.gin'))
+
     upsert_rest_arg(
         arg='--model_file',
         value=path.join(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))),
