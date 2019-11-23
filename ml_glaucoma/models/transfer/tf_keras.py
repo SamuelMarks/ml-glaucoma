@@ -11,8 +11,12 @@ from ml_glaucoma.models import valid_models
 def transfer_model(inputs, output_spec, transfer='ResNet50', weights='imagenet',
                    pooling='avg', final_activation='default',
                    kwargs=None):
+    raise AssertionError('transfer_model')
     if kwargs is None:
         kwargs = {}
+
+    print('transfer_model::transfer:', transfer)
+    assert transfer != 'ResNet50'
     features, = valid_models[transfer](
         include_top=False, weights=weights, pooling=pooling,
         input_tensor=inputs, **kwargs).outputs
