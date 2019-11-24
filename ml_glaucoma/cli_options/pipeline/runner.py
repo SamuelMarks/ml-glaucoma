@@ -21,39 +21,41 @@ def pipeline_runner(logfile, key, options, replacement_options, threshold, rest)
         '{}\n'.format(dumps(update_d({'_dt': datetime.utcnow().isoformat().__str__()}, obj))))
 
     log({'options': options})
-    next_key = _prepare_options(key, log, logfile, options, rest)
+    actual_run, final_result = 0, None
+    while actual_run < threshold:
+        actual_run += 1
+        next_key = _prepare_options(key, log, logfile, options, rest)
 
-    return _execute_command(key, log, next_key, options, rest, threshold)
+        final_result = _execute_command(key, log, next_key, options, rest)
+
+    return final_result
 
     # TODO: Checkpointing: Check if option was last one tried—by checking if 0.5—and if so, skip to next one
 
 
-def _execute_command(key, log, next_key, options, rest, threshold):
-    actual_run = 0
-    while actual_run < threshold:
-        actual_run += 1
-        print('-------------------------------------------\n'
-              '|                {cmd}ing…                |\n'
-              '-------------------------------------------'.format(cmd=rest[0]), sep='')
+def _execute_command(key, log, next_key, options, rest):
+    print('-------------------------------------------\n'
+          '|                {cmd}ing…                |\n'
+          '-------------------------------------------'.format(cmd=rest[0]), sep='')
 
-        if rest[0] != 'train':
-            raise NotImplementedError
+    if rest[0] != 'train':
+        raise NotImplementedError
 
-        err, cli_resp = _handle_rest(key, next_key, rest, options)
-        if err is not None:
-            if environ.get('NO_EXCEPTIONS'):
-                print(err, file=stderr)
-            else:
-                raise err
-        print('cli_resp:', cli_resp, ';')
+    err, cli_resp = _handle_rest(key, next_key, rest, options)
+    if err is not None:
+        if environ.get('NO_EXCEPTIONS'):
+            print(err, file=stderr)
+        else:
+            raise err
+    print('cli_resp:', cli_resp, ';')
 
-        print('-------------------------------------------\n'
-              '|            finished {cmd}ing.           |\n'
-              '-------------------------------------------'.format(cmd=rest[0]), sep='')
+    print('-------------------------------------------\n'
+          '|            finished {cmd}ing.           |\n'
+          '-------------------------------------------'.format(cmd=rest[0]), sep='')
 
-        options[key][0][next_key] += 0.5
-        del options['_next_key']
-        log(options)
+    options[key][0][next_key] += 0.5
+    del options['_next_key']
+    log({'options': options})
 
 
 def _prepare_options(key, log, logfile, options, rest):
@@ -109,7 +111,7 @@ def _prepare_options(key, log, logfile, options, rest):
 def _handle_model_change(rest, upsert_rest_arg, model):
     namespace = ml_glaucoma.cli_options.parser.cli_handler(rest, return_namespace=True)
 
-    gin_file = path.join(mkdtemp(prefix='gin', dir=gettempdir()), 'applications.gin')
+    gin_file = path.join(mkdtemp(prefix='gin_', dir=gettempdir()), 'applications.gin')
     copyfile(src=path.join(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))),
                            'model_configs', 'applications.gin'),
              dst=gin_file)
