@@ -2,7 +2,9 @@
 
 
 from abc import ABC
-from os import environ
+from os import environ, path
+from shutil import copyfile
+from tempfile import mkdtemp, gettempdir
 
 from yaml import load as yaml_load
 
@@ -69,7 +71,12 @@ class ConfigurableModelFn(Configurable):
     def build_self(self, model_file, model_param, **kwargs):
         import gin
 
-        gin.parse_config_files_and_bindings(model_file, model_param)
+        tmp_gin_file = path.join(mkdtemp(prefix='gin_', dir=gettempdir()), path.basename(model_file))
+        copyfile(src=model_file, dst=tmp_gin_file)
+
+        print('Copied {} to {}'.format(model_file, tmp_gin_file))
+
+        gin.parse_config_files_and_bindings(tmp_gin_file, model_param)
         return gin.query_parameter('%model_fn').configurable.fn_or_cls
 
 
