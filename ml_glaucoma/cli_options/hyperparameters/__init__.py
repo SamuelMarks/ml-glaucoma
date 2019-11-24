@@ -71,12 +71,13 @@ class ConfigurableModelFn(Configurable):
     def build_self(self, model_file, model_param, **kwargs):
         import gin
 
-        tmp_gin_file = path.join(mkdtemp(prefix='gin_', dir=gettempdir()), path.basename(model_file))
-        copyfile(src=model_file, dst=tmp_gin_file)
+        assert len(model_file) == 1, 'More than one model file is not supported (see next 2 lines below)'
+        tmp_gin_file = path.join(mkdtemp(prefix='gin_', dir=gettempdir()), path.basename(model_file[0]))
+        copyfile(src=model_file[0], dst=tmp_gin_file)
 
-        print('Copied {} to {}'.format(model_file, tmp_gin_file))
+        print('Copied {} to {}'.format(model_file[0], tmp_gin_file))
 
-        gin.parse_config_files_and_bindings(tmp_gin_file, model_param)
+        gin.parse_config_files_and_bindings([tmp_gin_file], model_param)
         return gin.query_parameter('%model_fn').configurable.fn_or_cls
 
 
