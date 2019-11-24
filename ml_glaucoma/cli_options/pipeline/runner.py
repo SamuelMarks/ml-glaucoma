@@ -5,7 +5,7 @@ from json import dumps, loads
 from os import environ, path, listdir
 from shutil import copyfile
 from sys import stderr, modules
-from tempfile import gettempdir
+from tempfile import gettempdir, mkdtemp
 
 from six import iteritems
 
@@ -109,7 +109,7 @@ def _prepare_options(key, log, logfile, options, rest):
 def _handle_model_change(rest, upsert_rest_arg, model):
     namespace = ml_glaucoma.cli_options.parser.cli_handler(rest, return_namespace=True)
 
-    gin_file = path.join(gettempdir(), 'applications.gin')
+    gin_file = path.join(mkdtemp(prefix='gin', dir=gettempdir()), 'applications.gin')
     copyfile(src=path.join(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))),
                            'model_configs', 'applications.gin'),
              dst=gin_file)
