@@ -48,7 +48,7 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
                 for v in e.summary.value:
                     last_result = {'simple_value': v.simple_value,
                                    'tag': v.tag, 'dirn': dirn}
-                    print('{simple_value:04d}\t{tag:>10}\t{dirn}'.format(**last_result))
+                    print('{simple_value:04f}\t{tag:>10}\t{dirn}'.format(**last_result))
             return last_result
         else:
             sorted_values = sorted(enumerate(v.simple_value
