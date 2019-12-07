@@ -111,7 +111,7 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                     dtype=tf.float32, shape=(2,)),
                 "index": tfds.features.Tensor(dtype=tf.int64, shape=()),
             }),
-            urls=[self.URL],
+            homepage=[self.URL],
             citation="TODO",
             supervised_keys=("fundus", label_key)
         )
