@@ -41,14 +41,22 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
             # print("{} in {} is not corrupted".format(fname, directory), file=stderr)
         # print("Succeed, tf records found for {} images".format(total_images), file=stderr)
 
-        sorted_values = sorted(enumerate(v.simple_value
-                                         for e in tf.compat.v1.train.summary_iterator(fname)
-                                         for v in e.summary.value
-                                         if v.tag == tag), key=itemgetter(1), reverse=True)
+        dirn = path.dirname(directory).rpartition(path.sep)[2]
 
-        if len(sorted_values):
-            dirn = path.dirname(directory)
-            print('\n'.join('{dirn}\tmodel-{k:04d}.h5\t{v}'.format(dirn=dirn.rpartition(path.sep)[2].ljust(34),
+        if tag == 'all':
+            for e in tf.compat.v1.train.summary_iterator(fname):
+                for v in e.summary.value:
+                    last_result = {'simple_value': v.simple_value,
+                                   'tag': v.tag, 'dirn': dirn}
+                    print('{simple_value:04d}\t{tag:>10}\t{dirn}'.format(**last_result))
+            return last_result
+        else:
+            sorted_values = sorted(enumerate(v.simple_value
+                                             for e in tf.compat.v1.train.summary_iterator(fname)
+                                             for v in e.summary.value
+                                             if v.tag == tag), key=itemgetter(1), reverse=True)
+
+            print('\n'.join('{dirn}\tmodel-{k:04d}.h5\t{v}'.format(dirn=dirn.ljust(34),
                                                                    k=k, v=v)
                             for k, v in sorted_values[:top]))
             last_result = fname, sorted_values[:top]
