@@ -44,11 +44,17 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
         dirn = path.dirname(directory).rpartition(path.sep)[2]
 
         if tag == 'all':
+            i = 0
             for e in tf.compat.v1.train.summary_iterator(fname):
                 for v in e.summary.value:
-                    last_result = {'simple_value': v.simple_value,
-                                   'tag': v.tag, 'dirn': dirn}
-                    print('{simple_value:04f}\t{tag:>20}\t{dirn}'.format(**last_result))
+                    i += 1
+                    last_result = {
+                        'i': i,
+                        'simple_value': v.simple_value,
+                        'tag': v.tag,
+                        'dirn': dirn
+                    }
+                    print('{i:04d}\t{simple_value:09f}\t{tag:>20}\t{dirn}'.format(**last_result))
             return last_result
         else:
             sorted_values = sorted(enumerate(v.simple_value
