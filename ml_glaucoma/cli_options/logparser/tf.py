@@ -45,11 +45,10 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
         dirn = path.dirname(directory).rpartition(path.sep)[2]
 
         if tag == 'all':
-            c = Counter()
             for e in tf.compat.v1.train.summary_iterator(fname):
                 for v in e.summary.value:
                     last_result = {
-                        'idx': c[v.tag] + 1,
+                        'idx': e.step,
                         'simple_value': v.simple_value,
                         'tag': v.tag,
                         'dirn': dirn
