@@ -27,7 +27,7 @@ def dataset_spec_to_input_spec(dataset, has_batch_dim=False):
         def f(shape, dtype):
             return InputSpec(shape=shape, dtype=dtype)
     return tf.nest.map_structure(
-        f, tf.compat.v1.data.get_output_shapes(dataset), dataset.output_types)
+        f, tf.compat.v1.data.get_output_shapes(dataset), tf.compat.v1.data.get_output_types(dataset))
 
 
 class BaseProblem(Problem):
