@@ -46,7 +46,7 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
                 "label": tfds.features.Tensor(dtype=tf.bool, shape=()),
                 "filename": tfds.features.Text(),
             }),
-            homepage=["https://github.com/SamuelMarks/ml-glaucoma"],
+            homepage="https://github.com/SamuelMarks/ml-glaucoma",
             citation="TODO",
             supervised_keys=("fundus", "label")
         )
