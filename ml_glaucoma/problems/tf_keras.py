@@ -387,4 +387,4 @@ def preprocess_example(image, labels,
     return image, labels
 
 
-del tfds, DownloadConfig, get_logger, Problem
+del DownloadConfig, get_logger, Problem
