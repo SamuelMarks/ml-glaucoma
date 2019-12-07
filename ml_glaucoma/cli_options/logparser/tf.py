@@ -1,3 +1,4 @@
+from collections import Counter
 from io import IOBase
 from operator import itemgetter
 from os import path, listdir
@@ -44,10 +45,11 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
         dirn = path.dirname(directory).rpartition(path.sep)[2]
 
         if tag == 'all':
-            for idx, e in enumerate(tf.compat.v1.train.summary_iterator(fname)):
+            c = Counter()
+            for e in tf.compat.v1.train.summary_iterator(fname):
                 for v in e.summary.value:
                     last_result = {
-                        'idx': idx + 1,
+                        'idx': c[v.tag] + 1,
                         'simple_value': v.simple_value,
                         'tag': v.tag,
                         'dirn': dirn
