@@ -32,6 +32,6 @@ if environ['TF']:
     }
 
 elif environ['TORCH']:
-    valid_models = frozenset()
+    valid_models = {}
 else:
-    valid_models = frozenset()
+    valid_models = {}

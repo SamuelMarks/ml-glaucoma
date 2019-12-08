@@ -91,7 +91,7 @@ def _prepare_options(key, log, logfile, options, rest):
                                                                  key=lambda a: a[0][1])),
                                        filter(lambda kv: not kv[0].startswith('_'), iteritems(options_dict)))}
 
-    options.update(get_sorted_options(options))
+    options = get_sorted_options(options)
     next_key = next(iter(options[key][0].keys()))
     options[key][0][next_key] += 0.5
     options['_next_key'] = next_key

@@ -14,8 +14,8 @@ def transfer_model(inputs, output_spec, transfer='ResNet50', weights='imagenet',
     if kwargs is None:
         kwargs = {}
 
-    print('transfer_model::transfer:', transfer)
-    assert transfer != 'ResNet50'
+    assert transfer in valid_models, '{transfer} not found in {valid_models}'.format(transfer=transfer,
+                                                                                     valid_models=valid_models)
     features, = valid_models[transfer](
         include_top=False, weights=weights, pooling=pooling,
         input_tensor=inputs, **kwargs).outputs
