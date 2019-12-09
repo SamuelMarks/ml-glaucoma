@@ -1,4 +1,10 @@
+import traceback
 from collections import namedtuple
+from functools import reduce
+
+import numpy as np
+import pandas as pd
+from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
 from ml_glaucoma.cli_options.hyperparameters import SUPPORTED_LOSSES, SUPPORTED_OPTIMIZERS
 from ml_glaucoma.models import valid_models
@@ -180,3 +186,94 @@ def parse_line(line):
 
 ParsedLine = namedtuple('ParsedLine', ('dataset', 'epoch', 'value', 'epochs', 'transfer',
                                        'loss', 'optimizer', 'optimizer_params', 'base'))
+
+
+# Extraction function from https://gist.github.com/ptschandl/ef67bbaa93ec67aba2cab0a7af47700b
+def tflog2pandas(path: str) -> pd.DataFrame:
+    """convert single tensorflow log file to pandas DataFrame
+
+    Parameters
+    ----------
+    path : str
+        path to tensorflow log file
+
+    Returns
+    -------
+    pd.DataFrame
+        converted dataframe
+    """
+    DEFAULT_SIZE_GUIDANCE = {
+        "compressedHistograms": 1,
+        "images": 14072,
+        "scalars": 0,  # 0 means load all
+        "histograms": 1,
+    }
+    runlog_data = pd.DataFrame({"metric": [], "value": [], "step": []})
+    try:
+        event_acc = EventAccumulator(path, DEFAULT_SIZE_GUIDANCE)
+        event_acc.Reload()
+        tags = event_acc.Tags()["scalars"]
+        for tag in tags:
+            event_list = event_acc.Scalars(tag)
+            values = list(map(lambda x: x.value, event_list))
+            step = list(map(lambda x: x.step, event_list))
+            runlog_data = pd.concat([runlog_data,
+                                     pd.DataFrame({"metric": [tag] * len(step), "value": values, "step": step})])
+    # Dirty catch of DataLossError
+    except:
+        print("Event file possibly corrupt: {}".format(path))
+        traceback.print_exc()
+    return runlog_data
+
+
+# Function from https://gist.github.com/ptschandl/ef67bbaa93ec67aba2cab0a7af47700b
+def many_logs2pandas(event_paths):
+    all_logs = pd.DataFrame()
+    for path in event_paths:
+        log = tflog2pandas(path)
+        if log is not None:
+            if all_logs.shape[0] == 0:
+                all_logs = log
+            else:
+                all_logs = all_logs.append(log, ignore_index=True)
+    return all_logs
+
+
+def get_metrics(logs, prefix='epoch_val_', tag='auc', total_epochs=250,
+                metrics=('loss', 'auc', 'tp50', 'fp50', 'tn50', 'fn50', 'f150')):
+    def get_metrics_from_one_logfile(log):
+        df = many_logs2pandas((log,))
+        df.rename_axis('epoch', inplace=True)
+        df['epoch'] = df.index
+        df.reset_index(drop=True, inplace=True)
+
+        # metric_with_epoch_greater_than_threshold = df[df['epoch'] > total_epochs]['metric'].unique()
+        df = df[df['epoch'] < total_epochs + 1]
+
+        max_metrics = df.loc[df.groupby('metric')['value'].idxmax()]
+
+        # epochs = max_metrics['epoch'].unique()
+
+        best_epoch = max_metrics.loc[
+            max_metrics['metric'] == '{}{}'.format(prefix, tag)]['epoch'].iloc[0]
+        metrics_of_best_epoch = df[df['epoch'] == best_epoch]
+
+        current_metrics = {
+            attr: metrics_of_best_epoch[
+                metrics_of_best_epoch['metric'] == '{}{}'.format(prefix, attr)]['value'].iloc[0]
+            for attr in metrics
+        }
+
+        if len(frozenset(('tp50', 'fp50', 'tn50', 'fn50')) - frozenset(metrics)) == 0:
+            loss, auc, tp, fp, tn, fn, f1 = (
+                current_metrics[attr]
+                for attr in ('loss', 'auc', 'tp50', 'fp50', 'tn50', 'fn50', 'f150')
+            )
+
+            current_metrics['acc'] = np.divide(np.add(tp, tn), np.sum((tp, tn, fp, fn)))
+            current_metrics['sensitivity'] = np.divide(tp, np.add(tp, fn))
+            current_metrics['specificity'] = np.divide(tn, np.add(tn, fp))
+
+        return log, namedtuple('Metrics', sorted(current_metrics.keys()))(**current_metrics)
+
+    return reduce(lambda p, c: update_d(p, {c[0]: c[1]}), map(get_metrics_from_one_logfile, logs), {})
