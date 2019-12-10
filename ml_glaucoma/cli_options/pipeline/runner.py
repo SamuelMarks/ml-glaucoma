@@ -28,6 +28,7 @@ def pipeline_runner(logfile, key, options, replacement_options, threshold, dry_r
 
         final_result = _execute_command(key, log, next_key, options, dry_run, rest)
 
+    logfile.close()
     return final_result
 
     # TODO: Checkpointing: Check if option was last one tried—by checking if 0.5—and if so, skip to next one

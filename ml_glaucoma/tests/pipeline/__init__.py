@@ -66,12 +66,14 @@ class TestPipeline(TestCase):
         err.seek(0)
         out.seek(0)
         all_options = tuple(
-            map(lambda line: (lambda l: loads(l))(line[len('rest:'):-1].lstrip()),
-                filter(lambda line: line.startswith('rest:     ['),
-                       out.read().split('\n'))
+            map(loads,
+                map(lambda line: line[len('rest:'):-1].lstrip(),
+                    filter(lambda line: line.startswith('rest:     ['),
+                           out.read().split('\n'))
+                    )
                 )
         )
-        # self.assertEqual(err.read(), '')
+        self.assertEqual(err.read(), '')
         self.assertEqual(len(all_options), threshold)
 
 
