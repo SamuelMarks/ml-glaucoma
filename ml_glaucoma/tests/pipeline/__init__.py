@@ -66,10 +66,12 @@ class TestPipeline(TestCase):
         err.seek(0)
         out.seek(0)
         all_options = tuple(
-            map(loads,
-                map(lambda line: line[len('rest:'):-1].lstrip(),
-                    filter(lambda line: line.startswith('rest:     ['),
-                           out.read().split('\n'))
+            map(lambda options: cli_handler(cmd=options, return_namespace=True),
+                map(loads,
+                    map(lambda line: line[len('rest:'):-1].lstrip(),
+                        filter(lambda line: line.startswith('rest:     ['),
+                               out.read().split('\n'))
+                        )
                     )
                 )
         )
