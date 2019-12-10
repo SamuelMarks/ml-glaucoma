@@ -37,12 +37,16 @@ class ConfigurablePipeline(Configurable):
             '--threshold', default=1, type=int,
             help='Number of loops to run through. Defaults to 1.'
         )
+        parser.add_argument(
+            '--dry-run', default=False, action='store_true',
+            help='Dry run doesn\'t actually run the subcommand, but prints what it would pass to it'
+        )
 
     def build(self, **kwargs):
         return self.build_self(**kwargs)
 
-    def build_self(self, logfile, key, options, replacement_options, threshold, rest):
-        return pipeline_runner(logfile, key, options, replacement_options, threshold, rest)
+    def build_self(self, logfile, key, options, replacement_options, threshold, dry_run, rest):
+        return pipeline_runner(logfile, key, options, replacement_options, threshold, dry_run, rest)
 
     def set_defaults(self, kwargs):
         pass

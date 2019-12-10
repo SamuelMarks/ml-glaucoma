@@ -16,7 +16,7 @@ from ml_glaucoma.utils import update_d
 logger = get_logger(modules[__name__].__name__.rpartition('.')[0])
 
 
-def pipeline_runner(logfile, key, options, replacement_options, threshold, rest):
+def pipeline_runner(logfile, key, options, replacement_options, threshold, dry_run, rest):
     log = lambda obj: logfile.write(
         '{}\n'.format(dumps(update_d({'_dt': datetime.utcnow().isoformat().__str__()}, obj))))
 
@@ -26,14 +26,14 @@ def pipeline_runner(logfile, key, options, replacement_options, threshold, rest)
         actual_run += 1
         next_key = _prepare_options(key, log, logfile, options, rest)
 
-        final_result = _execute_command(key, log, next_key, options, rest)
+        final_result = _execute_command(key, log, next_key, options, dry_run, rest)
 
     return final_result
 
     # TODO: Checkpointing: Check if option was last one tried—by checking if 0.5—and if so, skip to next one
 
 
-def _execute_command(key, log, next_key, options, rest):
+def _execute_command(key, log, next_key, options, dry_run, rest):
     print('-------------------------------------------\n'
           '|                {cmd}ing…                |\n'
           '-------------------------------------------'.format(cmd=rest[0]), sep='')
@@ -41,20 +41,33 @@ def _execute_command(key, log, next_key, options, rest):
     if rest[0] != 'train':
         raise NotImplementedError
 
-    err, cli_resp = _handle_rest(key, next_key, rest, options)
-    if err is not None:
-        if environ.get('NO_EXCEPTIONS'):
-            print(err, file=stderr)
-        else:
-            raise err
-    print('cli_resp:', cli_resp, ';')
+    if dry_run:
+        just = 10
+        print('key:'.ljust(just), key, ';\n',
+              'log:'.ljust(just), log, ';\n',
+              'next_key:'.ljust(just), next_key, ';\n',
+              'options:'.ljust(just), dumps(options), ';\n',
+              'dry_run:'.ljust(just), dry_run, ';\n',
+              'rest:'.ljust(just), dumps(rest), ';', sep='')
+    else:
+        err, cli_resp = _handle_rest(key, next_key, rest, options)
+        if err is not None:
+            if environ.get('NO_EXCEPTIONS'):
+                print(err, file=stderr)
+            else:
+                raise err
+        print('cli_resp:', cli_resp, ';')
 
     print('-------------------------------------------\n'
           '|            finished {cmd}ing.           |\n'
           '-------------------------------------------'.format(cmd=rest[0]), sep='')
 
-    options[key][0][next_key] += 0.5
-    del options['_next_key']
+    if next_key in options[key][0]:
+        options[key][0][next_key] += 0.5
+    else:
+        options[key][0][next_key] = 0
+    if '_next_key' in options:
+        del options['_next_key']
     log({'options': options})
 
 
