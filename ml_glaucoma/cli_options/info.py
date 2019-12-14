@@ -16,7 +16,7 @@ class ConfigurableInfo(Configurable):
     def fill_self(self, parser):
         pass
 
-    def build_self(self):
+    def build_self(self, rest):
         info = {k: tuple(sorted(iterkeys(v))) for k, v in iteritems({
             'models': valid_models,
             'losses': valid_losses,
