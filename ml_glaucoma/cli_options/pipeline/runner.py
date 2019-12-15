@@ -16,6 +16,7 @@ from ml_glaucoma.cli_options.logparser.utils import get_metrics, parse_line
 import ml_glaucoma.cli_options.parser
 from ml_glaucoma.cli_options.hyperparameters import SUPPORTED_LOSSES, SUPPORTED_OPTIMIZERS
 from ml_glaucoma.models import valid_models
+from ml_glaucoma.cli_options.logparser.utils import ParsedLine
 
 logger = get_logger(modules[__name__].__name__.rpartition('.')[0])
 
@@ -66,15 +67,17 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
             break
         maybe_options_space = None
 
-    received_space = ParsedLine(dataset=rest_namespace.dataset,
-               epoch=0,
-               value='value',
-               epochs=250,
-               transfer=rest_namespace.model_params[:rest_namespace.model_params.rpartition(' ')][1:-1],
-               loss=rest_namespace.loss,
-               optimizer=rest_namespace.optimizer,
-               optimizer_params=rest_namespace.optimizer,
-               base='transfer')
+    # generated_space = [ParsedLine(dataset=rest_namespace.dataset,
+    #            epoch=0,
+    #            value='value',
+    #            epochs=250,
+    #            # transfer=rest_namespace.model_param[:rest_namespace.model_param.rpartition(' ')][1:-1],
+    #            transfer="DenseNet169",
+    #            loss=rest_namespace.loss,
+    #            optimizer=rest_namespace.optimizer,
+    #            optimizer_params=rest_namespace.optimizer,
+    #            base='transfer')]
+    generated_space = []
     if maybe_options_space is None:
         # First go!
         # Generate the entire options_space
@@ -83,11 +86,12 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
             for m in valid_models:
                 for l in SUPPORTED_LOSSES:
                     for o in SUPPORTED_OPTIMIZERS:
-                        received_space.append(
+                        generated_space.append(
                             ParsedLine(dataset=rest_namespace.dataset,
                                        epoch=0,
                                        value='value',
                                        epochs=250,
+                                       # transfer=rest_namespace.model_param[:rest_namespace.model_param.rpartition(' ')][1:-1],
                                        transfer=m,
                                        loss=l,
                                        optimizer=o,
@@ -98,9 +102,7 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
         options_space = {
             'type': 'options_space',
             'last_idx': 0,
-            'space': [
-                received_space
-            ]
+            'space': generated_space
         }
     else:
 
@@ -137,14 +139,14 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
         # prev_options = parse_line(rest_namespace.tensorboard_log_dir)
 
     log(options_space)
-    return options_space['space']['last_idx']
+    return options_space['space'][options_space['last_idx']]
 
 def _new_modify_options(parsed_line, rest):
     if parsed_line is None:
         return
     upsert_rest_arg = partial(_upsert_cli_arg, cli=rest)
     for k in parsed_line._fields:
-        upsert_rest_arg(arg=k, value=parsed_line[k])
+        upsert_rest_arg(arg=k, value=getattr(parsed_line, k))
 
 
 def _execute_command(key, log, next_key, options, dry_run, rest):
