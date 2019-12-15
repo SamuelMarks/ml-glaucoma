@@ -66,6 +66,7 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
         if isinstance(maybe_options_space, dict) and 'type' in maybe_options_space and maybe_options_space['type'] == 'options_space':
             break
         maybe_options_space = None
+        idx -= 1
 
     # generated_space = [ParsedLine(dataset=rest_namespace.dataset,
     #            epoch=0,
@@ -108,33 +109,10 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
 
         # Or if the `maybe_options_space` is not None, then it might look like:
         options_space = maybe_options_space
-        options_space['space'] = map(ParsedLine, options_space['space'])
+        print(options_space['space'])
+        # options_space['space'] = tuple(map(ParsedLine, options_space['space']))
+        options_space['space'] = tuple(map(lambda o: ParsedLine(**o._fields, options_space['space']))
         options_space['last_idx'] = options_space['last_idx'] + 1 % len(options_space['space'])
-        '''options_space = {
-            'type': 'options_space',
-            'last_idx': 2,
-            'space': [
-                ParsedLine(dataset='refuge',
-                           epoch=64,
-                           value='value',
-                           epochs=250,
-                           transfer='Resnet50',
-                           loss='BinaryCrossentropy',
-                           optimizer='Adam',
-                           optimizer_params={'lr': 1e-3},
-                           base='transfer'),
-                ParsedLine(dataset='refuge',
-                           epoch=64,
-                           value='value',
-                           epochs=250,
-                           transfer='MobileNet',
-                           loss='CategoricalCrossentropy',
-                           optimizer='Nestrov',
-                           optimizer_params={'lr': 1e-5},
-                           base='transfer')
-            ]
-        }
-        '''
         # prev_metrics = get_metrics((path.join(rest_namespace.tensorboard_log_dir, 'validation'),), prefix='epoch_')
         # prev_options = parse_line(rest_namespace.tensorboard_log_dir)
 
