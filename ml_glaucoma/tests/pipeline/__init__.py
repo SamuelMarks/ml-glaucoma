@@ -9,6 +9,7 @@ from pkg_resources import resource_filename
 from six import StringIO
 
 from ml_glaucoma.cli_options.parser import cli_handler
+from ml_glaucoma.utils import pp
 
 
 @contextmanager
@@ -43,7 +44,7 @@ class TestPipeline(TestCase):
                 '--key', 'models',
                 '--threshold', '{}'.format(threshold),
                 '--logfile', self.logfile,
-                '--dry-run',
+                # '--dry-run',
 
                 'train',
                 '-ds', 'refuge',
@@ -77,6 +78,7 @@ class TestPipeline(TestCase):
         )
         self.assertEqual(err.read(), '')
         self.assertEqual(len(all_options), threshold)
+        pp(all_options)
 
 
 if __name__ == '__main__':

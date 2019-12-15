@@ -1,5 +1,6 @@
 py
 generated_types.py
+.DS_Store
 
 ### PyCharm ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm
