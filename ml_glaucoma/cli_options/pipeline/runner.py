@@ -12,6 +12,10 @@ from six import iteritems
 import ml_glaucoma.cli_options.parser
 from ml_glaucoma import get_logger
 from ml_glaucoma.utils import update_d
+from ml_glaucoma.cli_options.logparser.utils import get_metrics, parse_line
+import ml_glaucoma.cli_options.parser
+from ml_glaucoma.cli_options.hyperparameters import SUPPORTED_LOSSES, SUPPORTED_OPTIMIZERS
+from ml_glaucoma.models import valid_models
 
 logger = get_logger(modules[__name__].__name__.rpartition('.')[0])
 
@@ -24,14 +28,123 @@ def pipeline_runner(logfile, key, options, replacement_options, threshold, dry_r
     actual_run, final_result = 0, None
     while actual_run < threshold:
         actual_run += 1
-        next_key = _prepare_options(key, log, logfile, options, rest)
+        next_options = _new_prepare_options(log, logfile, options, rest)
+        _new_modify_options(next_options, rest)
 
-        final_result = _execute_command(key, log, next_key, options, dry_run, rest)
+        final_result = _execute_command(key, log, None, options, dry_run, rest)
 
     logfile.close()
     return final_result
 
     # TODO: Checkpointing: Check if option was last one tried—by checking if 0.5—and if so, skip to next one
+
+def _new_prepare_options(log, logfile, options, rest, try_all=True):
+    '''
+        This is run for every experiment
+        From rest, we can use get_metrics to open 'tensorboard_log_dir' to get the result of all the previous experiments
+            (change the prefix to 'epoch_') (using the validation subdirectory)
+            if path is empty just return
+        Change what is returned and
+        Build some data structure to determine next best choice
+        Select set of options to run for next experiment
+        Call upsert_rest_arg() to set parameters for the next experiment
+    '''
+    rest_namespace = ml_glaucoma.cli_options.parser.cli_handler(cmd=rest, return_namespace=True)
+    # if not path.isdir(rest_namespace.tensorboard_log_dir) or len(listdir(rest_namespace.tensorboard_log_dir)) == 0:
+    #     return  # first run!
+
+    print('rest_namespace.tensorboard_log_dir:', rest_namespace.tensorboard_log_dir, ';')
+
+    with open(logfile.name, 'rt') as f:
+        prev_logfile_lines = f.readlines()
+
+    idx = len(prev_logfile_lines) -1
+    maybe_options_space = None
+    while idx != 0:
+        maybe_options_space = loads(prev_logfile_lines[idx])
+        if isinstance(maybe_options_space, dict) and 'type' in maybe_options_space and maybe_options_space['type'] == 'options_space':
+            break
+        maybe_options_space = None
+
+    received_space = ParsedLine(dataset=rest_namespace.dataset,
+               epoch=0,
+               value='value',
+               epochs=250,
+               transfer=rest_namespace.model_params[:rest_namespace.model_params.rpartition(' ')][1:-1],
+               loss=rest_namespace.loss,
+               optimizer=rest_namespace.optimizer,
+               optimizer_params=rest_namespace.optimizer,
+               base='transfer')
+    if maybe_options_space is None:
+        # First go!
+        # Generate the entire options_space
+            # this will be logged and then loaded back in
+        if try_all == True:
+            for m in valid_models:
+                for l in SUPPORTED_LOSSES:
+                    for o in SUPPORTED_OPTIMIZERS:
+                        received_space.append(
+                            ParsedLine(dataset=rest_namespace.dataset,
+                                       epoch=0,
+                                       value='value',
+                                       epochs=250,
+                                       transfer=m,
+                                       loss=l,
+                                       optimizer=o,
+                                       optimizer_params=rest_namespace.optimizer,
+                                       base='transfer')
+                                       )
+
+        options_space = {
+            'type': 'options_space',
+            'last_idx': 0,
+            'space': [
+                received_space
+            ]
+        }
+    else:
+
+        # Or if the `maybe_options_space` is not None, then it might look like:
+        options_space = maybe_options_space
+        options_space['space'] = map(ParsedLine, options_space['space'])
+        options_space['last_idx'] = options_space['last_idx'] + 1 % len(options_space['space'])
+        '''options_space = {
+            'type': 'options_space',
+            'last_idx': 2,
+            'space': [
+                ParsedLine(dataset='refuge',
+                           epoch=64,
+                           value='value',
+                           epochs=250,
+                           transfer='Resnet50',
+                           loss='BinaryCrossentropy',
+                           optimizer='Adam',
+                           optimizer_params={'lr': 1e-3},
+                           base='transfer'),
+                ParsedLine(dataset='refuge',
+                           epoch=64,
+                           value='value',
+                           epochs=250,
+                           transfer='MobileNet',
+                           loss='CategoricalCrossentropy',
+                           optimizer='Nestrov',
+                           optimizer_params={'lr': 1e-5},
+                           base='transfer')
+            ]
+        }
+        '''
+        # prev_metrics = get_metrics((path.join(rest_namespace.tensorboard_log_dir, 'validation'),), prefix='epoch_')
+        # prev_options = parse_line(rest_namespace.tensorboard_log_dir)
+
+    log(options_space)
+    return options_space['space']['last_idx']
+
+def _new_modify_options(parsed_line, rest):
+    if parsed_line is None:
+        return
+    upsert_rest_arg = partial(_upsert_cli_arg, cli=rest)
+    for k in parsed_line._fields:
+        upsert_rest_arg(arg=k, value=parsed_line[k])
 
 
 def _execute_command(key, log, next_key, options, dry_run, rest):
@@ -44,14 +157,14 @@ def _execute_command(key, log, next_key, options, dry_run, rest):
 
     if dry_run:
         just = 10
-        print('key:'.ljust(just), key, ';\n',
+        print(#'key:'.ljust(just), key, ';\n',
               'log:'.ljust(just), log, ';\n',
-              'next_key:'.ljust(just), next_key, ';\n',
+              #'next_key:'.ljust(just), next_key, ';\n',
               'options:'.ljust(just), dumps(options), ';\n',
               'dry_run:'.ljust(just), dry_run, ';\n',
               'rest:'.ljust(just), dumps(rest), ';', sep='')
     else:
-        err, cli_resp = _handle_rest(key, next_key, rest, options)
+        err, cli_resp = _handle_rest(key, locals().get('next_key'), rest, options)
         if err is not None:
             if environ.get('NO_EXCEPTIONS'):
                 print(err, file=stderr)
@@ -63,16 +176,18 @@ def _execute_command(key, log, next_key, options, dry_run, rest):
           '|            finished {cmd}ing.           |\n'
           '-------------------------------------------'.format(cmd=rest[0]), sep='')
 
-    if next_key in options[key][0]:
-        options[key][0][next_key] += 0.5
-    else:
-        options[key][0][next_key] = 0
-    if '_next_key' in options:
-        del options['_next_key']
-    log({'options': options})
+    if 'next_key' in locals():
+        if next_key in options[key][0]:
+            options[key][0][next_key] += 0.5
+        else:
+            options[key][0][next_key] = 0
+        if '_next_key' in options:
+            del options['_next_key']
+        log({'options': options})
 
 
 def _prepare_options(key, log, logfile, options, rest):
+
     assert type(options) is dict, '--options value could not be parsed into a Python dictionary, got: {}'.format(
         options
     )
@@ -182,7 +297,8 @@ def _handle_rest(key, next_key, rest, options):
         _increment_directory_suffixes(model_dir, namespace, upsert_rest_arg)
 
     # Replace with pipeline argument. Change next line with more complicated—i.e.: more than 1 option change—mods.
-    upsert_rest_arg(key, next_key)
+    if next_key is not None:
+        upsert_rest_arg(key, next_key)
 
     print('Running command:'.ljust(16), '{} {}'.format(
         rest[0], ' '.join(map(lambda r: r if r.startswith('-') else '\'{}\''.format(r),
