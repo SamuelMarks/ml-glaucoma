@@ -59,30 +59,20 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
     with open(logfile.name, 'rt') as f:
         prev_logfile_lines = f.readlines()
 
-    idx = len(prev_logfile_lines) -1
+    idx = len(prev_logfile_lines) - 1
     maybe_options_space = None
-    while idx != 0:
+    while idx > 0:
         maybe_options_space = loads(prev_logfile_lines[idx])
         if isinstance(maybe_options_space, dict) and 'type' in maybe_options_space and maybe_options_space['type'] == 'options_space':
             break
         maybe_options_space = None
         idx -= 1
 
-    # generated_space = [ParsedLine(dataset=rest_namespace.dataset,
-    #            epoch=0,
-    #            value='value',
-    #            epochs=250,
-    #            # transfer=rest_namespace.model_param[:rest_namespace.model_param.rpartition(' ')][1:-1],
-    #            transfer="DenseNet169",
-    #            loss=rest_namespace.loss,
-    #            optimizer=rest_namespace.optimizer,
-    #            optimizer_params=rest_namespace.optimizer,
-    #            base='transfer')]
     generated_space = []
     if maybe_options_space is None:
         # First go!
         # Generate the entire options_space
-            # this will be logged and then loaded back in
+        # this will be logged and then loaded back in
         if try_all == True:
             for m in valid_models:
                 for l in SUPPORTED_LOSSES:
@@ -92,14 +82,12 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
                                        epoch=0,
                                        value='value',
                                        epochs=250,
-                                       # transfer=rest_namespace.model_param[:rest_namespace.model_param.rpartition(' ')][1:-1],
                                        transfer=m,
                                        loss=l,
                                        optimizer=o,
                                        optimizer_params=rest_namespace.optimizer,
                                        base='transfer')
                                        )
-
         options_space = {
             'type': 'options_space',
             'last_idx': 0,
@@ -109,14 +97,15 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
 
         # Or if the `maybe_options_space` is not None, then it might look like:
         options_space = maybe_options_space
-        print(options_space['space'])
-        # options_space['space'] = tuple(map(ParsedLine, options_space['space']))
-        options_space['space'] = tuple(map(lambda o: ParsedLine(**o._fields, options_space['space']))
+        options_space['space'] = [ParsedLine(*ops) for ops in options_space['space']]
         options_space['last_idx'] = options_space['last_idx'] + 1 % len(options_space['space'])
+
+        # TODO: yet to implement progressive selection and generation of next experiment steps
         # prev_metrics = get_metrics((path.join(rest_namespace.tensorboard_log_dir, 'validation'),), prefix='epoch_')
         # prev_options = parse_line(rest_namespace.tensorboard_log_dir)
 
     log(options_space)
+    print('cur_experiment_index:', options_space['last_idx'])
     return options_space['space'][options_space['last_idx']]
 
 def _new_modify_options(parsed_line, rest):
