@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 import sys
+from collections import Counter
 from functools import partial
-from itertools import filterfalse, chain
+from itertools import filterfalse, chain, repeat
 from operator import itemgetter, contains
 from os import path, environ
 
 import numpy as np
 import pandas as pd
-from sqlalchemy import create_engine
 
-engine = create_engine(environ['RDBMS_URI'])
+from ml_glaucoma.utils import pp
 
 
 def isnotebook():
@@ -28,7 +28,7 @@ def isnotebook():
 
 if isnotebook():
     from IPython.display import display, HTML
-else:
+elif environ.get('OUTPUT_HTML'):
     display = print
     HTML = lambda ident: ident
 
@@ -46,6 +46,9 @@ else:
 
 
     print = new_p
+else:
+    HTML = lambda ident: ident
+    display = print
 
 from six import string_types
 
@@ -96,7 +99,7 @@ manycat2threecat = {
 }
 
 
-def to_manycat_name(o):
+def to_manycat_name(o):  # type: ([str]) -> str
     if isinstance(o, string_types):
         o = o,
 
@@ -117,8 +120,8 @@ def to_manycat_name(o):
     raise TypeError('{!r} no key found for'.format(o))
 
 
-def grad_mac2(series):
-    def from_s(value):
+def grad_mac2(series):  # type: (pd.Series) -> pd.Series
+    def from_s(value):  # type: (np.float) -> str or np.nan
         if pd.isnull(value) or isinstance(value, string_types):
             return value
         value = np.ushort(value)
@@ -131,7 +134,7 @@ def grad_mac2(series):
     return series if series is None else series.apply(from_s)
 
 
-def debug(obj, name='obj', verbosity=0, subset_low=0, subset_high=None):
+def debug(obj, name='obj', verbosity=0, subset_low=0, subset_high=None):  # type: (any, str, int, int, int) -> None
     assert isinstance(name, string_types)
     assert obj is not None
     assert type(subset_low) is int
@@ -162,7 +165,7 @@ def debug(obj, name='obj', verbosity=0, subset_low=0, subset_high=None):
         print('{}:'.format(name).ljust(16), '{!r}'.format(obj), sep='')
 
 
-def to_manycat_name(o):
+def to_manycat_name(o):  # type: ([str]) -> str
     if isinstance(o, string_types):
         o = o,
 
@@ -181,16 +184,6 @@ def to_manycat_name(o):
             print('no match found for: {!r}'.format(e))
 
     raise TypeError('{!r} no key found for'.format(o))
-
-
-def process_within_series(cell):
-    if process_within_series.t > 0:
-        debug(cell, 'cell within process_within_series')
-
-    return cell
-
-
-process_within_series.t = 2
 
 
 def prepare():  # type: () -> pd.DataFrame
@@ -221,92 +214,43 @@ def prepare():  # type: () -> pd.DataFrame
     return df
 
 
-def old_main():
+def main():  # type: () -> None
     df = prepare()
+    just = 20
+    image_position_c, b_c, folder_name_c, d_c = repeat(Counter(), 4)
 
-    def applicator(series):  # type: (pd.Series) -> np.int64
-        def to_s(value, folder_name):  # type: (np.int64, str) -> np.int64
-            if applicator.t > 0:
-                applicator.t -= 1
-                local_vars = locals()
-                debug(*(lambda k: (local_vars[k], k))('folder_name'))
-                debug(*(lambda k: (local_vars[k], k))('value'))
-                # print('df.at:', df.at[folder_name, :])
-                # print('folder_name:', folder_name, '\n',
-                #       'value:', value, '\n',
-                #       sep='')
-                print(
-                    'series.get_value():',
-                    series.get_value(value)
-                )
-
-            if pd.isnull(value):
-                return value
-
-            return value
-
-        # debug(*(lambda l_vars, k: (l_vars[k], k))(locals(), 'series'))
-        if applicator.t > 0:
-            print('series.axes:', series.axes)
-        # print('type(series.folder_name):', type(series.folder_name).__name__)
-        # print('type(series):', type(series).__name__)
-        return series.apply(to_s, args=(series.name,))
-
-    applicator.t = 3
-
-    df.transform(applicator, 1)  # df.axes[1].names[1])
-    '''
-
-    t = 4
-    for i in df.index:
-        # for col in columns:
-        val = df.loc[i, :]  # type: pd.Series
-        if t > 0:
-            t -= 1
-            debug(val, 'val')
-        # val.apply(app(i, ))
-        # if not np.isnan(val):
-        val_df = val.to_frame()  # type: pd.DataFrame
-        for tup in val_df.iteritems():
-            if t > 0:
-                print('-' * 67)
-                process_within_series.t = t
-
-                for cell in tup:
-                    print('#' * 67)
-                    debug(cell, 'cell in tup')
-
-                    if isinstance(cell, pd.Series):
-                        cell = cell.apply(process_within_series)
-
-                print('-' * 67, '\n')
-    '''
-
-
-def main():
-    df = prepare()
-
-    def f(a, b, c, d):
+    def f(image_position, b=None, folder_name=None, d=None):
+        image_position_c[image_position] += 1
+        b_c[b] += 1
+        folder_name_c[folder_name] += 1
+        # d_c[d_c] += 1
         if f.t > 0:
             f.t -= 1
             if f.t & 1 != 0:
                 print('-' * 58)
-            print('a:', a, '\n',
-                  'b:', b, '\n',
-                  'c:', c, '\n',
-                  'd:', d, '\n',
+            print('image_position:'.ljust(just), image_position, '\n',
+                  'b:'.ljust(just), b, '\n',
+                  'folder_name:'.ljust(just), folder_name, '\n',
+                  '\'::\' + d:'.ljust(just), '::' + d, '\n',
+                  'd:'.ljust(just), d, '\n',
                   sep='')
             print('-' * 58)
-        return a, b, c, d
+        return '::'.join((image_position, b, folder_name)) + '::' + d
 
-    f.t = 6000
+    f.t = 6
 
-    debug(df)
+    print(df)
 
-    df.transform(lambda x: [
-        '::'.join(map(str, f(x.name[0], x.name[1], x.index[0], i if type(i) == float else 0)))
-        for i in x
-    ])
+    print('## transformed')
+
+    print(df.transform(lambda x:
+                       f(*(map(str, (x.index[0][0], x.index[0][1], x.name))), d=x.astype(str)),
+                       axis=1))
+    print('## saw')
+    for obj in 'image_position_c', 'b_c', 'folder_name_c':  # , 'd_c'
+        pp({obj: locals()[obj]})
+
+    # engine = create_engine(environ['RDBMS_URI'])
 
 
 if __name__ == '__main__':
