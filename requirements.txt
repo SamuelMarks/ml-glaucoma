@@ -25,3 +25,4 @@ https://github.com/SamuelMarks/keras-squeeze-excite-network/zipball/master#egg=k
 pyyaml
 # torch==1.17.2
 torchvision==0.4.1
+sqlalchemy

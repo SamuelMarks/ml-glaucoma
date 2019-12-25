@@ -7,6 +7,7 @@ from shutil import copyfile
 from sys import stderr, modules
 from tempfile import gettempdir, mkdtemp
 
+from pandas.core.indexes.frozen import FrozenList
 from six import iteritems
 
 import ml_glaucoma.cli_options.parser
@@ -15,6 +16,7 @@ from ml_glaucoma.utils import update_d
 
 logger = get_logger(modules[__name__].__name__.rpartition('.')[0])
 
+FrozenList
 
 def pipeline_runner(logfile, key, options, replacement_options, threshold, dry_run, rest):
     log = lambda obj: logfile.write(

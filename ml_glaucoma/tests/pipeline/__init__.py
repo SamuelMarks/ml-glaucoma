@@ -8,6 +8,7 @@ from unittest import TestCase, main as unittest_main
 from pkg_resources import resource_filename
 from six import StringIO
 
+from ml_glaucoma.cli_options.logparser.utils import get_metrics
 from ml_glaucoma.cli_options.parser import cli_handler
 from ml_glaucoma.utils import pp
 
@@ -35,6 +36,16 @@ class TestPipeline(TestCase):
     def test_simple(self):
         threshold = 100
 
+        with open('foo', 'w') as f:
+            f.write('foo')
+
+        f = open('foo', 'w')
+        f.write('foo')
+        f.close()
+
+        with open('foo', 'r') as f:
+            s = f.read()
+
         with captured_output() as (out, err):
             cli_handler([
                 'pipeline',
@@ -44,7 +55,7 @@ class TestPipeline(TestCase):
                 '--key', 'models',
                 '--threshold', '{}'.format(threshold),
                 '--logfile', self.logfile,
-                # '--dry-run',
+                '--dry-run',
 
                 'train',
                 '-ds', 'refuge',
@@ -66,6 +77,7 @@ class TestPipeline(TestCase):
             ])
         err.seek(0)
         out.seek(0)
+
         all_options = tuple(
             map(lambda options: cli_handler(cmd=options, return_namespace=True),
                 map(loads,
@@ -78,7 +90,8 @@ class TestPipeline(TestCase):
         )
         self.assertEqual(err.read(), '')
         self.assertEqual(len(all_options), threshold)
-        pp(all_options)
+        get_metrics
+        pp(all_options[0])
 
 
 if __name__ == '__main__':

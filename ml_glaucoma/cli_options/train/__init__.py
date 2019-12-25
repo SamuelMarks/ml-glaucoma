@@ -86,9 +86,10 @@ class ConfigurableTrain(Configurable):
                    callbacks, checkpoint_freq, summary_freq,
                    lr_schedule, tensorboard_log_dir, class_weight,
                    write_images, seed, disable_gpu,
-                   delete_lt, **_kwargs):
+                   delete_lt, rest, **_kwargs):
 
         print('ConfigurableTrain::model_fn:', model_fn, ';')
+        assert rest is None or len(rest) == 0, 'train subcommand does not handle chaining next subcommand, got: {!r}'.format(rest)
 
         if disable_gpu:
             environ['CUDA_VISIBLE_DEVICES'] = '-1'

@@ -3,10 +3,13 @@ import sys
 from functools import partial
 from itertools import filterfalse, chain
 from operator import itemgetter, contains
-from os import path
+from os import path, environ
 
 import numpy as np
 import pandas as pd
+from sqlalchemy import create_engine
+
+engine = create_engine(environ['RDBMS_URI'])
 
 
 def isnotebook():
@@ -33,8 +36,9 @@ else:
     def new_p(*args, sep=''):
         s, prev = '<p>', ''
         for arg in args:
-            s += '{}{}'.format('&#9;' if prev.rstrip().endswith(':') else '</p><p>',
-                               arg)
+            s += '{}{arg}{sep}'.format('&#9;' if isinstance(prev, string_types) and prev.rstrip().endswith(':')
+                                       else '</p><p>',
+                                       arg=arg, sep=sep)
             prev = arg
         s += '</p>'
         sys.stdout.write(s)
@@ -179,23 +183,9 @@ def to_manycat_name(o):
     raise TypeError('{!r} no key found for'.format(o))
 
 
-def app(idx, cat0):
-    def inner(value):
-        if app.t > 0:
-            app.t -= 1
-            debug(value, 'value', subset_high=5)
-            print('----------------------------')
-        return value
-
-    return inner
-
-
-app.t = 2
-
-
 def process_within_series(cell):
     if process_within_series.t > 0:
-        debug(cell, 'cell')
+        debug(cell, 'cell within process_within_series')
 
     return cell
 
@@ -203,7 +193,7 @@ def process_within_series(cell):
 process_within_series.t = 2
 
 
-def prepare():
+def prepare():  # type: () -> pd.DataFrame
     df = pd.read_excel('/'.join(('file://localhost',
                                  path.expanduser('~').replace(path.sep, '/'),
                                  'OneDrive - The University of Sydney (Students)',
@@ -231,8 +221,41 @@ def prepare():
     return df
 
 
-def main():
+def old_main():
     df = prepare()
+
+    def applicator(series):  # type: (pd.Series) -> np.int64
+        def to_s(value, folder_name):  # type: (np.int64, str) -> np.int64
+            if applicator.t > 0:
+                applicator.t -= 1
+                local_vars = locals()
+                debug(*(lambda k: (local_vars[k], k))('folder_name'))
+                debug(*(lambda k: (local_vars[k], k))('value'))
+                # print('df.at:', df.at[folder_name, :])
+                # print('folder_name:', folder_name, '\n',
+                #       'value:', value, '\n',
+                #       sep='')
+                print(
+                    'series.get_value():',
+                    series.get_value(value)
+                )
+
+            if pd.isnull(value):
+                return value
+
+            return value
+
+        # debug(*(lambda l_vars, k: (l_vars[k], k))(locals(), 'series'))
+        if applicator.t > 0:
+            print('series.axes:', series.axes)
+        # print('type(series.folder_name):', type(series.folder_name).__name__)
+        # print('type(series):', type(series).__name__)
+        return series.apply(to_s, args=(series.name,))
+
+    applicator.t = 3
+
+    df.transform(applicator, 1)  # df.axes[1].names[1])
+    '''
 
     t = 4
     for i in df.index:
@@ -247,14 +270,43 @@ def main():
         for tup in val_df.iteritems():
             if t > 0:
                 print('-' * 67)
+                process_within_series.t = t
 
                 for cell in tup:
-                    debug(cell, 'cell')
+                    print('#' * 67)
+                    debug(cell, 'cell in tup')
 
                     if isinstance(cell, pd.Series):
                         cell = cell.apply(process_within_series)
 
                 print('-' * 67, '\n')
+    '''
+
+
+def main():
+    df = prepare()
+
+    def f(a, b, c, d):
+        if f.t > 0:
+            f.t -= 1
+            if f.t & 1 != 0:
+                print('-' * 58)
+            print('a:', a, '\n',
+                  'b:', b, '\n',
+                  'c:', c, '\n',
+                  'd:', d, '\n',
+                  sep='')
+            print('-' * 58)
+        return a, b, c, d
+
+    f.t = 6000
+
+    debug(df)
+
+    df.transform(lambda x: [
+        '::'.join(map(str, f(x.name[0], x.name[1], x.index[0], i if type(i) == float else 0)))
+        for i in x
+    ])
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 import traceback
 from collections import namedtuple
 from functools import reduce
+from os import path
 
 import numpy as np
 import pandas as pd
@@ -169,6 +170,7 @@ def parse_line(line):
         sep=''
     )
     '''
+    path.splitext()
 
     base, transfer = locals().get('base'), locals().get('transfer')
     assert base is not None or transfer is not None, 'Unknown model'
@@ -186,6 +188,30 @@ def parse_line(line):
 
 ParsedLine = namedtuple('ParsedLine', ('dataset', 'epoch', 'value', 'epochs', 'transfer',
                                        'loss', 'optimizer', 'optimizer_params', 'base'))
+
+options_space = {
+    'last_idx': 2,
+    'space': [
+        ParsedLine(dataset='refuge',
+                   epoch=64,
+                   value='value',
+                   epochs=250,
+                   transfer='Resnet50',
+                   loss='BinaryCrossentropy',
+                   optimizer='Adam',
+                   optimizer_params={'lr': 1e-3},
+                   base='transfer'),
+        ParsedLine(dataset='refuge',
+                   epoch=64,
+                   value='value',
+                   epochs=250,
+                   transfer='MobileNet',
+                   loss='CategoricalCrossentropy',
+                   optimizer='Nestrov',
+                   optimizer_params={'lr': 1e-5},
+                   base='transfer')
+    ]
+}
 
 
 # Extraction function from https://gist.github.com/ptschandl/ef67bbaa93ec67aba2cab0a7af47700b
@@ -270,9 +296,11 @@ def get_metrics(logs, prefix='epoch_val_', tag='auc', total_epochs=250,
                 for attr in ('loss', 'auc', 'tp50', 'fp50', 'tn50', 'fn50', 'f150')
             )
 
-            current_metrics['acc'] = np.divide(np.add(tp, tn), np.sum((tp, tn, fp, fn)))
-            current_metrics['sensitivity'] = np.divide(tp, np.add(tp, fn))
-            current_metrics['specificity'] = np.divide(tn, np.add(tn, fp))
+            current_metrics.update({
+                'acc': np.divide(np.add(tp, tn), np.sum((tp, tn, fp, fn))),
+                'sensitivity': np.divide(tp, np.add(tp, fn)),
+                'specificity': np.divide(tn, np.add(tn, fp))
+            })
 
         return log, namedtuple('Metrics', sorted(current_metrics.keys()))(**current_metrics)
 
