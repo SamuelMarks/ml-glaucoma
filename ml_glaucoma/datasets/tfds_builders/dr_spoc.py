@@ -196,11 +196,10 @@ def to_manycat_name(o):  # type: ([str]) -> str
     raise TypeError('{!r} no key found for'.format(o))
 
 
-def prepare(sheet_name):  # type: (str) -> pd.DataFrame
+def prepare(dr_spoc_dir, sheet_name):  # type: (str, str) -> pd.DataFrame
     df = pd \
         .read_excel('/'.join(('file://localhost',
-                              path.expanduser('~').replace(path.sep, '/'),
-                              'OneDrive - The University of Sydney (Students)',
+                              path.dirname(path.dirname(dr_spoc_dir)).replace(path.sep, '/'),
                               'DR SPOC - Graders 1 and 2.xlsx')),
                     sheet_name=sheet_name,
                     skiprows=1,
@@ -233,7 +232,7 @@ def prepare(sheet_name):  # type: (str) -> pd.DataFrame
 prepare.t = 0
 
 
-def retrieve_from_db():  # type: () -> (pd.DataFrame, Counter)
+def retrieve_from_db(dr_spoc_dir):  # type: () -> (pd.DataFrame, Counter)
     engine = create_engine(environ['RDBMS_URI'])
 
     with engine.connect() as con:
@@ -263,11 +262,11 @@ def retrieve_from_db():  # type: () -> (pd.DataFrame, Counter)
 
     df = pd.read_sql('''
     SELECT replace(url_decode("artifactLocation"), 'fundus_images',
-                   '/Users/samuel/OneDrive - The University of Sydney (Students)/Fundus Photographs for AI') as "artifactLocation",
+                   '{dr_spoc_dir_parent}') as "artifactLocation",
            category
     FROM categorise_tbl
     WHERE username = 'hamo.dw@gmail.com';
-    ''', con=engine).set_index('artifactLocation')
+    '''.format(dr_spoc_dir_parent=path.dirname(dr_spoc_dir)), con=engine).set_index('artifactLocation')
 
     category2location = {cat: [] for cat in df.category.unique()}
 
@@ -337,7 +336,7 @@ def prepare_next(dr_spoc_dir):  # type: (str) -> (pd.DataFrame, pd.DataFrame)
     assert path.isdir(path.join(dr_spoc_dir, 'DR SPOC Photo Dataset'))
     assert not path.isdir(path.join(dr_spoc_dir, 'DR SPOC Photo Dataset', 'DR SPOC Dataset'))
 
-    df_grader_1, df_grader_2 = prepare('Grader 1'), prepare('Grader 2')
+    df_grader_1, df_grader_2 = (prepare(dr_spoc_dir, sheet_name='Grader {:d}'.format(i)) for i in (1, 2))
     just = 20
 
     # parseFname('DR SPOC Photo Dataset/6146/Upload/WA112325R2-8.jpg')
@@ -384,24 +383,28 @@ def prepare_next(dr_spoc_dir):  # type: (str) -> (pd.DataFrame, pd.DataFrame)
 
 
 def main():  # type: () -> pd.DataFrame
-    df_grader_1, df_grader_2 = prepare_next(dr_spoc_dir=path.join(path.expanduser('~'),
-                                                                  'OneDrive - The University of Sydney (Students)',
-                                                                  'Fundus Photographs for AI',
-                                                                  'DR SPOC Dataset'))
+    dr_spoc_dir = path.join(path.expanduser('~'),
+                            'OneDrive - The University of Sydney (Students)',
+                            'Fundus Photographs for AI',
+                            'DR SPOC Dataset')
+    df_grader_1, df_grader_2 = prepare_next(dr_spoc_dir=dr_spoc_dir)
     df = df_grader_1.transform(lambda series: pd.Series({k: find_compare(v, with_df=df_grader_2)
                                                          for k, v in series.items()}))
+    frame_checks(dr_spoc_dir=dr_spoc_dir)
     return df
 
 
 # :::::::::::::::::::::::::::::::::::::::
 
-# db_df, db_fname_co = retrieve_from_db()
+def frame_checks(dr_spoc_dir):
+    db_df, db_fname_co = retrieve_from_db(dr_spoc_dir=dr_spoc_dir)
 
-# assert sum(map(itemgetter(1), filename_c.most_common()[1:])) // 3 == 1570
-# assert sum(map(itemgetter(1), db_fname_co.most_common())) == 589
+    # assert sum(map(itemgetter(1), filename_c.most_common()[1:])) // 3 == 1570
+    assert sum(map(itemgetter(1), db_fname_co.most_common())) == 589
 
-# print('db_fname_co:'.ljust(just), '{:04d}'.format(sum(map(itemgetter(1), db_fname_co.most_common()))))
-# print('filename_c:'.ljust(just), '{:04d}'.format(sum(map(itemgetter(1), filename_c.most_common()[1:])) // 3))
+    print('db_fname_co:'.ljust(20), '{:04d}'.format(sum(map(itemgetter(1), db_fname_co.most_common()))))
+    # print('filename_c:'.ljust(just), '{:04d}'.format(sum(map(itemgetter(1), filename_c.most_common()[1:])) // 3))
+
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
