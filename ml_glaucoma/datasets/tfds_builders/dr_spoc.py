@@ -2,9 +2,9 @@
 import sys
 from collections import Counter
 from functools import partial
-from itertools import filterfalse, chain, repeat
+from itertools import filterfalse, chain
 from operator import itemgetter, contains
-from os import path, environ
+from os import path, environ, listdir
 
 import numpy as np
 import pandas as pd
@@ -216,19 +216,36 @@ def prepare():  # type: () -> pd.DataFrame
 
 
 def main():  # type: () -> None
+    dr_spoc_dir = path.join(path.expanduser('~'),
+                            'OneDrive - The University of Sydney (Students)',
+                            'Fundus Photographs for AI',
+                            'DR SPOC Dataset')
+
+    assert path.isdir(dr_spoc_dir)
+    assert path.isdir(path.join(dr_spoc_dir, 'DR SPOC Photo Dataset'))
+    assert not path.isdir(path.join(dr_spoc_dir, 'DR SPOC Photo Dataset', 'DR SPOC Dataset'))
+
     df = prepare()
     just = 20
-    # image_position_c, category_c, folder_name_c, choice_c = repeat(Counter(), 4)
 
-    image_position_c = Counter()
-    category_c = Counter()
-    folder_name_c = Counter()
-    choice_c = Counter()
+    # parseFname('DR SPOC Photo Dataset/6146/Upload/WA112325R2-8.jpg')
+
+    def construct_filename(image_position, folder_name):  # type: (str, int) -> str or np.nan
+        if pd.isnull(image_position) or pd.isnull(folder_name):
+            return np.nan
+        image_position = image_position[:2]
+        directory = path.join(dr_spoc_dir, 'DR SPOC Photo Dataset', str(folder_name))
+
+        image = next((img
+                      for img in listdir(directory)
+                      if img.endswith('.jpg') and image_position in img),
+                     np.nan)
+
+        return image if pd.isnull(image) else path.join(directory, image)
+
+    filename_c = Counter()
 
     def fn(image_position, category, folder_name, choice):  # type: (str, str, int, str) -> str
-        def maybe_nan_str(o):
-            return 'NaN' if pd.isnull(o) else o
-
         if not isinstance(image_position, string_types):
             image_position = np.nan
         if not isinstance(category, string_types):
@@ -241,43 +258,28 @@ def main():  # type: () -> None
         if image_position == category:
             image_position = np.nan
 
-        image_position_c[maybe_nan_str(image_position)] += 1
-        category_c[maybe_nan_str(category)] += 1
-        folder_name_c[maybe_nan_str(folder_name)] += 1
-        choice_c[maybe_nan_str(choice)] += 1
+        filename = construct_filename(image_position, folder_name)
+        filename_c[filename] += 1
+
         if fn.t > 0:
             fn.t -= 1
             print('image_position:'.ljust(just), '{!r}'.format(image_position), '\n',
                   'category:'.ljust(just), '{!r}'.format(category), '\n',
                   'folder_name:'.ljust(just), '{!r}'.format(folder_name), '\n',
                   'choice:'.ljust(just), '{!r}'.format(choice), '\n',
+                  'construct_filename:'.ljust(just), '{!r}'.format(filename), '\n',
                   sep='')
         return '_'.join(map(str, (image_position, category, folder_name, choice)))
 
-    fn.t = 0
+    fn.t = 3
 
     df.transform(lambda x: [fn(x.name[0], x.name[1], pos, value)
                             for pos, value in x.items()])
 
+    assert sum(map(itemgetter(1), filename_c.most_common()[1:])) // 3 == 1570
+
     # engine = create_engine(environ['RDBMS_URI'])
 
-
-'''
-image_position:     R1 (Right macula-centred image)
-category:           Overall quality of the photographs taken
-folder_name:        27
----------------------
-
-image_position:     R1 (Right macula-centred image)
-category:           ETDRS Grading
-folder_name:        27
----------------------
-
-image_position:     R1 (Right macula-centred image)
-category:           Maculopathy
-folder_name:        27
----------------------
-'''
 
 if __name__ == '__main__':
     main()
