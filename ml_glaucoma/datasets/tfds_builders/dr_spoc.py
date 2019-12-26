@@ -451,7 +451,7 @@ def combine_spreadsheet_db(filename2cat, db_df):  # type: (pd.Series, pd.DataFra
         if idx in g.db_df.index:
             if g.tt > 0:
                 g.tt -= 1
-                #print('categories.index({!r}):'.format(val), categories.index(val), '\n',
+                # print('categories.index({!r}):'.format(val), categories.index(val), '\n',
                 #      'categories.index({!r}):'.format(g.db_df.loc[idx].category),
                 #      categories.index(g.db_df.loc[idx].category), '\n'
                 #      )
@@ -465,7 +465,7 @@ def combine_spreadsheet_db(filename2cat, db_df):  # type: (pd.Series, pd.DataFra
             if g.tt > 0:
                 print('{!r} not found in {!r}'.format(idx, g.db_df.index))
             g.db_df = g.db_df.append(
-                pd.Series({'artifactLocation': idx, 'category': val}, index=('artifactLocation',), name=idx)
+                pd.Series({'category': val}, name=idx)
             )
             # db_df[idx] = val
         return val
