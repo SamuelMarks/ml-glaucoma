@@ -483,6 +483,27 @@ def combine_spreadsheet_db(filename2cat, db_df):  # type: (pd.Series, pd.DataFra
     return g.db_df
 
 
+# TODO: Use dir—and other params—as per the global CLI structure
+base_dir = path.join(  # path.dirname(path.dirname(path.dirname(path.dirname(path.dirname(df.iloc[0].name))))),
+    'tensorflow_datasets', 'DR SPOC')
+
+
+def partition_symlink(series):
+    def g(category, filename):
+        if partition_symlink.t > 0:
+            partition_symlink.t -= 1
+            print('os.symlink({filename!r}, {category!r})'.format(filename=filename,
+                                                                  category=path.join(base_dir,
+                                                                                     category,
+                                                                                     path.basename(filename))))
+        return category
+
+    return series.apply(g, args=(series.name,))
+
+
+partition_symlink.t = 20
+
+
 def main():  # type: () -> (str, pd.DataFrame, pd.Series, pd.DataFrame)
     dr_spoc_dir = path.join(path.expanduser('~'),
                             'OneDrive - The University of Sydney (Students)',
@@ -495,6 +516,8 @@ def main():  # type: () -> (str, pd.DataFrame, pd.Series, pd.DataFrame)
     df.apply(construct_worst_per_image, args=(dr_spoc_dir, filename2cat))
 
     combined_df = combine_spreadsheet_db(db_df=db_df, filename2cat=filename2cat)
+
+    combined_df.apply(partition_symlink, 1)
 
     return dr_spoc_dir, df, filename2cat, combined_df
 
