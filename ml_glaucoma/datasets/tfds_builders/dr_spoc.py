@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import sys
 from collections import Counter
 from functools import partial
@@ -8,11 +9,10 @@ from os import path, environ, listdir
 
 import numpy as np
 import pandas as pd
+from sqlalchemy import create_engine, text
 
-from ml_glaucoma.utils import pp
 
-
-def isnotebook():
+def isnotebook():  # type: () -> bool
     try:
         from IPython import get_ipython
         shell = get_ipython().__class__.__name__
@@ -121,7 +121,7 @@ def to_manycat_name(o):  # type: ([str]) -> str
 
 
 def grad_mac2(series):  # type: (pd.Series) -> pd.Series
-    def from_s(value):  # type: (np.float) -> str or np.nan
+    def from_s(value, idx):  # type: (np.float, np.float) -> str or np.nan
         if pd.isnull(value) or isinstance(value, string_types):
             return value
         value = np.ushort(value)
@@ -129,9 +129,19 @@ def grad_mac2(series):  # type: (pd.Series) -> pd.Series
 
         mapped = manycat2threecat.get(name)
 
-        return value if mapped is None or len(mapped) < value else mapped[value]
+        try:
+            result = value if mapped is None or len(mapped) < value else mapped[4 if value == 5 else value]
+        except IndexError:
+            just = 20
+            print('mapped:'.ljust(just), '{!r}\n'.format(mapped),
+                  'value:'.ljust(just), '{!r}\n'.format(value),
+                  'idx:'.ljust(just), '{!r}\n'.format(idx),
+                  sep='')
+            print(series.index)
+            raise
+        return result
 
-    return series if series is None else series.apply(from_s)
+    return series if series is None else series.apply(from_s, args=(series.name,))
 
 
 def debug(obj, name='obj', verbosity=0, subset_low=0, subset_high=None):  # type: (any, str, int, int, int) -> None
@@ -186,22 +196,27 @@ def to_manycat_name(o):  # type: ([str]) -> str
     raise TypeError('{!r} no key found for'.format(o))
 
 
-def prepare():  # type: () -> pd.DataFrame
+def prepare(sheet_name):  # type: (str) -> pd.DataFrame
     df = pd \
         .read_excel('/'.join(('file://localhost',
                               path.expanduser('~').replace(path.sep, '/'),
                               'OneDrive - The University of Sydney (Students)',
                               'DR SPOC - Graders 1 and 2.xlsx')),
-                    skiprows=1, header=[0, 1], index_col=[0]) \
+                    sheet_name=sheet_name,
+                    skiprows=1,
+                    header=[0, 1],
+                    index_col=[0]) \
         .transform(grad_mac2)
 
-    display(HTML('<h2>Columns</h2>'))
+    if prepare.t > 0:
+        prepare.t -= 1
+        display(HTML('<h2>Columns</h2>'))
 
-    display(HTML(
-        '<ul>\n{}\n</ul>'.format('\n'.join(
-            '  <li>"{}"</li>'.format(col)
-            for col in chain_unique(map(itemgetter(1), df.axes[1]))
-        ))))
+        display(HTML(
+            '<ul>\n{}\n</ul>'.format('\n'.join(
+                '  <li>"{}"</li>'.format(col)
+                for col in chain_unique(map(itemgetter(1), df.axes[1]))
+            ))))
 
     axes = filter(lambda c: c[:2] in image_angle_types,
                   map(itemgetter(0), df.axes[1]))
@@ -215,70 +230,195 @@ def prepare():  # type: () -> pd.DataFrame
     return df
 
 
-def main():  # type: () -> None
-    dr_spoc_dir = path.join(path.expanduser('~'),
-                            'OneDrive - The University of Sydney (Students)',
-                            'Fundus Photographs for AI',
-                            'DR SPOC Dataset')
+prepare.t = 0
 
+
+def retrieve_from_db():  # type: () -> (pd.DataFrame, Counter)
+    engine = create_engine(environ['RDBMS_URI'])
+
+    with engine.connect() as con:
+        r = con.execute(text('''
+        CREATE OR REPLACE FUNCTION url_decode(input text) RETURNS text
+            LANGUAGE plpgsql
+            IMMUTABLE STRICT AS
+        $$
+        DECLARE
+            bin  bytea = '';
+            byte text;
+        BEGIN
+            FOR byte IN (select (regexp_matches(input, '(%..|.)', 'g'))[1])
+                LOOP
+                    IF length(byte) = 3 THEN
+                        bin = bin || decode(substring(byte, 2, 2), 'hex');
+                    ELSE
+                        bin = bin || byte::bytea;
+                    END IF;
+                END LOOP;
+            RETURN convert_from(bin, 'utf8');
+        END
+        $$;
+        '''))
+
+    assert r.rowcount == -1
+
+    df = pd.read_sql('''
+    SELECT replace(url_decode("artifactLocation"), 'fundus_images',
+                   '/Users/samuel/OneDrive - The University of Sydney (Students)/Fundus Photographs for AI') as "artifactLocation",
+           category
+    FROM categorise_tbl
+    WHERE username = 'hamo.dw@gmail.com';
+    ''', con=engine).set_index('artifactLocation')
+
+    category2location = {cat: [] for cat in df.category.unique()}
+
+    fname_co = Counter()
+
+    def partition(series):  # type: (pd.Series) -> pd.Series
+        def part(category, folder_name):  # type: (str, str) -> str
+            if partition.t > 0:
+                partition.t -= 1
+                print('category:', category, '\n',
+                      'folder_name:', folder_name, '\n', sep='\t')
+
+            category2location[category].append(folder_name)
+            fname_co[folder_name] += 1
+
+            # symlink here?
+
+            return category
+
+        return series.apply(part, args=(series.name,))
+
+    partition.t = 0
+
+    df.apply(partition, 1)
+
+    return df, fname_co
+
+
+def construct_filename(dr_spoc_dir, image_position, folder_name):  # type: (str, str, int) -> str or np.nan
+    if pd.isnull(image_position) or pd.isnull(folder_name):
+        return np.nan
+    image_position = image_position[:2]
+    directory = path.join(dr_spoc_dir, 'DR SPOC Photo Dataset', str(folder_name))
+
+    image = next((img
+                  for img in listdir(directory)
+                  if img.endswith('.jpg') and image_position in img),
+                 np.nan)
+
+    return image if pd.isnull(image) else path.join(directory, image)
+
+
+def choice_between(record0, record1):  # type: (pd.Series, pd.Series) -> pd.Series
+    if record0.choice == 'No gradable image':
+        return record0
+    elif record1.choice == 'No gradable image':
+        return record1
+    elif record0.choice == 'referable':
+        return record0
+    elif record1.choice == 'referable':
+        return record1
+
+    return record0
+
+
+def find_compare(record, with_df):  # type: (pd.Series, pd.DataFrame) -> pd.Series
+    try:
+        record1 = with_df.loc[record.folder_name, (record.image_position, record.category)]
+    except KeyError:
+        return record
+
+    return choice_between(record, record1)
+
+
+def prepare_next(dr_spoc_dir):  # type: (str) -> (pd.DataFrame, pd.DataFrame)
     assert path.isdir(dr_spoc_dir)
     assert path.isdir(path.join(dr_spoc_dir, 'DR SPOC Photo Dataset'))
     assert not path.isdir(path.join(dr_spoc_dir, 'DR SPOC Photo Dataset', 'DR SPOC Dataset'))
 
-    df = prepare()
+    df_grader_1, df_grader_2 = prepare('Grader 1'), prepare('Grader 2')
     just = 20
 
     # parseFname('DR SPOC Photo Dataset/6146/Upload/WA112325R2-8.jpg')
 
-    def construct_filename(image_position, folder_name):  # type: (str, int) -> str or np.nan
-        if pd.isnull(image_position) or pd.isnull(folder_name):
-            return np.nan
-        image_position = image_position[:2]
-        directory = path.join(dr_spoc_dir, 'DR SPOC Photo Dataset', str(folder_name))
-
-        image = next((img
-                      for img in listdir(directory)
-                      if img.endswith('.jpg') and image_position in img),
-                     np.nan)
-
-        return image if pd.isnull(image) else path.join(directory, image)
-
     filename_c = Counter()
 
-    def fn(image_position, category, folder_name, choice):  # type: (str, str, int, str) -> str
-        if not isinstance(image_position, string_types):
-            image_position = np.nan
-        if not isinstance(category, string_types):
-            category = np.nan
-        if type(folder_name) is not int:
-            folder_name = np.nan
+    def fn(image_position, category, folder_name, choice):  # type: (str, str, int, str) -> pd.Series
         if not isinstance(choice, string_types):
             choice = np.nan
 
         if image_position == category:
             image_position = np.nan
 
-        filename = construct_filename(image_position, folder_name)
+        filename = construct_filename(dr_spoc_dir, image_position, folder_name)
         filename_c[filename] += 1
 
+        series_input = {
+            'image_position': image_position,
+            'category': category,
+            'folder_name': folder_name,
+            'choice': choice
+        }
         if fn.t > 0:
             fn.t -= 1
-            print('image_position:'.ljust(just), '{!r}'.format(image_position), '\n',
-                  'category:'.ljust(just), '{!r}'.format(category), '\n',
-                  'folder_name:'.ljust(just), '{!r}'.format(folder_name), '\n',
-                  'choice:'.ljust(just), '{!r}'.format(choice), '\n',
-                  'construct_filename:'.ljust(just), '{!r}'.format(filename), '\n',
-                  sep='')
-        return '_'.join(map(str, (image_position, category, folder_name, choice)))
+            print(
+                'image_position:'.ljust(just), '{!r}'.format(image_position), '\n',
+                'category:'.ljust(just), '{!r}'.format(category), '\n',
+                'folder_name:'.ljust(just), '{!r}'.format(folder_name), '\n',
+                'choice:'.ljust(just), '{!r}'.format(choice), '\n',
+                'construct_filename:'.ljust(just), '{!r}'.format(filename), '\n',
+                'pd.Series(series_input, index=sorted(series_input.keys())).index:',
+                pd.Series(series_input, index=sorted(series_input.keys())).index, '\n',
+                sep=''
+            )
 
-    fn.t = 3
+        return pd.Series(series_input, index=sorted(series_input.keys()))
+        # return '_'.join(map(str, (image_position, category, folder_name, choice)))
 
-    df.transform(lambda x: [fn(x.name[0], x.name[1], pos, value)
-                            for pos, value in x.items()])
+    fn.t = 0
 
-    assert sum(map(itemgetter(1), filename_c.most_common()[1:])) // 3 == 1570
+    return tuple(df.apply(lambda x: [fn(x.name[0], x.name[1], pos, value)
+                                     for pos, value in x.items()])
+                 for df in (df_grader_1, df_grader_2))
 
-    # engine = create_engine(environ['RDBMS_URI'])
+
+def main():  # type: () -> pd.DataFrame
+    df_grader_1, df_grader_2 = prepare_next(dr_spoc_dir=path.join(path.expanduser('~'),
+                                                                  'OneDrive - The University of Sydney (Students)',
+                                                                  'Fundus Photographs for AI',
+                                                                  'DR SPOC Dataset'))
+    df = df_grader_1.transform(lambda series: pd.Series({k: find_compare(v, with_df=df_grader_2)
+                                                         for k, v in series.items()}))
+    return df
+
+
+# :::::::::::::::::::::::::::::::::::::::
+
+# db_df, db_fname_co = retrieve_from_db()
+
+# assert sum(map(itemgetter(1), filename_c.most_common()[1:])) // 3 == 1570
+# assert sum(map(itemgetter(1), db_fname_co.most_common())) == 589
+
+# print('db_fname_co:'.ljust(just), '{:04d}'.format(sum(map(itemgetter(1), db_fname_co.most_common()))))
+# print('filename_c:'.ljust(just), '{:04d}'.format(sum(map(itemgetter(1), filename_c.most_common()[1:])) // 3))
+
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+# print('filename_c.most_common()')
+# print(filename_c.most_common())
+# print('db_fname_co.most_common()')
+# print(db_fname_co.most_common())
+# total_filenames_c = filename_c + db_fname_co
+# print(total_filenames_c.most_common())
+
+# create new dataframe with
+# [fname -> diagnoses]
+
+# with open('/tmp/fnames.txt', 'wt') as f:
+#    f.write('\n'.join(filter(None, map(
+#        lambda c: c.replace('/Users/samuel/OneDrive - The University of Sydney (Students)/', '') if not pd.isnull(
+#            c) else None, total_filenames_c.keys()))))
 
 
 if __name__ == '__main__':
