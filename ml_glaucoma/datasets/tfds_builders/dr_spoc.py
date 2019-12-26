@@ -187,12 +187,13 @@ def to_manycat_name(o):  # type: ([str]) -> str
 
 
 def prepare():  # type: () -> pd.DataFrame
-    df = pd.read_excel('/'.join(('file://localhost',
-                                 path.expanduser('~').replace(path.sep, '/'),
-                                 'OneDrive - The University of Sydney (Students)',
-                                 'DR SPOC - Graders 1 and 2.xlsx')),
-                       skiprows=1, header=[0, 1], index_col=[0])
-    df = df.transform(grad_mac2)
+    df = pd \
+        .read_excel('/'.join(('file://localhost',
+                              path.expanduser('~').replace(path.sep, '/'),
+                              'OneDrive - The University of Sydney (Students)',
+                              'DR SPOC - Graders 1 and 2.xlsx')),
+                    skiprows=1, header=[0, 1], index_col=[0]) \
+        .transform(grad_mac2)
 
     display(HTML('<h2>Columns</h2>'))
 
@@ -217,41 +218,66 @@ def prepare():  # type: () -> pd.DataFrame
 def main():  # type: () -> None
     df = prepare()
     just = 20
-    image_position_c, b_c, folder_name_c, d_c = repeat(Counter(), 4)
+    # image_position_c, category_c, folder_name_c, choice_c = repeat(Counter(), 4)
 
-    def f(image_position, b=None, folder_name=None, d=None):
-        image_position_c[image_position] += 1
-        b_c[b] += 1
-        folder_name_c[folder_name] += 1
-        # d_c[d_c] += 1
-        if f.t > 0:
-            f.t -= 1
-            if f.t & 1 != 0:
-                print('-' * 58)
-            print('image_position:'.ljust(just), image_position, '\n',
-                  'b:'.ljust(just), b, '\n',
-                  'folder_name:'.ljust(just), folder_name, '\n',
-                  '\'::\' + d:'.ljust(just), '::' + d, '\n',
-                  'd:'.ljust(just), d, '\n',
+    image_position_c = Counter()
+    category_c = Counter()
+    folder_name_c = Counter()
+    choice_c = Counter()
+
+    def fn(image_position, category, folder_name, choice):  # type: (str, str, int, str) -> str
+        def maybe_nan_str(o):
+            return 'NaN' if pd.isnull(o) else o
+
+        if not isinstance(image_position, string_types):
+            image_position = np.nan
+        if not isinstance(category, string_types):
+            category = np.nan
+        if type(folder_name) is not int:
+            folder_name = np.nan
+        if not isinstance(choice, string_types):
+            choice = np.nan
+
+        if image_position == category:
+            image_position = np.nan
+
+        image_position_c[maybe_nan_str(image_position)] += 1
+        category_c[maybe_nan_str(category)] += 1
+        folder_name_c[maybe_nan_str(folder_name)] += 1
+        choice_c[maybe_nan_str(choice)] += 1
+        if fn.t > 0:
+            fn.t -= 1
+            print('image_position:'.ljust(just), '{!r}'.format(image_position), '\n',
+                  'category:'.ljust(just), '{!r}'.format(category), '\n',
+                  'folder_name:'.ljust(just), '{!r}'.format(folder_name), '\n',
+                  'choice:'.ljust(just), '{!r}'.format(choice), '\n',
                   sep='')
-            print('-' * 58)
-        return '::'.join((image_position, b, folder_name)) + '::' + d
+        return '_'.join(map(str, (image_position, category, folder_name, choice)))
 
-    f.t = 6
+    fn.t = 0
 
-    print(df)
-
-    print('## transformed')
-
-    print(df.transform(lambda x:
-                       f(*(map(str, (x.index[0][0], x.index[0][1], x.name))), d=x.astype(str)),
-                       axis=1))
-    print('## saw')
-    for obj in 'image_position_c', 'b_c', 'folder_name_c':  # , 'd_c'
-        pp({obj: locals()[obj]})
+    df.transform(lambda x: [fn(x.name[0], x.name[1], pos, value)
+                            for pos, value in x.items()])
 
     # engine = create_engine(environ['RDBMS_URI'])
 
+
+'''
+image_position:     R1 (Right macula-centred image)
+category:           Overall quality of the photographs taken
+folder_name:        27
+---------------------
+
+image_position:     R1 (Right macula-centred image)
+category:           ETDRS Grading
+folder_name:        27
+---------------------
+
+image_position:     R1 (Right macula-centred image)
+category:           Maculopathy
+folder_name:        27
+---------------------
+'''
 
 if __name__ == '__main__':
     main()
