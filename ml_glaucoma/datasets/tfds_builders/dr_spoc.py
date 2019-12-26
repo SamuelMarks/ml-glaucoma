@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 from sqlalchemy import create_engine, text
 
+from ml_glaucoma.utils import it_consumes
+
 
 def isnotebook():  # type: () -> bool
     try:
@@ -263,7 +265,7 @@ def retrieve_from_db(dr_spoc_dir):  # type: () -> (pd.DataFrame, Counter)
     df = pd.read_sql('''
     SELECT replace(url_decode("artifactLocation"), 'fundus_images',
                    '{dr_spoc_dir_parent}') as "artifactLocation",
-           category
+           replace(lower(category), 'ungradable', 'No gradable image') as category
     FROM categorise_tbl
     WHERE username = 'hamo.dw@gmail.com';
     '''.format(dr_spoc_dir_parent=path.dirname(dr_spoc_dir)), con=engine).set_index('artifactLocation')
@@ -331,6 +333,55 @@ def find_compare(record, with_df):  # type: (pd.Series, pd.DataFrame) -> pd.Seri
     return choice_between(record, record1)
 
 
+categories = 'No gradable image', 'referable', 'non-referable'
+
+
+def construct_worst_per_image(series, dr_spoc_dir, new_df):
+    def g(val):
+        fname = construct_filename(dr_spoc_dir, val.image_position, val.folder_name)
+
+        if pd.isnull(val.choice):
+            return val
+
+        new_idx = categories.index(val.choice)
+
+        try:
+            cur_fname = new_df.get(fname, None)
+        except TypeError:
+            cur_fname = None
+
+        if construct_worst_per_image.t > 0:
+            construct_worst_per_image.t -= 1
+            just = 35
+            print('val:'.ljust(just), '{!r}\n'.format(val),
+                  'val.choice:'.ljust(just), '{!r}\n'.format(val.choice),
+                  'fname:'.ljust(just), '{!r}\n'.format(fname),
+                  'new_df[fname]:'.ljust(just), '{!r}\n'.format(cur_fname),
+                  sep='')
+            print('categories.index(val.choice):'.ljust(just), '{!r}\n'.format(new_idx), sep='')
+            print('categories.index(new_df[fname]):'.ljust(just), '{!r}\n'.format(cur_fname if cur_fname is None
+                                                                                  else categories.index(cur_fname)),
+                  sep='')
+
+        cur_idx = cur_fname if cur_fname is None or pd.isnull(cur_fname) \
+            else categories.index(cur_fname)
+
+        new_df[fname] = (val.choice
+                         if fname not in new_df
+                            or pd.isnull(cur_fname)
+                            or pd.isnull(cur_idx)
+                            or cur_idx < new_idx
+                         else new_df[fname])
+
+        return val
+
+    it_consumes(map(g, series.values))
+    return series
+
+
+construct_worst_per_image.t = 0
+
+
 def prepare_next(dr_spoc_dir):  # type: (str) -> (pd.DataFrame, pd.DataFrame)
     assert path.isdir(dr_spoc_dir)
     assert path.isdir(path.join(dr_spoc_dir, 'DR SPOC Photo Dataset'))
@@ -382,28 +433,83 @@ def prepare_next(dr_spoc_dir):  # type: (str) -> (pd.DataFrame, pd.DataFrame)
                  for df in (df_grader_1, df_grader_2))
 
 
-def main():  # type: () -> pd.DataFrame
+def handle_spreadsheet(dr_spoc_dir):  # type: (str) -> pd.DataFrame
+    df_grader_1, df_grader_2 = prepare_next(dr_spoc_dir=dr_spoc_dir)
+    return df_grader_1.transform(lambda series: pd.Series({pos: find_compare(value, with_df=df_grader_2)
+                                                           for pos, value in series.items()}))
+
+
+def combine_spreadsheet_db(filename2cat, db_df):  # type: (pd.Series, pd.DataFrame) -> pd.DataFrame
+    def g(idx_val):
+        idx, val = idx_val
+        assert isinstance(val, str), 'Got type {!r} containing {!r}'.format(type(val), val)
+        if g.t > 0:
+            g.t -= 1
+            print('val:', val, '\n',
+                  'idx:', idx, '\n',
+                  )
+        if idx in g.db_df.index:
+            if g.tt > 0:
+                g.tt -= 1
+                #print('categories.index({!r}):'.format(val), categories.index(val), '\n',
+                #      'categories.index({!r}):'.format(g.db_df.loc[idx].category),
+                #      categories.index(g.db_df.loc[idx].category), '\n'
+                #      )
+            if categories.index(val) < categories.index(g.db_df.loc[idx].category):
+                g.db_df.loc[idx].category = val
+                g.changed_cond += 1
+                if g.tt > 0:
+                    print('db_df.loc[{!r}].category is now'.format(idx), g.db_df.loc[idx].category)
+            g.changed += 1
+        else:
+            if g.tt > 0:
+                print('{!r} not found in {!r}'.format(idx, g.db_df.index))
+            g.db_df = g.db_df.append(
+                pd.Series({'artifactLocation': idx, 'category': val}, index=('artifactLocation',), name=idx)
+            )
+            # db_df[idx] = val
+        return val
+
+    g.t = 0
+    g.tt = 0
+    g.changed_cond = 0
+    g.changed = 0
+    g.db_df = db_df
+
+    it_consumes(map(g, filename2cat.items()))
+
+    assert len(g.db_df.index) == 1574
+
+    return g.db_df
+
+
+def main():  # type: () -> (str, pd.DataFrame, pd.Series, pd.DataFrame)
     dr_spoc_dir = path.join(path.expanduser('~'),
                             'OneDrive - The University of Sydney (Students)',
                             'Fundus Photographs for AI',
                             'DR SPOC Dataset')
-    df_grader_1, df_grader_2 = prepare_next(dr_spoc_dir=dr_spoc_dir)
-    df = df_grader_1.transform(lambda series: pd.Series({k: find_compare(v, with_df=df_grader_2)
-                                                         for k, v in series.items()}))
-    frame_checks(dr_spoc_dir=dr_spoc_dir)
-    return df
+
+    db_df = handle_db(dr_spoc_dir=dr_spoc_dir)
+    df = handle_spreadsheet(dr_spoc_dir=dr_spoc_dir)
+    filename2cat = pd.Series()
+    df.apply(construct_worst_per_image, args=(dr_spoc_dir, filename2cat))
+
+    combined_df = combine_spreadsheet_db(db_df=db_df, filename2cat=filename2cat)
+
+    return dr_spoc_dir, df, filename2cat, combined_df
 
 
 # :::::::::::::::::::::::::::::::::::::::
 
-def frame_checks(dr_spoc_dir):
+def handle_db(dr_spoc_dir):  # type: (str) -> pd.DataFrame
     db_df, db_fname_co = retrieve_from_db(dr_spoc_dir=dr_spoc_dir)
 
     # assert sum(map(itemgetter(1), filename_c.most_common()[1:])) // 3 == 1570
     assert sum(map(itemgetter(1), db_fname_co.most_common())) == 589
 
-    print('db_fname_co:'.ljust(20), '{:04d}'.format(sum(map(itemgetter(1), db_fname_co.most_common()))))
+    # print('db_fname_co:'.ljust(20), '{:04d}'.format(sum(map(itemgetter(1), db_fname_co.most_common()))))
     # print('filename_c:'.ljust(just), '{:04d}'.format(sum(map(itemgetter(1), filename_c.most_common()[1:])) // 3))
+    return db_df
 
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
