@@ -26,3 +26,4 @@ pyyaml
 # torch==1.17.2
 torchvision==0.4.1
 sqlalchemy
+psycopg2

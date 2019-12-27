@@ -1,3 +1,5 @@
+from os import path
+
 import tensorflow_datasets as tfds
 
 from ml_glaucoma import problems as p
@@ -27,6 +29,29 @@ def dataset_builder(bmes_init, bmes_parent_dir, builders, data_dir, dataset, dow
             from ml_glaucoma.datasets.tfds_builders import refuge
 
             builder_factory = refuge.get_refuge_builder
+        elif ds == 'dr_spoc':
+            from ml_glaucoma.datasets.tfds_builders import dr_spoc
+            dr_spoc.get_data(manual_dir)
+            builder = tfds.image.ImageLabelFolder('DR SPOC')
+            builder.as_dataset(split=('test', 'train', 'valid'), shuffle_files=False)
+
+            if bmes_parent_dir is None:
+                raise ValueError(
+                    '`bmes_parent_dir` must be provided if doing '
+                    'bmes_init')
+
+            builder = tfds.image.ImageLabelFolder('DR SPOC')
+
+            #dl_config = tfds.download.DownloadConfig(manual_dir=path.join(bmes_parent_dir,
+            #                                                              'tensorflow_datasets'))
+
+            #manual_dir = path.join(bmes_parent_dir, 'tensorflow_datasets')
+
+            #builder.download_and_prepare(download_config=dl_config)
+            # print(builder.info)  # Splits, num examples,... automatically extracted
+            ds = builder.as_dataset(split=('test', 'train', 'valid'), shuffle_files=True)
+
+            builder_factory = dr_spoc.get_dr_spoc_builder
         else:
             raise NotImplementedError()
 

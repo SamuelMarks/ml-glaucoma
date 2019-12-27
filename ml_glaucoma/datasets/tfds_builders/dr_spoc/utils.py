@@ -588,26 +588,6 @@ def symbolically_link(dr_spoc_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
     return target_counts_cp
 
 
-def main():  # type: () -> (str, pd.DataFrame, pd.Series, pd.DataFrame)
-    dr_spoc_dir = path.join(path.expanduser('~'),
-                            'OneDrive - The University of Sydney (Students)',
-                            'Fundus Photographs for AI',
-                            'DR SPOC Dataset')
-
-    db_df = handle_db(dr_spoc_dir=dr_spoc_dir)
-    df = handle_spreadsheet(dr_spoc_dir=dr_spoc_dir)
-    filename2cat = pd.Series()
-    df.apply(construct_worst_per_image, args=(dr_spoc_dir, filename2cat))
-
-    combined_df = combine_spreadsheet_db(db_df=db_df, filename2cat=filename2cat)
-
-    # combined_df.apply(partition_symlink, 1)
-
-    symbolically_link(dr_spoc_dir, combined_df)
-
-    return dr_spoc_dir, df, filename2cat, combined_df
-
-
 # :::::::::::::::::::::::::::::::::::::::
 
 def handle_db(dr_spoc_dir):  # type: (str) -> pd.DataFrame
@@ -620,6 +600,20 @@ def handle_db(dr_spoc_dir):  # type: (str) -> pd.DataFrame
     # print('filename_c:'.ljust(just), '{:04d}'.format(sum(map(itemgetter(1), filename_c.most_common()[1:])) // 3))
     return db_df
 
+
+def main(dr_spoc_dir):  # type: (str) -> (str, pd.DataFrame, pd.Series, pd.DataFrame)
+    db_df = handle_db(dr_spoc_dir=dr_spoc_dir)
+    df = handle_spreadsheet(dr_spoc_dir=dr_spoc_dir)
+    filename2cat = pd.Series()
+    df.apply(construct_worst_per_image, args=(dr_spoc_dir, filename2cat))
+
+    combined_df = combine_spreadsheet_db(db_df=db_df, filename2cat=filename2cat)
+
+    # combined_df.apply(partition_symlink, 1)
+
+    symbolically_link(dr_spoc_dir, combined_df)
+
+    return dr_spoc_dir, df, filename2cat, combined_df
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -637,7 +631,3 @@ def handle_db(dr_spoc_dir):  # type: (str) -> pd.DataFrame
 #    f.write('\n'.join(filter(None, map(
 #        lambda c: c.replace('/Users/samuel/OneDrive - The University of Sydney (Students)/', '') if not pd.isnull(
 #            c) else None, total_filenames_c.keys()))))
-
-
-if __name__ == '__main__':
-    main()
