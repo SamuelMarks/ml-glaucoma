@@ -5,7 +5,7 @@ from collections import Counter
 from functools import partial
 from itertools import filterfalse, chain
 from operator import itemgetter, contains
-from os import path, environ, listdir
+from os import path, environ, listdir, makedirs, symlink
 
 import numpy as np
 import pandas as pd
@@ -483,25 +483,109 @@ def combine_spreadsheet_db(filename2cat, db_df):  # type: (pd.Series, pd.DataFra
     return g.db_df
 
 
-# TODO: Use dir—and other params—as per the global CLI structure
-base_dir = path.join(  # path.dirname(path.dirname(path.dirname(path.dirname(path.dirname(df.iloc[0].name))))),
-    'tensorflow_datasets', 'DR SPOC')
+def symbolically_link(dr_spoc_dir, df):  # type: (str, pd.DataFrame) -> pd.DataFrame
+    vc = df.apply(pd.value_counts)
 
+    # 75% in train
+    # 12.5% in test
+    # 12.5% in validation
+    target_counts = pd.DataFrame({
+        'train': pd.Series({
+            idx: np.uint16(np.floor(np.multiply(vc.loc[idx].category, .75)))
+            for idx in vc.category.index
+        }),
+        'test': pd.Series({
+            idx: np.uint16(np.floor(np.multiply(vc.loc[idx].category, .125)))
+            for idx in vc.category.index
+        })
+    })
+    target_counts['valid'] = pd.Series({
+        idx: vc.loc[idx].category - sum((lambda ser: (ser.train, ser.test))(target_counts.loc[idx]))
+        for idx in vc.category.index
+    })
 
-def partition_symlink(series):
-    def g(category, filename):
-        if partition_symlink.t > 0:
-            partition_symlink.t -= 1
-            print('os.symlink({filename!r}, {category!r})'.format(filename=filename,
-                                                                  category=path.join(base_dir,
-                                                                                     category,
-                                                                                     path.basename(filename))))
-        return category
+    base_dir = path.join(path.dirname(path.dirname(dr_spoc_dir)),
+                         'tensorflow_datasets',
+                         'DR SPOC')
 
-    return series.apply(g, args=(series.name,))
+    symlinks = []
 
+    if not path.isdir(base_dir):
+        makedirs(base_dir)
 
-partition_symlink.t = 20
+    def dedupe(items, key=None):
+        seen = set()
+        for item in items:
+            val = item if key is None else key(item)
+            if val not in seen:
+                yield val
+                seen.add(item)
+
+    def partition_symlink(series):
+        def g(filename_category):
+            filename, category = filename_category
+
+            if pd.isnull(filename):
+                return category
+
+            symlinks.append((filename, category))
+            return category
+
+        it_consumes(map(g, series.items()))
+        return series
+
+    partition_symlink.t = 0
+
+    df.apply(partition_symlink)
+
+    uniq_syms = tuple(dedupe(symlinks, key=itemgetter(0)))
+
+    target_counts_cp = target_counts.copy()
+
+    def get_next_label(index):  # type: (str) -> str
+        for column in target_counts.columns:
+            if target_counts[column][index] > 0:
+                target_counts[column][index] -= 1
+                return column
+        raise StopIteration('No more {!r}'.format(index))
+
+    def tier_syms(filename_category):
+        filename, category = filename_category if isinstance(filename_category, tuple) \
+            else (filename_category, df.loc[filename_category].category)
+
+        target_dir = path.join(base_dir,
+                               get_next_label(category),
+                               category)
+
+        if not path.isdir(target_dir):
+            makedirs(target_dir)
+
+        target_dir = path.join(
+            target_dir,
+            '_'.join((
+                path.basename(path.dirname(filename)),
+                path.basename(filename)
+            ))
+        )
+        try:
+            symlink(filename, target_dir)
+        except FileExistsError:
+            tier_syms.FileExistsError += 1
+
+        if tier_syms.t > 0:
+            tier_syms.t -= 1
+            print('filename: {!r}\ncategory: {!r}\n'.format(
+                filename, category
+            ), sep='')
+
+    tier_syms.t = 0
+    tier_syms.FileExistsError = 0
+
+    assert tier_syms.FileExistsError in (0, 1573)
+
+    it_consumes(map(tier_syms, uniq_syms))
+
+    return target_counts_cp
 
 
 def main():  # type: () -> (str, pd.DataFrame, pd.Series, pd.DataFrame)
@@ -517,7 +601,9 @@ def main():  # type: () -> (str, pd.DataFrame, pd.Series, pd.DataFrame)
 
     combined_df = combine_spreadsheet_db(db_df=db_df, filename2cat=filename2cat)
 
-    combined_df.apply(partition_symlink, 1)
+    # combined_df.apply(partition_symlink, 1)
+
+    symbolically_link(dr_spoc_dir, combined_df)
 
     return dr_spoc_dir, df, filename2cat, combined_df
 
