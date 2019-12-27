@@ -2,15 +2,11 @@
 
 from os import path
 
-import tensorflow_datasets as tfds
-
 from ml_glaucoma.datasets.tfds_builders.dr_spoc.utils import main
 
 
 def get_data(dr_spoc_dir):
     dr_spoc_dir, df, filename2cat, combined_df = main(dr_spoc_dir)
-
-    train_ds = tfds.load('mnist:3.*.*', split=tfds.core.ReadInstruction('train'))
 
     return combined_df
 
