@@ -55,7 +55,7 @@ rand_cache = rand_cache_obj.load()
 fqdn = getfqdn()
 
 
-def create_random_numbers(minimum, maximum, n):
+def create_random_numbers(minimum, maximum, n):  # type: (int, int, int) -> [int]
     whole, prev = frozenset(), frozenset()
     while len(whole) < n:
         whole = reduce(frozenset.union,
@@ -71,7 +71,7 @@ class UnknownImageFormat(Exception):
     pass
 
 
-def get_image_size(file_path):
+def get_image_size(file_path):  # type: (str) -> (int, int)
     """
     Return (width, height) for a given img file content - no external
     dependencies except the os and struct modules from core

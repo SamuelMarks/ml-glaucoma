@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import pickle
 import sys
 from collections import Counter
 from functools import partial
@@ -12,6 +13,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 
 from ml_glaucoma.utils import it_consumes
+from ml_glaucoma.utils.bmes_data_prep import create_random_numbers
 
 
 def isnotebook():  # type: () -> bool
@@ -513,14 +515,6 @@ def symbolically_link(dr_spoc_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
     if not path.isdir(base_dir):
         makedirs(base_dir)
 
-    def dedupe(items, key=None):
-        seen = set()
-        for item in items:
-            val = item if key is None else key(item)
-            if val not in seen:
-                yield val
-                seen.add(item)
-
     def partition_symlink(series):
         def g(filename_category):
             filename, category = filename_category
@@ -538,7 +532,19 @@ def symbolically_link(dr_spoc_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
 
     df.apply(partition_symlink)
 
-    uniq_syms = tuple(dedupe(symlinks, key=itemgetter(0)))
+    _used = set()
+
+    _uniq_syms = tuple((src, dst)
+                       for src, dst in symlinks
+                       if src not in _used and (_used.add(src) or True))
+
+    random_list = get_or_generate_and_store_random_list(
+        len(_uniq_syms),
+        path.join(path.dirname(path.dirname(path.dirname(path.dirname(__file__)))), '_data', '.cache',
+                  'dr_spoc_rand.pkl')
+    )
+    uniq_syms = tuple(_uniq_syms[i] for i in random_list)
+    assert len(uniq_syms) == len(_uniq_syms)
 
     target_counts_cp = target_counts.copy()
 
@@ -615,6 +621,7 @@ def main(dr_spoc_dir):  # type: (str) -> (str, pd.DataFrame, pd.Series, pd.DataF
 
     return dr_spoc_dir, df, filename2cat, combined_df
 
+
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # print('filename_c.most_common()')
@@ -631,3 +638,31 @@ def main(dr_spoc_dir):  # type: (str) -> (str, pd.DataFrame, pd.Series, pd.DataF
 #    f.write('\n'.join(filter(None, map(
 #        lambda c: c.replace('/Users/samuel/OneDrive - The University of Sydney (Students)/', '') if not pd.isnull(
 #            c) else None, total_filenames_c.keys()))))
+
+def get_or_generate_and_store_random_list(n, fname):  # type: (int, str) -> [int]
+    if n is None or n < 1:
+        raise TypeError('Nothing to generate')
+    if path.isfile(fname):
+        with open(fname, 'rb') as f:
+            return pickle.load(f)
+    print('Creating new random file')
+    random_numbers = create_random_numbers(
+        n=n, minimum=0, maximum=n
+    )
+    with open(fname, 'wb') as f:
+        pickle.dump(random_numbers, f)
+
+    return random_numbers
+
+
+if __name__ == '__main__':
+    get_or_generate_and_store_random_list(
+        1574,
+        path.join(path.dirname(path.dirname(path.dirname(path.dirname(__file__)))), '_data', '.cache',
+                  'dr_spoc_rand.pkl')
+        # partial(path.join, path.dirname(
+        #    resource_filename(sys.modules[__name__].__name__, '__init__.py')), '_conf')
+    )
+
+    # path.join(path.dirname(path.dirname(__file__)), '_data', '.cache',
+    #                'rand_cache.pkl'))
