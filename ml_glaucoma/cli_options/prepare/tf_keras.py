@@ -48,7 +48,14 @@ def dataset_builder(dataset, data_dir, download_dir,
 
                 get_data(dr_spoc_parent_dir, manual_dir)
 
-            builder = tfds.image.ImageLabelFolder('DR SPOC')
+            builder = tfds.image.ImageLabelFolder(
+                'DR SPOC', data_dir=data_dir,
+                config=tfds.core.BuilderConfig(
+                    name='DR SPOC',
+                    version='2019',
+                    description='Coming soon'
+                )
+            )
 
             # manual_dir = path.join(bmes_parent_dir, 'tensorflow_datasets')
 
@@ -57,6 +64,7 @@ def dataset_builder(dataset, data_dir, download_dir,
             # builders.append(builder)
             #
             # return
+            # TODO: Ensure resolution, RGB can be provided
             def builder_factory(resolution, rgb, data_dir):
                 if resolution is not None:
                     logger.warn('`resolution` not handled (yet) for DR SPOC dataset')
@@ -68,7 +76,6 @@ def dataset_builder(dataset, data_dir, download_dir,
         else:
             raise NotImplementedError()
 
-        # TODO: Ensure resolution, RGB, and data_dir can be provided for `dr_spoc`
         builder = builder_factory(resolution=resolution,
                                   rgb=not gray_on_disk,
                                   data_dir=data_dir)
