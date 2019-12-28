@@ -1,3 +1,5 @@
+from os import path
+
 import tensorflow_datasets as tfds
 
 from ml_glaucoma import problems as p
@@ -46,19 +48,18 @@ def dataset_builder(dataset, data_dir, download_dir,
 
                 get_data(dr_spoc_parent_dir, manual_dir)
 
-            builder = tfds.image.ImageLabelFolder('DR SPOC')
-            builder.as_dataset(split=('test', 'train', 'valid'), shuffle_files=False)
+            # builder = tfds.image.ImageLabelFolder('DR SPOC')
+            # builder.as_dataset(split=('test', 'train', 'valid'), shuffle_files=False)
 
             builder = tfds.image.ImageLabelFolder('DR SPOC')
 
-            # dl_config = tfds.download.DownloadConfig(manual_dir=path.join(bmes_parent_dir,
-            #                                                              'tensorflow_datasets'))
+            dl_config = tfds.download.DownloadConfig(manual_dir=manual_dir)
 
             # manual_dir = path.join(bmes_parent_dir, 'tensorflow_datasets')
 
-            # builder.download_and_prepare(download_config=dl_config)
+            builder.download_and_prepare(download_config=dl_config)
             # print(builder.info)  # Splits, num examples,... automatically extracted
-            ds = builder.as_dataset(split=('test', 'train', 'valid'), shuffle_files=True)
+            # ds = builder.as_dataset(split=('test', 'train', 'valid'), shuffle_files=True)
             builders.append(builder)
             # TODO: Ensure resolution, RGB, and data_dir can be provided like the other datasets
             return
