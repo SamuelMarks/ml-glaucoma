@@ -492,6 +492,9 @@ def combine_spreadsheet_db(filename2cat, db_df):  # type: (pd.Series, pd.DataFra
 
 
 def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataFrame
+    if symbolically_link.t > 0:
+        symbolically_link.t -= 1
+        print('symbolically_link::symlink_dir:'.ljust(just), '{!r}'.format(symlink_dir))
     vc = df.apply(pd.value_counts)
 
     # 75% in train
@@ -596,6 +599,9 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
     return target_counts_cp
 
 
+symbolically_link.t = 0
+
+
 # :::::::::::::::::::::::::::::::::::::::
 
 def handle_db(root_directory):  # type: (str) -> pd.DataFrame
@@ -609,7 +615,19 @@ def handle_db(root_directory):  # type: (str) -> pd.DataFrame
     return db_df
 
 
+just = 70
+
+
 def main(root_directory, manual_dir):  # type: (str, str or None) -> (str, pd.DataFrame, pd.Series, pd.DataFrame)
+    if main.t > 0:
+        main.t -= 1
+        print(
+            'ml_glaucoma/utils/dr_spoc_data_prep/utils.py::main::root_directory:'.ljust(just),
+            '{!r}\n'.format(root_directory),
+            'ml_glaucoma/utils/dr_spoc_data_prep/utils.py::main::manual_dir:'.ljust(just), '{!r}\n'.format(manual_dir),
+            sep=''
+        )
+
     it_consumes(map(ensure_is_dir, (root_directory, manual_dir)))
 
     levels = ['Fundus Photographs for AI', 'DR SPOC Dataset', 'DR SPOC Photo Dataset'][::-1]
@@ -628,13 +646,15 @@ def main(root_directory, manual_dir):  # type: (str, str or None) -> (str, pd.Da
 
     # combined_df.apply(partition_symlink, 1)
 
-    if manual_dir is None or manual_dir == root_directory:
-        manual_dir = path.join(root_directory,
-                               'symlinked_datasets',
-                               'DR SPOC')
+    if manual_dir is None or path.realpath(manual_dir) == path.realpath(root_directory):
+        manual_dir = path.join(root_directory, 'symlinked_datasets', 'DR SPOC')
+
     symbolically_link(manual_dir, combined_df)
 
     return root_directory, df, filename2cat, combined_df
+
+
+main.t = 0
 
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
