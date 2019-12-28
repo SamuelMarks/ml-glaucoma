@@ -63,7 +63,7 @@ def dataset_builder(dataset, data_dir, download_dir,
                 manual_dir = symlinked_datasets_directory
 
             builder = tfds.image.ImageLabelFolder(
-                'DR SPOC Photo Dataset', data_dir=data_dir,
+                'DR SPOC', data_dir=data_dir,
                 config=tfds.core.BuilderConfig(
                     name='DR SPOC',
                     version='2019.12.28',
