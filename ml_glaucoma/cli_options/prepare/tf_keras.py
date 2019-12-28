@@ -47,9 +47,9 @@ def dataset_builder(dataset, data_dir, download_dir,
 
                 get_data(root_directory=dr_spoc_parent_dir, manual_dir=manual_dir)
 
-            part = 'tensorflow_datasets'
+            part = 'dr_spoc'
             if not data_dir.endswith(part):
-                data_dir = path.join(data_dir, part)
+                data_dir = path.join(data_dir, 'tensorflow_datasets', part)
 
             builder = tfds.image.ImageLabelFolder(
                 'DR SPOC Photo Dataset', data_dir=data_dir,
