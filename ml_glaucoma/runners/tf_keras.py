@@ -3,7 +3,6 @@ from stat import S_IWOTH, S_IWGRP, S_IWRITE
 from sys import modules
 
 import tensorflow as tf
-from tensorflow.python.keras.utils import model_to_dot
 
 from ml_glaucoma import callbacks as cb, runners, get_logger
 from ml_glaucoma.cli_options.logparser.tf import log_parser
@@ -124,7 +123,7 @@ def train(problem, batch_size, epochs,
         callbacks.extend(common_callbacks)
 
     try:
-        dot = model_to_dot(model)
+        dot = tf.keras.utils.model_to_dot(model)
         if dot is not None:
             dotfile = os.path.join(os.path.dirname(model_dir),
                                    os.path.basename(model_dir) + '.dot')
@@ -135,6 +134,7 @@ def train(problem, batch_size, epochs,
 
     if model.name == 'model':
         model._name = os.path.basename(model_dir)
+
     model.summary()
 
     parsed_line = parse_line(os.path.basename(model_dir))
