@@ -13,12 +13,12 @@ from shutil import rmtree
 from socket import getfqdn
 from sys import modules
 
-import quantumrandom
 from six import iteritems, itervalues
+
+from ml_glaucoma.utils.helpers import create_random_numbers
 
 if python_version_tuple()[0] == '3':
     from importlib import reload
-    from functools import reduce
 
     xrange = range
     imap = map
@@ -53,18 +53,6 @@ rand_cache_obj = Cache(fname=path.join(path.dirname(path.dirname(__file__)), '_d
 rand_cache_recreate = environ.get('RECREATE_RAND_CACHE', False)
 rand_cache = rand_cache_obj.load()
 fqdn = getfqdn()
-
-
-def create_random_numbers(minimum, maximum, n):  # type: (int, int, int) -> [int]
-    whole, prev = frozenset(), frozenset()
-    while len(whole) < n:
-        whole = reduce(frozenset.union,
-                       (frozenset(imap(lambda num: minimum + (num % maximum),
-                                       quantumrandom.get_data(data_type='uint16', array_length=1024))),
-                        prev))
-        prev = whole
-        print(len(whole), 'of', n)
-    return sample(whole, n)
 
 
 class UnknownImageFormat(Exception):

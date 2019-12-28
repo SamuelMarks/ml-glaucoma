@@ -170,7 +170,6 @@ def parse_line(line):
         sep=''
     )
     '''
-    path.splitext()
 
     base, transfer = locals().get('base'), locals().get('transfer')
     assert base is not None or transfer is not None, 'Unknown model'

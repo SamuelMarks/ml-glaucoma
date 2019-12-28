@@ -13,13 +13,15 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 
 from ml_glaucoma.utils import it_consumes
-from ml_glaucoma.utils.bmes_data_prep import create_random_numbers
+from ml_glaucoma.utils.helpers import create_random_numbers, ensure_is_dir
 
 
 def isnotebook():  # type: () -> bool
     try:
         from IPython import get_ipython
+
         shell = get_ipython().__class__.__name__
+
         if shell == 'ZMQInteractiveShell':
             return True  # Jupyter notebook or qtconsole
         elif shell == 'TerminalInteractiveShell':
@@ -507,7 +509,7 @@ def symbolically_link(dr_spoc_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
     })
 
     base_dir = path.join(path.dirname(path.dirname(dr_spoc_dir)),
-                         'tensorflow_datasets',
+                         'symlinked_datasets',
                          'DR SPOC')
 
     symlinks = []
@@ -607,7 +609,8 @@ def handle_db(dr_spoc_dir):  # type: (str) -> pd.DataFrame
     return db_df
 
 
-def main(dr_spoc_dir):  # type: (str) -> (str, pd.DataFrame, pd.Series, pd.DataFrame)
+def main(dr_spoc_dir, manual_dir):  # type: (str, str) -> (str, pd.DataFrame, pd.Series, pd.DataFrame)
+    it_consumes(map(ensure_is_dir, (dr_spoc_dir, manual_dir)))
     db_df = handle_db(dr_spoc_dir=dr_spoc_dir)
     df = handle_spreadsheet(dr_spoc_dir=dr_spoc_dir)
     filename2cat = pd.Series()

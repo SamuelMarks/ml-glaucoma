@@ -2,11 +2,13 @@
 
 from os import path
 
-from ml_glaucoma.datasets.tfds_builders.dr_spoc.utils import main
+import pandas as pd
+
+from ml_glaucoma.utils.dr_spoc_data_prep.utils import main
 
 
-def get_data(dr_spoc_dir):
-    dr_spoc_dir, df, filename2cat, combined_df = main(dr_spoc_dir)
+def get_data(dr_spoc_dir, manual_dir):  # type: (str, str) -> pd.DataFrame
+    dr_spoc_dir, df, filename2cat, combined_df = main(dr_spoc_dir, manual_dir)
 
     return combined_df
 

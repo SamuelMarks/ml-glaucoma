@@ -16,7 +16,7 @@ class ConfigurableBuilders(Configurable):
 
     def fill_self(self, parser):
         parser.add_argument(
-            '-ds', '--dataset', choices=('bmes', 'refuge'), default=['refuge'],
+            '-ds', '--dataset', choices=('bmes', 'dr_spoc', 'refuge'), default=['refuge'],
             nargs='+',
             help='dataset key', )
         parser.add_argument(
@@ -42,16 +42,31 @@ class ConfigurableBuilders(Configurable):
         parser.add_argument(
             '--gray_on_disk', action='store_true',
             help='whether or not to save data as grayscale on disk')
+
+        # Specific to BMES
         parser.add_argument(
             '--bmes_init', action='store_true', help='initial bmes get_data')
         parser.add_argument(
             '--bmes_parent_dir', help='parent directory of bmes data')
 
-    def build_self(self, dataset, data_dir, download_dir, extract_dir, manual_dir,
-                   download_mode, resolution, gray_on_disk, bmes_init, bmes_parent_dir, **kwargs):
+        # Specific to DR SPOC
+        parser.add_argument(
+            '--dr_spoc_init', action='store_true', help='initial DR SPOC get_data')
+        parser.add_argument(
+            '--dr_spoc_parent_dir', help='parent directory of DR SPOC data')
+
+    def build_self(self, dataset, data_dir, download_dir,
+                   extract_dir, manual_dir, download_mode,
+                   resolution, gray_on_disk,
+                   bmes_init, bmes_parent_dir,
+                   dr_spoc_init, dr_spoc_parent_dir, **kwargs):
         builders = []
 
-        dataset_builder(bmes_init, bmes_parent_dir, builders, data_dir, dataset, download_dir,
-                        download_mode, extract_dir, gray_on_disk, manual_dir, resolution)
+        dataset_builder(dataset=dataset, data_dir=data_dir, download_dir=download_dir,
+                        extract_dir=extract_dir, manual_dir=manual_dir, download_mode=download_mode,
+                        resolution=resolution, gray_on_disk=gray_on_disk,
+                        bmes_init=bmes_init, bmes_parent_dir=bmes_parent_dir,
+                        dr_spoc_init=dr_spoc_init, dr_spoc_parent_dir=dr_spoc_parent_dir,
+                        builders=builders)
 
         return builders
