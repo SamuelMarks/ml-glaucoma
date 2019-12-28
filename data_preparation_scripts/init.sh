@@ -7,6 +7,6 @@ dataset="${DATASET:-dr_spoc}"
 python -m ml_glaucoma download \
     -ds "$dataset" \
     --data_dir "$data_pardir"/tensorflow_datasets \
-    --bmes_init \
+    --"$dataset"_init \
     --manual_dir "$manual_dir" \
-    --bmes_parent_dir "$data_pardir"/
+    --"$dataset"_parent_dir "$data_pardir"/
