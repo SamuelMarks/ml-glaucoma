@@ -1,8 +1,8 @@
-from os import path
-
 import tensorflow_datasets as tfds
 
-from ml_glaucoma import problems as p
+from ml_glaucoma import problems as p, get_logger
+
+logger = get_logger(__file__.partition('.')[0])
 
 
 def dataset_builder(dataset, data_dir, download_dir,
@@ -48,33 +48,37 @@ def dataset_builder(dataset, data_dir, download_dir,
 
                 get_data(dr_spoc_parent_dir, manual_dir)
 
-            # builder = tfds.image.ImageLabelFolder('DR SPOC')
-            # builder.as_dataset(split=('test', 'train', 'valid'), shuffle_files=False)
-
             builder = tfds.image.ImageLabelFolder('DR SPOC')
-
-            dl_config = tfds.download.DownloadConfig(manual_dir=manual_dir)
 
             # manual_dir = path.join(bmes_parent_dir, 'tensorflow_datasets')
 
-            builder.download_and_prepare(download_config=dl_config)
             # print(builder.info)  # Splits, num examples,... automatically extracted
             # ds = builder.as_dataset(split=('test', 'train', 'valid'), shuffle_files=True)
-            builders.append(builder)
-            # TODO: Ensure resolution, RGB, and data_dir can be provided like the other datasets
-            return
+            # builders.append(builder)
+            #
+            # return
+            def builder_factory(resolution, rgb, data_dir):
+                if resolution is not None:
+                    logger.warn('`resolution` not handled (yet) for DR SPOC dataset')
+                if rgb is not None:
+                    logger.warn('`rgb` not handled (yet) for DR SPOC dataset')
+                builder._data_dir = data_dir
+                return builder
+
         else:
             raise NotImplementedError()
 
-        builder = builder_factory(
-            resolution=resolution,
-            rgb=not gray_on_disk,
-            data_dir=data_dir)
+        # TODO: Ensure resolution, RGB, and data_dir can be provided for `dr_spoc`
+        builder = builder_factory(resolution=resolution,
+                                  rgb=not gray_on_disk,
+                                  data_dir=data_dir)
 
         p.download_and_prepare(
             builder=builder,
             download_config=tfds.download.DownloadConfig(
                 extract_dir=extract_dir, manual_dir=manual_dir,
-                download_mode=download_mode),
-            download_dir=download_dir)
+                download_mode=download_mode
+            ),
+            download_dir=download_dir
+        )
         builders.append(builder)
