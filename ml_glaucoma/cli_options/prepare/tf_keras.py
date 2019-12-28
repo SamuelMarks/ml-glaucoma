@@ -1,8 +1,11 @@
+from os import path
+
 import tensorflow_datasets as tfds
 
 from ml_glaucoma import problems as p, get_logger
 
-logger = get_logger(__file__.partition('.')[0])
+logger = get_logger('.'.join((path.basename(path.dirname(__file__)),
+                              path.basename(__file__).rpartition('.')[0])))
 
 
 def dataset_builder(dataset, data_dir, download_dir,
@@ -37,24 +40,20 @@ def dataset_builder(dataset, data_dir, download_dir,
             if dr_spoc_init:
                 from ml_glaucoma.utils.dr_spoc_data_prep import get_data
 
-                if manual_dir is None:
-                    raise ValueError(
-                        '`manual_dir` must be provided if doing bmes_init')
-
                 if dr_spoc_parent_dir is None:
                     raise ValueError(
                         '`dr_spoc_parent_dir` must be provided if '
                         '`dr_spoc_init is True`')
 
-                get_data(dr_spoc_parent_dir, manual_dir)
+                get_data(root_directory=dr_spoc_parent_dir, manual_dir=manual_dir)
 
             builder = tfds.image.ImageLabelFolder(
-                'DR SPOC', data_dir=data_dir,
-                config=tfds.core.BuilderConfig(
-                    name='DR SPOC',
-                    version='2019',
-                    description='Coming soon'
-                )
+                'DR SPOC Photo Dataset', data_dir=data_dir,
+                # config=tfds.core.BuilderConfig(
+                #    name='DR SPOC',
+                #    version='2019.12.28',
+                #    description='Coming soon'
+                # )
             )
 
             # manual_dir = path.join(bmes_parent_dir, 'tensorflow_datasets')
@@ -64,6 +63,9 @@ def dataset_builder(dataset, data_dir, download_dir,
             # builders.append(builder)
             #
             # return
+
+            print('ml_glaucoma/cli_options/prepare/tf_keras.py::data_dir: {!r}'.format(data_dir))
+
             # TODO: Ensure resolution, RGB can be provided
             def builder_factory(resolution, rgb, data_dir):
                 if resolution is not None:

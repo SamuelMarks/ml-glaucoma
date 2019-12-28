@@ -202,10 +202,11 @@ def to_manycat_name(o):  # type: ([str]) -> str
     raise TypeError('{!r} no key found for'.format(o))
 
 
-def prepare(dr_spoc_dir, sheet_name):  # type: (str, str) -> pd.DataFrame
+def prepare(root_directory, sheet_name):  # type: (str, str) -> pd.DataFrame
     df = pd \
         .read_excel('/'.join(('file://localhost',
-                              path.dirname(path.dirname(dr_spoc_dir)).replace(path.sep, '/'),
+                              root_directory.replace(path.sep, '/'),
+                              'Fundus Photographs for AI', 'DR SPOC Dataset',
                               'DR SPOC - Graders 1 and 2.xlsx')),
                     sheet_name=sheet_name,
                     skiprows=1,
@@ -238,7 +239,7 @@ def prepare(dr_spoc_dir, sheet_name):  # type: (str, str) -> pd.DataFrame
 prepare.t = 0
 
 
-def retrieve_from_db(dr_spoc_dir):  # type: () -> (pd.DataFrame, Counter)
+def retrieve_from_db(root_directory):  # type: () -> (pd.DataFrame, Counter)
     engine = create_engine(environ['RDBMS_URI'])
 
     with engine.connect() as con:
@@ -268,11 +269,11 @@ def retrieve_from_db(dr_spoc_dir):  # type: () -> (pd.DataFrame, Counter)
 
     df = pd.read_sql('''
     SELECT replace(url_decode("artifactLocation"), 'fundus_images',
-                   '{dr_spoc_dir_parent}') as "artifactLocation",
+                   '{directory_parent}') as "artifactLocation",
            replace(lower(category), 'ungradable', 'No gradable image') as category
     FROM categorise_tbl
     WHERE username = 'hamo.dw@gmail.com';
-    '''.format(dr_spoc_dir_parent=path.dirname(dr_spoc_dir)), con=engine).set_index('artifactLocation')
+    '''.format(directory_parent=root_directory), con=engine).set_index('artifactLocation')
 
     category2location = {cat: [] for cat in df.category.unique()}
 
@@ -301,18 +302,23 @@ def retrieve_from_db(dr_spoc_dir):  # type: () -> (pd.DataFrame, Counter)
     return df, fname_co
 
 
-def construct_filename(dr_spoc_dir, image_position, folder_name):  # type: (str, str, int) -> str or np.nan
+def construct_filename(root_directory, image_position, folder_name):  # type: (str, str, int) -> str or np.nan
     if pd.isnull(image_position) or pd.isnull(folder_name):
         return np.nan
+
     image_position = image_position[:2]
-    directory = path.join(dr_spoc_dir, 'DR SPOC Photo Dataset', str(folder_name))
+    labels_directory = path.join(
+        root_directory,
+        'Fundus Photographs for AI', 'DR SPOC Dataset', 'DR SPOC Photo Dataset',
+        str(folder_name)
+    )
 
     image = next((img
-                  for img in listdir(directory)
+                  for img in listdir(labels_directory)
                   if img.endswith('.jpg') and image_position in img),
                  np.nan)
 
-    return image if pd.isnull(image) else path.join(directory, image)
+    return image if pd.isnull(image) else path.join(labels_directory, image)
 
 
 def choice_between(record0, record1):  # type: (pd.Series, pd.Series) -> pd.Series
@@ -340,9 +346,9 @@ def find_compare(record, with_df):  # type: (pd.Series, pd.DataFrame) -> pd.Seri
 categories = 'No gradable image', 'referable', 'non-referable'
 
 
-def construct_worst_per_image(series, dr_spoc_dir, new_df):
+def construct_worst_per_image(series, root_directory, new_df):
     def g(val):
-        fname = construct_filename(dr_spoc_dir, val.image_position, val.folder_name)
+        fname = construct_filename(root_directory, val.image_position, val.folder_name)
 
         if pd.isnull(val.choice):
             return val
@@ -386,12 +392,8 @@ def construct_worst_per_image(series, dr_spoc_dir, new_df):
 construct_worst_per_image.t = 0
 
 
-def prepare_next(dr_spoc_dir):  # type: (str) -> (pd.DataFrame, pd.DataFrame)
-    assert path.isdir(dr_spoc_dir)
-    assert path.isdir(path.join(dr_spoc_dir, 'DR SPOC Photo Dataset'))
-    assert not path.isdir(path.join(dr_spoc_dir, 'DR SPOC Photo Dataset', 'DR SPOC Dataset'))
-
-    df_grader_1, df_grader_2 = (prepare(dr_spoc_dir, sheet_name='Grader {:d}'.format(i)) for i in (1, 2))
+def prepare_next(root_directory):  # type: (str) -> (pd.DataFrame, pd.DataFrame)
+    df_grader_1, df_grader_2 = (prepare(root_directory, sheet_name='Grader {:d}'.format(i)) for i in (1, 2))
     just = 20
 
     # parseFname('DR SPOC Photo Dataset/6146/Upload/WA112325R2-8.jpg')
@@ -405,7 +407,7 @@ def prepare_next(dr_spoc_dir):  # type: (str) -> (pd.DataFrame, pd.DataFrame)
         if image_position == category:
             image_position = np.nan
 
-        filename = construct_filename(dr_spoc_dir, image_position, folder_name)
+        filename = construct_filename(root_directory, image_position, folder_name)
         filename_c[filename] += 1
 
         series_input = {
@@ -437,8 +439,8 @@ def prepare_next(dr_spoc_dir):  # type: (str) -> (pd.DataFrame, pd.DataFrame)
                  for df in (df_grader_1, df_grader_2))
 
 
-def handle_spreadsheet(dr_spoc_dir):  # type: (str) -> pd.DataFrame
-    df_grader_1, df_grader_2 = prepare_next(dr_spoc_dir=dr_spoc_dir)
+def handle_spreadsheet(root_directory):  # type: (str) -> pd.DataFrame
+    df_grader_1, df_grader_2 = prepare_next(root_directory=root_directory)
     return df_grader_1.transform(lambda series: pd.Series({pos: find_compare(value, with_df=df_grader_2)
                                                            for pos, value in series.items()}))
 
@@ -482,12 +484,13 @@ def combine_spreadsheet_db(filename2cat, db_df):  # type: (pd.Series, pd.DataFra
 
     it_consumes(map(g, filename2cat.items()))
 
-    assert len(g.db_df.index) == 1574
+    # display(HTML(g.db_df.to_html()))
+    assert len(g.db_df.index) == 1574, 'Actually got {:d}'.format(len(g.db_df.index))
 
     return g.db_df
 
 
-def symbolically_link(dr_spoc_dir, df):  # type: (str, pd.DataFrame) -> pd.DataFrame
+def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataFrame
     vc = df.apply(pd.value_counts)
 
     # 75% in train
@@ -508,14 +511,10 @@ def symbolically_link(dr_spoc_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
         for idx in vc.category.index
     })
 
-    base_dir = path.join(path.dirname(path.dirname(dr_spoc_dir)),
-                         'symlinked_datasets',
-                         'DR SPOC')
-
     symlinks = []
 
-    if not path.isdir(base_dir):
-        makedirs(base_dir)
+    if not path.isdir(symlink_dir):
+        makedirs(symlink_dir)
 
     def partition_symlink(series):
         def g(filename_category):
@@ -542,7 +541,7 @@ def symbolically_link(dr_spoc_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
 
     random_list = get_or_generate_and_store_random_list(
         len(_uniq_syms),
-        path.join(path.dirname(path.dirname(path.dirname(path.dirname(__file__)))), '_data', '.cache',
+        path.join(path.dirname(path.dirname(path.dirname(__file__))), '_data', '.cache',
                   'dr_spoc_rand.pkl')
     )
     uniq_syms = tuple(_uniq_syms[i] for i in random_list)
@@ -561,7 +560,7 @@ def symbolically_link(dr_spoc_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
         filename, category = filename_category if isinstance(filename_category, tuple) \
             else (filename_category, df.loc[filename_category].category)
 
-        target_dir = path.join(base_dir,
+        target_dir = path.join(symlink_dir,
                                get_next_label(category),
                                category)
 
@@ -598,8 +597,8 @@ def symbolically_link(dr_spoc_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
 
 # :::::::::::::::::::::::::::::::::::::::
 
-def handle_db(dr_spoc_dir):  # type: (str) -> pd.DataFrame
-    db_df, db_fname_co = retrieve_from_db(dr_spoc_dir=dr_spoc_dir)
+def handle_db(root_directory):  # type: (str) -> pd.DataFrame
+    db_df, db_fname_co = retrieve_from_db(root_directory=root_directory)
 
     # assert sum(map(itemgetter(1), filename_c.most_common()[1:])) // 3 == 1570
     assert sum(map(itemgetter(1), db_fname_co.most_common())) == 589
@@ -609,20 +608,32 @@ def handle_db(dr_spoc_dir):  # type: (str) -> pd.DataFrame
     return db_df
 
 
-def main(dr_spoc_dir, manual_dir):  # type: (str, str) -> (str, pd.DataFrame, pd.Series, pd.DataFrame)
-    it_consumes(map(ensure_is_dir, (dr_spoc_dir, manual_dir)))
-    db_df = handle_db(dr_spoc_dir=dr_spoc_dir)
-    df = handle_spreadsheet(dr_spoc_dir=dr_spoc_dir)
+def main(root_directory, manual_dir):  # type: (str, str or None) -> (str, pd.DataFrame, pd.Series, pd.DataFrame)
+    it_consumes(map(ensure_is_dir, (root_directory, manual_dir)))
+
+    levels = ['Fundus Photographs for AI', 'DR SPOC Dataset', 'DR SPOC Photo Dataset'][::-1]
+    prev = levels.pop()
+    while len(levels):
+        ensure_is_dir(prev)
+        prev = path.join(prev, levels.pop())
+    del levels, prev
+
+    db_df = handle_db(root_directory=root_directory)
+    df = handle_spreadsheet(root_directory=root_directory)
     filename2cat = pd.Series()
-    df.apply(construct_worst_per_image, args=(dr_spoc_dir, filename2cat))
+    df.apply(construct_worst_per_image, args=(root_directory, filename2cat))
 
     combined_df = combine_spreadsheet_db(db_df=db_df, filename2cat=filename2cat)
 
     # combined_df.apply(partition_symlink, 1)
 
-    symbolically_link(dr_spoc_dir, combined_df)
+    if manual_dir is None or manual_dir == root_directory:
+        manual_dir = path.join(root_directory,
+                               'symlinked_datasets',
+                               'DR SPOC')
+    symbolically_link(manual_dir, combined_df)
 
-    return dr_spoc_dir, df, filename2cat, combined_df
+    return root_directory, df, filename2cat, combined_df
 
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -645,17 +656,18 @@ def main(dr_spoc_dir, manual_dir):  # type: (str, str) -> (str, pd.DataFrame, pd
 def get_or_generate_and_store_random_list(n, fname):  # type: (int, str) -> [int]
     if n is None or n < 1:
         raise TypeError('Nothing to generate')
-    if path.isfile(fname):
+    elif path.isfile(fname):
         with open(fname, 'rb') as f:
             return pickle.load(f)
-    print('Creating new random file')
-    random_numbers = create_random_numbers(
-        n=n, minimum=0, maximum=n
-    )
-    with open(fname, 'wb') as f:
-        pickle.dump(random_numbers, f)
+    else:
+        print('Creating new random file')
+        random_numbers = create_random_numbers(
+            n=n, minimum=0, maximum=n
+        )
+        with open(fname, 'wb') as f:
+            pickle.dump(random_numbers, f)
 
-    return random_numbers
+        return random_numbers
 
 
 if __name__ == '__main__':
