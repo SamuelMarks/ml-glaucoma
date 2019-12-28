@@ -49,11 +49,11 @@ def dataset_builder(dataset, data_dir, download_dir,
 
             builder = tfds.image.ImageLabelFolder(
                 'DR SPOC Photo Dataset', data_dir=data_dir,
-                # config=tfds.core.BuilderConfig(
-                #    name='DR SPOC',
-                #    version='2019.12.28',
-                #    description='Coming soon'
-                # )
+                config=tfds.core.BuilderConfig(
+                    name='DR SPOC',
+                    version='2019.12.28',
+                    description='Coming soon'
+                )
             )
 
             # manual_dir = path.join(bmes_parent_dir, 'tensorflow_datasets')
@@ -64,7 +64,7 @@ def dataset_builder(dataset, data_dir, download_dir,
             #
             # return
 
-            print('ml_glaucoma/cli_options/prepare/tf_keras.py::data_dir: {!r}'.format(data_dir))
+            # print('ml_glaucoma/cli_options/prepare/tf_keras.py::data_dir: {!r}'.format(data_dir))
 
             # TODO: Ensure resolution, RGB can be provided
             def builder_factory(resolution, rgb, data_dir):
