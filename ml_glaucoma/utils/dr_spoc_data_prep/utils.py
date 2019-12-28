@@ -612,7 +612,7 @@ def main(root_directory, manual_dir):  # type: (str, str or None) -> (str, pd.Da
     it_consumes(map(ensure_is_dir, (root_directory, manual_dir)))
 
     levels = ['Fundus Photographs for AI', 'DR SPOC Dataset', 'DR SPOC Photo Dataset'][::-1]
-    prev = levels.pop()
+    prev = path.join(root_directory, levels.pop())
     while len(levels):
         ensure_is_dir(prev)
         prev = path.join(prev, levels.pop())
