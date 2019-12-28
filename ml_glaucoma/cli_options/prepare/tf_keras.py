@@ -64,11 +64,11 @@ def dataset_builder(dataset, data_dir, download_dir,
 
             builder = tfds.image.ImageLabelFolder(
                 'DR SPOC', data_dir=data_dir,
-                config=tfds.core.BuilderConfig(
-                    #name='DR SPOC',
-                    version='2019.12.28',
-                    description='Coming soon'
-                )
+                # config=tfds.core.BuilderConfig(
+                # name='DR SPOC',
+                #    version=tfds.core.Version('2019.12.28'),
+                #    description='Coming soon'
+                # )
             )
 
             # manual_dir = path.join(bmes_parent_dir, 'tensorflow_datasets')
