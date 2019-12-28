@@ -47,9 +47,9 @@ def dataset_builder(dataset, data_dir, download_dir,
 
                 get_data(root_directory=dr_spoc_parent_dir, manual_dir=manual_dir)
 
-            part = 'dr_spoc'
+            part = 'tensorflow_datasets'
             if not data_dir.endswith(part):
-                data_dir = path.join(data_dir, 'tensorflow_datasets', part)
+                data_dir = path.join(data_dir, part)
 
             if path.dirname(manual_dir) != 'DR SPOC Dataset' and not path.isdir(path.join(manual_dir, 'DR SPOC')):
                 symlinked_datasets_directory = path.join(dr_spoc_parent_dir,
