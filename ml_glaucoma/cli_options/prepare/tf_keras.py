@@ -50,6 +50,17 @@ def dataset_builder(dataset, data_dir, download_dir,
             part = 'dr_spoc'
             if not data_dir.endswith(part):
                 data_dir = path.join(data_dir, 'tensorflow_datasets', part)
+            if path.dirname(manual_dir) != 'DR SPOC Dataset':
+                symlinked_datasets_directory = path.join(dr_spoc_parent_dir,
+                                                         'symlinked_datasets',
+                                                         'DR SPOC')
+                assert path.isdir(symlinked_datasets_directory), 'Manual directory {!r} does not exist. ' \
+                                                                 'Create it and download/extract dataset artifacts ' \
+                                                                 'in there. Additional instructions: ' \
+                                                                 'This is a \'template\' dataset.'.format(
+                    symlinked_datasets_directory
+                )
+                manual_dir = symlinked_datasets_directory
 
             builder = tfds.image.ImageLabelFolder(
                 'DR SPOC Photo Dataset', data_dir=data_dir,
