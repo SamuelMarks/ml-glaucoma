@@ -273,7 +273,8 @@ def retrieve_from_db(root_directory):  # type: () -> (pd.DataFrame, Counter)
            replace(lower(category), 'ungradable', 'No gradable image') as category
     FROM categorise_tbl
     WHERE username = 'hamo.dw@gmail.com';
-    '''.format(directory_parent=root_directory), con=engine).set_index('artifactLocation')
+    '''.format(directory_parent=path.join(root_directory, 'Fundus Photographs for AI')), con=engine).set_index(
+        'artifactLocation')
 
     category2location = {cat: [] for cat in df.category.unique()}
 
