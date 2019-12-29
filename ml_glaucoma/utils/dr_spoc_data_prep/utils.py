@@ -580,7 +580,7 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
         )
 
         grad_and_no_grad_dir = path.join(
-            path.dirname(target_dir),
+            starting_target_dir,
             'DR SPOC - grad_and_no_grad_dir',
             '_'.join((
                 path.basename(path.dirname(filename)),
@@ -589,7 +589,7 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
         )
 
         no_no_grad_dir = path.join(
-            path.dirname(target_dir),
+            starting_target_dir,
             'DR SPOC - no_no_grad_dir',
             '_'.join((
                 path.basename(path.dirname(filename)),
