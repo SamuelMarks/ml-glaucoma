@@ -554,7 +554,7 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
 
     target_counts_cp = target_counts.copy()
 
-    def get_next_label(index):  # type: (str) -> str
+    def get_next_tier(index):  # type: (str) -> str
         for column in target_counts.columns:
             if target_counts[column][index] > 0:
                 target_counts[column][index] -= 1
@@ -565,7 +565,7 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
         filename, category = filename_category if isinstance(filename_category, tuple) \
             else (filename_category, df.loc[filename_category].category)
 
-        current_label = get_next_label(category)
+        current_tier = get_next_tier(category)
         this_filename = '_'.join((
             path.basename(path.dirname(filename)),
             path.basename(filename)
@@ -573,7 +573,7 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
 
         all_labels_dir = path.join(
             symlink_dir,
-            current_label,
+            current_tier,
             category
         )
 
@@ -585,7 +585,7 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
         no_no_grad_dir = path.join(
             path.dirname(symlink_dir),
             'DR SPOC - no_no_grad_dir',
-            current_label,
+            current_tier,
             category
         )
 
@@ -602,7 +602,7 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
             tier_syms.FileExistsError += 1
 
         with suppress(FileExistsError):
-            label = current_label if current_label == 'No gradable image' else 'gradable'
+            label = category if category == 'No gradable image' else 'gradable'
             grad_and_no_grad_dir = path.join(grad_and_no_grad_dir, label)
             if not path.isdir(grad_and_no_grad_dir):
                 makedirs(grad_and_no_grad_dir)
