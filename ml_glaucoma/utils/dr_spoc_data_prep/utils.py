@@ -606,7 +606,7 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
             grad_and_no_grad_dir = path.join(grad_and_no_grad_dir, label)
             if not path.isdir(grad_and_no_grad_dir):
                 makedirs(grad_and_no_grad_dir)
-            grad_and_no_grad_dst = path.join(grad_and_no_grad_dir, this_filename)
+            grad_and_no_grad_dst = path.join(grad_and_no_grad_dir, current_tier, this_filename)
             symlink(filename, grad_and_no_grad_dst, target_is_directory=False)
             if label != 'No gradable image':
                 if not path.isdir(no_no_grad_dir_dst):
