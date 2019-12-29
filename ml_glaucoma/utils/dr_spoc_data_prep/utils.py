@@ -596,6 +596,9 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
                 path.basename(filename)
             ))
         )
+        for directory in grad_and_no_grad_dir, no_no_grad_dir:
+            if not path.isdir(directory):
+                makedirs(directory)
 
         try:
             symlink(filename, target_dir)
