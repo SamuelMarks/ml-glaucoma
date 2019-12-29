@@ -3,6 +3,7 @@
 import pickle
 import sys
 from collections import Counter
+from contextlib import suppress
 from functools import partial
 from itertools import filterfalse, chain
 from operator import itemgetter, contains
@@ -564,53 +565,49 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
         filename, category = filename_category if isinstance(filename_category, tuple) \
             else (filename_category, df.loc[filename_category].category)
 
-        starting_target_dir = path.join(symlink_dir,
-                                        get_next_label(category),
-                                        category)
+        next_label = get_next_label(category)
+        this_filename = '_'.join((
+            path.basename(path.dirname(filename)),
+            path.basename(filename)
+        ))
 
-        if not path.isdir(starting_target_dir):
-            makedirs(starting_target_dir)
-
-        target_dir = path.join(
-            starting_target_dir,
-            '_'.join((
-                path.basename(path.dirname(filename)),
-                path.basename(filename)
-            ))
+        all_labels_dir = path.join(
+            symlink_dir,
+            next_label,
+            category
         )
 
         grad_and_no_grad_dir = path.join(
             path.dirname(symlink_dir),
             'DR SPOC - grad_and_no_grad_dir',
-            '_'.join((
-                path.basename(path.dirname(filename)),
-                path.basename(filename)
-            ))
+            get_next_label(category),
+            category
         )
 
         no_no_grad_dir = path.join(
             path.dirname(symlink_dir),
             'DR SPOC - no_no_grad_dir',
-            '_'.join((
-                path.basename(path.dirname(filename)),
-                path.basename(filename)
-            ))
+            get_next_label(category),
+            category
         )
-        for directory in grad_and_no_grad_dir, no_no_grad_dir:
+
+        for directory in all_labels_dir, grad_and_no_grad_dir, no_no_grad_dir:
             if not path.isdir(directory):
                 makedirs(directory)
 
+        all_labels_dst = path.join(all_labels_dir, this_filename)
+        grad_and_no_grad_dst = path.join(grad_and_no_grad_dir, this_filename)
+        no_no_grad_dir_dst = path.join(no_no_grad_dir, this_filename)
+
         try:
-            symlink(filename, target_dir, target_is_directory=False)
+            symlink(filename, all_labels_dst, target_is_directory=False)
         except FileExistsError:
             tier_syms.FileExistsError += 1
 
-        try:
-            symlink(filename, grad_and_no_grad_dir)
+        with suppress(FileExistsError):
+            symlink(filename, grad_and_no_grad_dst, target_is_directory=False)
             if category != 'No gradable image':
-                symlink(filename, no_no_grad_dir, target_is_directory=False)
-        except FileExistsError:
-            pass
+                symlink(filename, no_no_grad_dir_dst, target_is_directory=False)
 
         if tier_syms.t > 0:
             tier_syms.t -= 1
