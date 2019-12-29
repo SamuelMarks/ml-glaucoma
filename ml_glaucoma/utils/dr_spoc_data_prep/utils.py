@@ -564,15 +564,15 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
         filename, category = filename_category if isinstance(filename_category, tuple) \
             else (filename_category, df.loc[filename_category].category)
 
-        target_dir = path.join(symlink_dir,
-                               get_next_label(category),
-                               category)
+        starting_target_dir = path.join(symlink_dir,
+                                        get_next_label(category),
+                                        category)
 
-        if not path.isdir(target_dir):
-            makedirs(target_dir)
+        if not path.isdir(starting_target_dir):
+            makedirs(starting_target_dir)
 
         target_dir = path.join(
-            target_dir,
+            starting_target_dir,
             '_'.join((
                 path.basename(path.dirname(filename)),
                 path.basename(filename)
@@ -601,14 +601,14 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
                 makedirs(directory)
 
         try:
-            symlink(filename, target_dir)
+            symlink(filename, target_dir, target_is_directory=False)
         except FileExistsError:
             tier_syms.FileExistsError += 1
 
         try:
             symlink(filename, grad_and_no_grad_dir)
             if category != 'No gradable image':
-                symlink(filename, no_no_grad_dir)
+                symlink(filename, no_no_grad_dir, target_is_directory=False)
         except FileExistsError:
             pass
 
