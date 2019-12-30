@@ -51,16 +51,18 @@ def dataset_builder(dataset, data_dir, download_dir,
             if not data_dir.endswith(part):
                 data_dir = path.join(data_dir, part)
 
-            if path.dirname(manual_dir) != 'DR SPOC Dataset' and not path.isdir(path.join(manual_dir, 'DR SPOC')):
-                symlinked_datasets_directory = path.join(dr_spoc_parent_dir,
-                                                         'symlinked_datasets')
-                assert path.isdir(symlinked_datasets_directory), 'Manual directory {!r} does not exist. ' \
-                                                                 'Create it and download/extract dataset artifacts ' \
-                                                                 'in there. Additional instructions: ' \
-                                                                 'This is a \'template\' dataset.'.format(
-                    symlinked_datasets_directory
-                )
-                manual_dir = symlinked_datasets_directory
+            assert manual_dir is not None
+
+            # if path.dirname(manual_dir) != 'DR SPOC Dataset' and not path.isdir(path.join(manual_dir, 'DR SPOC')):
+            #     symlinked_datasets_directory = path.join(dr_spoc_parent_dir,
+            #                                              'symlinked_datasets')
+            #     assert path.isdir(symlinked_datasets_directory), 'Manual directory {!r} does not exist. ' \
+            #                                                      'Create it and download/extract dataset artifacts ' \
+            #                                                      'in there. Additional instructions: ' \
+            #                                                      'This is a \'template\' dataset.'.format(
+            #         symlinked_datasets_directory
+            #     )
+            #     manual_dir = symlinked_datasets_directory
 
             builder = tfds.image.ImageLabelFolder(
                 'DR SPOC', data_dir=data_dir,
@@ -87,7 +89,7 @@ def dataset_builder(dataset, data_dir, download_dir,
                     logger.warn('`resolution` not handled (yet) for DR SPOC dataset')
                 if rgb is not None:
                     logger.warn('`rgb` not handled (yet) for DR SPOC dataset')
-                builder._data_dir = data_dir
+                # builder._data_dir = data_dir
                 return builder
 
         else:
