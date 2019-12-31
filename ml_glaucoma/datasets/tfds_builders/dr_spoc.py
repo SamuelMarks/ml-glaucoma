@@ -2,6 +2,7 @@ import itertools
 import os
 from os import path
 
+import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow_datasets.image.image_folder import list_folders, list_imgs
 
@@ -78,12 +79,37 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
                     builder=self,
                     description='TODO',
                     features=tfds.features.FeaturesDict({
-                        'image': tfds.features.Image(shape=resolution + ((3 if rgb else 1),),
+                        'image': tfds.features.Image(#shape=resolution + ((3 if rgb else 1),),
                                                      encoding_format='jpeg'),
                         'label': tfds.features.ClassLabel(num_classes=3 if dataset_name == 'dr_spoc' else 2)
                     }),
                     supervised_keys=('image', 'label'),
                 )
+
+            def _generate_examples(self, label_images):
+                """Generate example for each image in the dict."""
+
+                from tempfile import mkdtemp
+
+                tempdir = mkdtemp(prefix='dr_spoc')  # TODO: Cleanup
+
+                for label, image_paths in label_images.items():
+                    for image_path in image_paths:
+                        key = '/'.join((label, os.path.basename(image_path)))
+
+                        print('type(image_path):'.ljust(20), type(image_path).__name__, sep='')
+                        temp_f = path.join(tempdir, '_'.join((label, os.path.basename(image_path))))
+                        with open(image_path, 'rb') as f:
+                            img = f.read()
+
+                        img = tf.image.resize(tf.image.decode_jpeg(img, channels=3 if rgb else 1), resolution)
+                        with open(temp_f, 'wb') as f:
+                            f.write(img)
+
+                        yield key, {
+                            "image": temp_f,
+                            "label": label,
+                        }
 
         builder = DrSpocImageLabelFolder(
             dataset_name=dataset_name,
