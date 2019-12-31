@@ -53,15 +53,9 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
             manual_dir
         )
 
-    builder = tfds.image.ImageLabelFolder(
-        dataset_name=dataset_name,
-        data_dir=data_dir
-        # config=tfds.core.BuilderConfig(
-        # name='DR SPOC',
-        #    version=tfds.core.Version('2019.12.28'),
-        #    description='Coming soon'
-        # )
-    )
+    # DrSpocImageLabelFolder.BUILDER_CONFIGS.append(
+    #
+    # )
 
     # manual_dir = path.join(bmes_parent_dir, 'tensorflow_datasets')
     # print(builder.info)  # Splits, num examples,... automatically extracted
@@ -72,7 +66,9 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
     # print('ml_glaucoma/cli_options/prepare/tf_keras.py::data_dir: {!r}'.format(data_dir))
     # TODO: Ensure resolution, RGB can be provided
     def builder_factory(resolution, rgb, data_dir):  # type: (int, bool, str) -> tfds.image.ImageLabelFolder
-        builder.info = tfds.core.DatasetInfo(
+        # builder._data_dir = data_dir
+        DrSpocImageLabelFolder = tfds.image.ImageLabelFolder
+        DrSpocImageLabelFolder._info = lambda self: tfds.core.DatasetInfo(
             builder=builder,
             description='TODO: Add a description about DR SPOC',
             features=tfds.features.FeaturesDict({
@@ -82,8 +78,16 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
                     encoding_format='jpeg')
             })
         )
+        builder = DrSpocImageLabelFolder(
+            dataset_name=dataset_name,
+            data_dir=data_dir,
+            config=tfds.core.BuilderConfig(
+                name='DR SPOC {}'.format(dataset_name[len('dr_spoc_'):]),
+                version=tfds.core.Version('2019.12.28'),
+                description='Coming soon'
+            )
+        )
 
-        # builder._data_dir = data_dir
         return builder
 
     return builder_factory, data_dir, manual_dir
