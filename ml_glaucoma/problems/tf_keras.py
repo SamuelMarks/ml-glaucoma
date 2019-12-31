@@ -208,11 +208,11 @@ class TfdsProblem(BaseProblem):
         # attempt to handle supervised problems by default
         feature = self._supervised_feature(1)
         num_classes = getattr(feature, 'num_classes', None)
-        if num_classes is not None:
+        if num_classes is not None and num_classes != 2:
             # categorical classification
             self._output_spec = InputSpec(
                 shape=(num_classes,), dtype=tf.float32)
-        elif feature.dtype.is_bool:
+        elif feature.dtype.is_bool or num_classes == 2:
             # binary classification
             self._output_spec = InputSpec(
                 shape=(), dtype=tf.float32)
