@@ -73,60 +73,17 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
         print('resolution:'.ljust(20), '{!r}'.format(resolution), sep='')
 
         class DrSpocImageLabelFolder(tfds.image.ImageLabelFolder):
-            def _split_generators(self, dl_manager):
-                """Returns SplitGenerators from the folder names."""
-                # At data creation time, parse the folder to deduce number of splits,
-                # labels, image size,
-
-                # The splits correspond to the high level folders
-                split_names = list_folders(dl_manager.manual_dir)
-
-                # Extract all label names and associated images
-                split_label_images = {}  # dict[split_name][label_name] = list(img_paths)
-                for split_name in split_names:
-                    split_dir = os.path.join(dl_manager.manual_dir, split_name)
-                    split_label_images[split_name] = {
-                        label_name: list_imgs(os.path.join(split_dir, label_name))
-                        for label_name in list_folders(split_dir)
-                    }
-
-                # Merge all label names from all splits to get the final list of labels
-                # Sorted list for determinism
-                labels = [split.keys() for split in split_label_images.values()]
-                labels = list(sorted(set(itertools.chain(*labels))))
-
-                # Could improve the automated encoding format detection
-                # Extract the list of all image paths
-                image_paths = [
-                    image_paths
-                    for label_images in split_label_images.values()
-                    for image_paths in label_images.values()
-                ]
-                if any(f.lower().endswith(".png") for f in itertools.chain(*image_paths)):
-                    encoding_format = "png"
-                else:
-                    encoding_format = "jpeg"
-
-                # Update the info.features. Those info will be automatically resored when
-                # the dataset is re-created
-                self.info.features["image"].set_encoding_format(encoding_format)
-
-                self.info.features["image"].set_shape(resolution + ((3 if rgb else 1),))
-                self.info.features["label"].names = labels
-
-                def num_examples(label_images):
-                    return sum(len(imgs) for imgs in label_images.values())
-
-                # Define the splits
-                return [
-                    tfds.core.SplitGenerator(
-                        name=split_name,
-                        # The number of shards is a dynamic function of the total
-                        # number of images (between 0-10)
-                        num_shards=min(10, max(num_examples(label_images) // 1000, 1)),
-                        gen_kwargs=dict(label_images=label_images, ),
-                    ) for split_name, label_images in split_label_images.items()
-                ]
+            def _info(self):
+                return tfds.core.DatasetInfo(
+                    builder=self,
+                    description=self.builder_config.description,
+                    features=tfds.features.FeaturesDict({
+                        'image': tfds.features.Image(shape=resolution + ((3 if rgb else 1),),
+                                                     encoding_format='jpeg'),
+                        'label': tfds.features.ClassLabel(num_classes=3 if dataset_name == 'dr_spoc' else 2)
+                    }),
+                    supervised_keys=('image', 'label'),
+                )
 
         builder = DrSpocImageLabelFolder(
             dataset_name=dataset_name,
