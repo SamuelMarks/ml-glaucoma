@@ -70,7 +70,7 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
         class DrSpocImageLabelFolder(tfds.image.ImageLabelFolder):
             def _info(self):  # type: () -> tfds.core.DatasetInfo
                 return tfds.core.DatasetInfo(
-                    builder=builder,
+                    builder=tfds.core.DatasetBuilder(data_dir=data_dir),
                     description='TODO: Add a description about DR SPOC',
                     features=tfds.features.FeaturesDict({
                         'input': tfds.features.Image(),
