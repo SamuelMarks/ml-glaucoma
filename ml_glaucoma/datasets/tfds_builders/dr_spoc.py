@@ -89,26 +89,29 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
 
                 from tempfile import mkdtemp
 
-                # tempdir = mkdtemp(prefix='dr_spoc')  # TODO: Cleanup
+                tempdir = mkdtemp(prefix='dr_spoc')  # TODO: Cleanup
 
-                def decode_img(img):
+                def decode_img(image):
                     # convert the compressed string to a 3D uint8 tensor
-                    img = tf.image.decode_jpeg(img, channels=3 if rgb else 1)
+                    image = tf.image.decode_jpeg(image, channels=3 if rgb else 1)
                     # Use `convert_image_dtype` to convert to floats in the [0,1] range.
-                    img = tf.image.convert_image_dtype(img, tf.float32)
+                    image = tf.image.convert_image_dtype(image, tf.float32)
                     # resize the image to the desired size.
-                    return tf.image.resize(img, resolution)
+                    return tf.image.resize(image, resolution)
 
                 def process_path(file_path):
-                    return tf.io.read_file(decode_img(file_path))
+                    return decode_img(tf.io.read_file(file_path))
 
                 for label, image_paths in label_images.items():
                     for image_path in image_paths:
                         key = '/'.join((label, os.path.basename(image_path)))
-                        # temp_f = path.join(tempdir, '_'.join((label, os.path.basename(image_path))))
+                        temp_f = path.join(tempdir, '_'.join((label, os.path.basename(image_path))))
+                        img = process_path(image_path)
+                        with open(temp_f, 'wb') as f:
+                            f.write(img)
 
                         yield key, {
-                            "image": process_path(image_path),
+                            "image": temp_f,
                             "label": label,
                         }
 
