@@ -76,7 +76,7 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
             def _info(self):
                 return tfds.core.DatasetInfo(
                     builder=self,
-                    description=self.builder_config.description,
+                    description='TODO',
                     features=tfds.features.FeaturesDict({
                         'image': tfds.features.Image(shape=resolution + ((3 if rgb else 1),),
                                                      encoding_format='jpeg'),
