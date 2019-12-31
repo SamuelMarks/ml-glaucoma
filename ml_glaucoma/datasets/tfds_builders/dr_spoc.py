@@ -89,7 +89,7 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
 
                 from tempfile import mkdtemp
 
-                tempdir = mkdtemp(prefix='dr_spoc')  # TODO: Cleanup
+                # tempdir = mkdtemp(prefix='dr_spoc')  # TODO: Cleanup
 
                 def decode_img(img):
                     # convert the compressed string to a 3D uint8 tensor
@@ -105,13 +105,10 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
                 for label, image_paths in label_images.items():
                     for image_path in image_paths:
                         key = '/'.join((label, os.path.basename(image_path)))
-                        temp_f = path.join(tempdir, '_'.join((label, os.path.basename(image_path))))
-                        img = process_path(image_path)
-                        with open(temp_f, 'wb') as f:
-                            f.write(img)
+                        # temp_f = path.join(tempdir, '_'.join((label, os.path.basename(image_path))))
 
                         yield key, {
-                            "image": temp_f,
+                            "image": process_path(image_path),
                             "label": label,
                         }
 
