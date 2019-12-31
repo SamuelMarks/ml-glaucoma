@@ -79,7 +79,7 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
                 'input': tfds.features.Image(),
                 'target': tfds.features.Image(
                     shape=(resolution, resolution, 3 if rgb else 1),
-                    encoding_format='jpg')
+                    encoding_format='jpeg')
             })
         )
 
