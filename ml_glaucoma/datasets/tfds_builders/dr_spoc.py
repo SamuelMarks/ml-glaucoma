@@ -69,12 +69,12 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
         # builder._data_dir = data_dir
         builder = tfds.image.ImageLabelFolder(
             dataset_name=dataset_name,
-            data_dir=data_dir,
-            config=tfds.core.BuilderConfig(
-                name='DR SPOC {}'.format(dataset_name[len('dr_spoc_'):]),
-                version=tfds.core.Version('2019.12.28'),
-                description='Coming soon'
-            )
+            data_dir=data_dir
+            # config=tfds.core.BuilderConfig(
+            #     name='DR SPOC {}'.format(dataset_name[len('dr_spoc_'):]),
+            #     version=tfds.core.Version('2019.12.28'),
+            #     description='Coming soon'
+            # )
         )
         builder._info = lambda self: tfds.core.DatasetInfo(
             builder=builder,
