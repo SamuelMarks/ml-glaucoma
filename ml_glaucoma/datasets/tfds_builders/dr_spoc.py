@@ -72,10 +72,17 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
     # print('ml_glaucoma/cli_options/prepare/tf_keras.py::data_dir: {!r}'.format(data_dir))
     # TODO: Ensure resolution, RGB can be provided
     def builder_factory(resolution, rgb, data_dir):  # type: (int, bool, str) -> tfds.image.ImageLabelFolder
-        if resolution is not None:
-            logger.warn('`resolution` not handled (yet) for DR SPOC dataset')
-        if rgb is not None:
-            logger.warn('`rgb` not handled (yet) for DR SPOC dataset')
+        builder.info = tfds.core.DatasetInfo(
+            builder,
+            description='TODO: Add a description about DR SPOC',
+            features=tfds.features.FeaturesDict({
+                'input': tfds.features.Image(),
+                'target': tfds.features.Image(
+                    shape=(resolution, resolution, 3 if rgb else 1),
+                    encoding_format='jpg')
+            })
+        )
+
         # builder._data_dir = data_dir
         return builder
 
