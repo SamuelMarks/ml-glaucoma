@@ -1,6 +1,7 @@
 from os import environ
 
 from ml_glaucoma.cli_options.base import Configurable
+from ml_glaucoma.datasets.tfds_builders.dr_spoc import dr_spoc_datasets
 
 if environ['TF']:
     from ml_glaucoma.cli_options.prepare.tf_keras import dataset_builder
@@ -16,9 +17,9 @@ class ConfigurableBuilders(Configurable):
 
     def fill_self(self, parser):
         parser.add_argument(
-            '-ds', '--dataset', choices=('bmes', 'dr_spoc', 'refuge'), default=['refuge'],
+            '-ds', '--dataset', choices=tuple(sorted(('bmes', 'refuge') + dr_spoc_datasets)), default=['refuge'],
             nargs='+',
-            help='dataset key', )
+            help='dataset name')
         parser.add_argument(
             '--data_dir',
             help='root directory to store processed tfds records')
@@ -34,7 +35,8 @@ class ConfigurableBuilders(Configurable):
             choices=(
                 'reuse_dataset_if_exists',
                 'reuse_cache_if_exists',
-                'force_redownload'),
+                'force_redownload'
+            ),
             help='tfds.GenerateMode')
         parser.add_argument(
             '-r', '--resolution', nargs=2, default=(256, 256), type=int,

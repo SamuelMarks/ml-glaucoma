@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 from sqlalchemy import create_engine, text
 
+from ml_glaucoma.datasets.tfds_builders.dr_spoc import dr_spoc_datasets
 from ml_glaucoma.utils import it_consumes
 from ml_glaucoma.utils.helpers import create_random_numbers, ensure_is_dir
 
@@ -573,19 +574,20 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
 
         all_labels_dir = path.join(
             symlink_dir,
+            dr_spoc_datasets[dr_spoc_datasets.index('dr_spoc')],
             current_tier,
             category
         )
 
         grad_and_no_grad_dir = path.join(
-            path.dirname(symlink_dir),
-            'DR SPOC - grad_and_no_grad_dir',
+            symlink_dir,
+            dr_spoc_datasets[dr_spoc_datasets.index('dr_spoc_grad_and_no_grad')],
             current_tier
         )
 
         no_no_grad_dir = path.join(
-            path.dirname(symlink_dir),
-            'DR SPOC - no_no_grad_dir',
+            symlink_dir,
+            dr_spoc_datasets[dr_spoc_datasets.index('dr_spoc_no_no_grad_dir')],
             current_tier,
             category
         )
@@ -624,6 +626,8 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
     tier_syms.FileExistsError = 0
 
     assert tier_syms.FileExistsError in (0, 1573)
+
+    print('symlink_dir:'.ljust(20), '{!r}'.format(symlink_dir), sep='')
 
     it_consumes(map(tier_syms, uniq_syms))
 
@@ -678,14 +682,14 @@ def main(root_directory, manual_dir):  # type: (str, str or None) -> (str, pd.Da
     # combined_df.apply(partition_symlink, 1)
 
     if manual_dir is None or path.realpath(manual_dir) == path.realpath(root_directory):
-        manual_dir = path.join(root_directory, 'symlinked_datasets', 'DR SPOC')
+        manual_dir = path.join(root_directory, 'symlinked_datasets', )
 
     symbolically_link(manual_dir, combined_df)
 
     return root_directory, df, filename2cat, combined_df
 
 
-main.t = 0
+main.t = 1
 
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

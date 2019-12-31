@@ -14,8 +14,11 @@ logging = get_logger(__file__.partition('.')[0])
 def download_and_prepare(builder, download_config=None, download_dir=None):
     if download_config is None:
         download_config = DownloadConfig()
+
     builder.download_and_prepare(
-        download_dir=download_dir, download_config=download_config)
+        download_dir=download_dir,
+        download_config=download_config
+    )
 
 
 def dataset_spec_to_input_spec(dataset, has_batch_dim=False):

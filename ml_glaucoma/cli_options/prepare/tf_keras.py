@@ -3,6 +3,7 @@ from os import path
 import tensorflow_datasets as tfds
 
 from ml_glaucoma import problems as p, get_logger
+from ml_glaucoma.datasets.tfds_builders.dr_spoc import dr_spoc_builder, dr_spoc_datasets_set
 
 logger = get_logger('.'.join((path.basename(path.dirname(__file__)),
                               path.basename(__file__).rpartition('.')[0])))
@@ -36,70 +37,23 @@ def dataset_builder(dataset, data_dir, download_dir,
             from ml_glaucoma.datasets.tfds_builders import refuge
 
             builder_factory = refuge.get_refuge_builder
-        elif ds == 'dr_spoc':
-            if dr_spoc_init:
-                from ml_glaucoma.utils.dr_spoc_data_prep import get_data
 
-                if dr_spoc_parent_dir is None:
-                    raise ValueError(
-                        '`dr_spoc_parent_dir` must be provided if '
-                        '`dr_spoc_init is True`')
-
-                get_data(root_directory=dr_spoc_parent_dir, manual_dir=manual_dir)
-
-            part = 'tensorflow_datasets'
-            if not data_dir.endswith(part):
-                data_dir = path.join(data_dir, part)
-
-            assert manual_dir is not None
-
-            if path.dirname(manual_dir) != 'DR SPOC Dataset' \
-                and not path.isdir(path.join(manual_dir, 'DR SPOC')) \
-                and not path.isdir(path.join(path.dirname(manual_dir), 'DR SPOC')):
-                symlinked_datasets_directory = path.join(dr_spoc_parent_dir,
-                                                         'symlinked_datasets')
-                assert path.isdir(symlinked_datasets_directory), 'Manual directory {!r} does not exist. ' \
-                                                                 'Create it and download/extract dataset artifacts ' \
-                                                                 'in there. Additional instructions: ' \
-                                                                 'This is a \'template\' dataset.'.format(
-                    symlinked_datasets_directory
-                )
-                manual_dir = symlinked_datasets_directory
-
-            builder = tfds.image.ImageLabelFolder(
-                'DR SPOC', data_dir=data_dir,
-                # config=tfds.core.BuilderConfig(
-                # name='DR SPOC',
-                #    version=tfds.core.Version('2019.12.28'),
-                #    description='Coming soon'
-                # )
-            )
-
-            # manual_dir = path.join(bmes_parent_dir, 'tensorflow_datasets')
-
-            # print(builder.info)  # Splits, num examples,... automatically extracted
-            # ds = builder.as_dataset(split=('test', 'train', 'valid'), shuffle_files=True)
-            # builders.append(builder)
-            #
-            # return
-
-            # print('ml_glaucoma/cli_options/prepare/tf_keras.py::data_dir: {!r}'.format(data_dir))
-
-            # TODO: Ensure resolution, RGB can be provided
-            def builder_factory(resolution, rgb, data_dir):
-                if resolution is not None:
-                    logger.warn('`resolution` not handled (yet) for DR SPOC dataset')
-                if rgb is not None:
-                    logger.warn('`rgb` not handled (yet) for DR SPOC dataset')
-                # builder._data_dir = data_dir
-                return builder
-
+        elif ds in dr_spoc_datasets_set:  # 'DR SPOC', 'DR SPOC - grad_and_no_grad_dir', 'DR SPOC - no_no_grad_dir'
+            builder_factory, data_dir, manual_dir = dr_spoc_builder(ds, data_dir, dr_spoc_init,
+                                                                    dr_spoc_parent_dir, manual_dir)
         else:
             raise NotImplementedError()
 
         builder = builder_factory(resolution=resolution,
                                   rgb=not gray_on_disk,
                                   data_dir=data_dir)
+
+        if dataset_builder.t > 0:
+            dataset_builder.t -= 1
+            print('download_dir:'.ljust(20), '{!r}\n'.format(download_dir),
+                  'data_dir:'.ljust(20), '{!r}\n'.format(download_dir),
+                  'manual_dir:'.ljust(20), '{!r}\n'.format(manual_dir),
+                  sep='')
 
         p.download_and_prepare(
             builder=builder,
@@ -109,4 +63,8 @@ def dataset_builder(dataset, data_dir, download_dir,
             ),
             download_dir=download_dir
         )
+
         builders.append(builder)
+
+
+dataset_builder.t = 1
