@@ -654,15 +654,6 @@ just = 70
 
 
 def main(root_directory, manual_dir):  # type: (str, str or None) -> (str, pd.DataFrame, pd.Series, pd.DataFrame)
-    if main.t > 0:
-        main.t -= 1
-        print(
-            'ml_glaucoma/utils/dr_spoc_data_prep/utils.py::main::root_directory:'.ljust(just),
-            '{!r}\n'.format(root_directory),
-            'ml_glaucoma/utils/dr_spoc_data_prep/utils.py::main::manual_dir:'.ljust(just), '{!r}\n'.format(manual_dir),
-            sep=''
-        )
-
     it_consumes(map(ensure_is_dir, (root_directory, manual_dir)))
 
     levels = ['Fundus Photographs for AI', 'DR SPOC Dataset', 'DR SPOC Photo Dataset'][::-1]
@@ -687,9 +678,6 @@ def main(root_directory, manual_dir):  # type: (str, str or None) -> (str, pd.Da
     symbolically_link(manual_dir, combined_df)
 
     return root_directory, df, filename2cat, combined_df
-
-
-main.t = 1
 
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
