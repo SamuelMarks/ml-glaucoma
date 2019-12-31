@@ -77,8 +77,7 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
                             shape=(resolution, resolution, 3 if rgb else 1),
                             encoding_format='jpeg'
                         ),
-                        'label': tfds.features.ClassLabel(),
-                        'num_classes': 3 if dataset_name == 'dr_spoc' else 2,
+                        'label': tfds.features.ClassLabel(num_classes=3 if dataset_name == 'dr_spoc' else 2)
                     })
                 )
 
