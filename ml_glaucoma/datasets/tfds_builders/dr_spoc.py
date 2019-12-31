@@ -73,7 +73,7 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
     # TODO: Ensure resolution, RGB can be provided
     def builder_factory(resolution, rgb, data_dir):  # type: (int, bool, str) -> tfds.image.ImageLabelFolder
         builder.info = tfds.core.DatasetInfo(
-            builder,
+            builder=builder,
             description='TODO: Add a description about DR SPOC',
             features=tfds.features.FeaturesDict({
                 'input': tfds.features.Image(),
