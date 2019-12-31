@@ -4,10 +4,15 @@ data_dir="${DATA_DIR:-"$HOME"/tensorflow_datasets}"
 parent_dir="${DATASET_PARENT_DIR:-"$HOME"}"
 manual_dir="${MANUAL_DIR:-/mnt}"
 dataset="${DATASET:-dr_spoc}"
+if [[ "$dataset" == dr_spoc* ]];
+   prefix='dr_spoc'
+else
+   prefix="$dataset"
+fi
 
 python -m ml_glaucoma download \
     -ds "$dataset" \
     --data_dir "$data_dir" \
-    --"$dataset"_init \
+    --"$prefix"_init \
     --manual_dir "$manual_dir" \
-    --"$dataset"_parent_dir "$parent_dir"/
+    --"$prefix"_parent_dir "$parent_dir"/
