@@ -53,15 +53,15 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
             manual_dir
         )
 
-        builder = tfds.image.ImageLabelFolder(
-            dataset_name=dataset_name,
-            data_dir=data_dir
-            # config=tfds.core.BuilderConfig(
-            # name='DR SPOC',
-            #    version=tfds.core.Version('2019.12.28'),
-            #    description='Coming soon'
-            # )
-        )
+    builder = tfds.image.ImageLabelFolder(
+        dataset_name=dataset_name,
+        data_dir=data_dir
+        # config=tfds.core.BuilderConfig(
+        # name='DR SPOC',
+        #    version=tfds.core.Version('2019.12.28'),
+        #    description='Coming soon'
+        # )
+    )
 
     # manual_dir = path.join(bmes_parent_dir, 'tensorflow_datasets')
     # print(builder.info)  # Splits, num examples,... automatically extracted
