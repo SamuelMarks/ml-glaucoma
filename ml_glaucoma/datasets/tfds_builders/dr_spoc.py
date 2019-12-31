@@ -31,37 +31,37 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
         else:
             logger.info('Using already created symlinks')
 
-    part = 'tensorflow_datasets'
-    if not data_dir.endswith(part):
-        data_dir = path.join(data_dir, part)
+        part = 'tensorflow_datasets'
+        if not data_dir.endswith(part):
+            data_dir = path.join(data_dir, part)
 
-    just = 20
-    if dr_spoc_builder.t > 0:
-        dr_spoc_builder.t -= 1
-        print(
-            'data_dir:'.ljust(just), '{!r}\n'.format(data_dir),
-            'manual_dir:'.ljust(just), '{!r}\n'.format(manual_dir),
-            '_get_manual_dir:'.ljust(just), '{!r}\n'.format(_get_manual_dir(dr_spoc_parent_dir, manual_dir)),
-            sep=''
+        just = 20
+        if dr_spoc_builder.t > 0:
+            dr_spoc_builder.t -= 1
+            print(
+                'data_dir:'.ljust(just), '{!r}\n'.format(data_dir),
+                'manual_dir:'.ljust(just), '{!r}\n'.format(manual_dir),
+                '_get_manual_dir:'.ljust(just), '{!r}\n'.format(_get_manual_dir(dr_spoc_parent_dir, manual_dir)),
+                sep=''
+            )
+
+        manual_dir = _get_manual_dir(dr_spoc_parent_dir, manual_dir)
+        assert path.isdir(manual_dir), 'Manual directory {!r} does not exist. ' \
+                                       'Create it and download/extract dataset artifacts ' \
+                                       'in there. Additional instructions: ' \
+                                       'This is a \'template\' dataset.'.format(
+            manual_dir
         )
 
-    manual_dir = _get_manual_dir(dr_spoc_parent_dir, manual_dir)
-    assert path.isdir(manual_dir), 'Manual directory {!r} does not exist. ' \
-                                   'Create it and download/extract dataset artifacts ' \
-                                   'in there. Additional instructions: ' \
-                                   'This is a \'template\' dataset.'.format(
-        manual_dir
-    )
-
-    builder = tfds.image.ImageLabelFolder(
-        dataset_name=dataset_name,
-        data_dir=data_dir
-        # config=tfds.core.BuilderConfig(
-        # name='DR SPOC',
-        #    version=tfds.core.Version('2019.12.28'),
-        #    description='Coming soon'
-        # )
-    )
+        builder = tfds.image.ImageLabelFolder(
+            dataset_name=dataset_name,
+            data_dir=data_dir
+            # config=tfds.core.BuilderConfig(
+            # name='DR SPOC',
+            #    version=tfds.core.Version('2019.12.28'),
+            #    description='Coming soon'
+            # )
+        )
 
     # manual_dir = path.join(bmes_parent_dir, 'tensorflow_datasets')
     # print(builder.info)  # Splits, num examples,... automatically extracted
@@ -81,7 +81,9 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
 
     return builder_factory, data_dir, manual_dir
 
+
 dr_spoc_builder.t = 1
+
 
 def _get_manual_dir(dr_spoc_parent_dir, manual_dir):  # type: (str, str) -> str
     if path.dirname(manual_dir) != 'DR SPOC Dataset' \
