@@ -1,10 +1,8 @@
-import itertools
 import os
 from os import path
 
 import tensorflow as tf
 import tensorflow_datasets as tfds
-from tensorflow_datasets.image.image_folder import list_folders, list_imgs
 
 from ml_glaucoma import get_logger
 
@@ -79,8 +77,8 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
                     builder=self,
                     description='TODO',
                     features=tfds.features.FeaturesDict({
-                        'image': tfds.features.Image(#shape=resolution + ((3 if rgb else 1),),
-                                                     encoding_format='jpeg'),
+                        'image': tfds.features.Image(  # shape=resolution + ((3 if rgb else 1),),
+                            encoding_format='jpeg'),
                         'label': tfds.features.ClassLabel(num_classes=3 if dataset_name == 'dr_spoc' else 2)
                     }),
                     supervised_keys=('image', 'label'),
@@ -93,16 +91,22 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
 
                 tempdir = mkdtemp(prefix='dr_spoc')  # TODO: Cleanup
 
+                def decode_img(img):
+                    # convert the compressed string to a 3D uint8 tensor
+                    img = tf.image.decode_jpeg(img, channels=3 if rgb else 1)
+                    # Use `convert_image_dtype` to convert to floats in the [0,1] range.
+                    img = tf.image.convert_image_dtype(img, tf.float32)
+                    # resize the image to the desired size.
+                    return tf.image.resize(img, resolution)
+
+                def process_path(file_path):
+                    return tf.io.read_file(decode_img(file_path))
+
                 for label, image_paths in label_images.items():
                     for image_path in image_paths:
                         key = '/'.join((label, os.path.basename(image_path)))
-
-                        print('type(image_path):'.ljust(20), type(image_path).__name__, sep='')
                         temp_f = path.join(tempdir, '_'.join((label, os.path.basename(image_path))))
-                        with open(image_path, 'rb') as f:
-                            img = f.read()
-
-                        img = tf.image.resize(tf.image.decode_jpeg(img, channels=3 if rgb else 1), resolution)
+                        img = process_path(image_path)
                         with open(temp_f, 'wb') as f:
                             f.write(img)
 
