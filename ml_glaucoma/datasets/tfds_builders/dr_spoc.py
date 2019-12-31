@@ -1,6 +1,6 @@
 import itertools
-from os import path
 import os
+from os import path
 
 import tensorflow_datasets as tfds
 from tensorflow_datasets.image.image_folder import list_folders, list_imgs
@@ -70,7 +70,7 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
     # TODO: Ensure resolution, RGB can be provided
     def builder_factory(resolution, rgb, data_dir):  # type: (int, bool, str) -> tfds.image.ImageLabelFolder
         # builder._data_dir = data_dir
-        print('resolution:'.ljust(20), '{!r}'.format(resolution))
+        print('resolution:'.ljust(20), '{!r}'.format(resolution), sep='')
 
         class DrSpocImageLabelFolder(tfds.image.ImageLabelFolder):
             def _split_generators(self, dl_manager):
@@ -111,7 +111,7 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
                 # the dataset is re-created
                 self.info.features["image"].set_encoding_format(encoding_format)
 
-                self.info.features["image"].set_shape(resolution[0], 3 if rgb else 1)
+                self.info.features["image"].set_shape(resolution + ((3 if rgb else 1),))
                 self.info.features["label"].names = labels
 
                 def num_examples(label_images):
