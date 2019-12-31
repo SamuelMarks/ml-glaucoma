@@ -67,7 +67,21 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
     # TODO: Ensure resolution, RGB can be provided
     def builder_factory(resolution, rgb, data_dir):  # type: (int, bool, str) -> tfds.image.ImageLabelFolder
         # builder._data_dir = data_dir
-        builder = tfds.image.ImageLabelFolder(
+        class DrSpocImageLabelFolder(tfds.image.ImageLabelFolder):
+            def _info(self):  # type: () -> tfds.core.DatasetInfo
+                return tfds.core.DatasetInfo(
+                    builder=builder,
+                    description='TODO: Add a description about DR SPOC',
+                    features=tfds.features.FeaturesDict({
+                        'input': tfds.features.Image(),
+                        'num_classes': 3 if dataset_name == 'dr_spoc' else 2,
+                        'target': tfds.features.Image(
+                            shape=(resolution, resolution, 3 if rgb else 1),
+                            encoding_format='jpeg')
+                    })
+                )
+
+        builder = DrSpocImageLabelFolder(
             dataset_name=dataset_name,
             data_dir=data_dir
             # config=tfds.core.BuilderConfig(
@@ -75,16 +89,6 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
             #     version=tfds.core.Version('2019.12.28'),
             #     description='Coming soon'
             # )
-        )
-        builder._info = lambda self: tfds.core.DatasetInfo(
-            builder=builder,
-            description='TODO: Add a description about DR SPOC',
-            features=tfds.features.FeaturesDict({
-                'input': tfds.features.Image(),
-                'target': tfds.features.Image(
-                    shape=(resolution, resolution, 3 if rgb else 1),
-                    encoding_format='jpeg')
-            })
         )
 
         return builder
