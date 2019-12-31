@@ -74,6 +74,7 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
                     description='TODO: Add a description about DR SPOC',
                     features=tfds.features.FeaturesDict({
                         'image': tfds.features.Image(),
+                        'label': tfds.features.ClassLabel(),
                         'input': tfds.features.Image(),
                         'num_classes': 3 if dataset_name == 'dr_spoc' else 2,
                         'target': tfds.features.Image(
