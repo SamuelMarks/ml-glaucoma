@@ -51,7 +51,7 @@ def dataset_builder(dataset, data_dir, download_dir,
         if dataset_builder.t > 0:
             dataset_builder.t -= 1
             print('download_dir:'.ljust(20), '{!r}\n'.format(download_dir),
-                  'data_dir:'.ljust(20), '{!r}\n'.format(download_dir),
+                  'data_dir:'.ljust(20), '{!r}\n'.format(data_dir),
                   'manual_dir:'.ljust(20), '{!r}\n'.format(manual_dir),
                   sep='')
 

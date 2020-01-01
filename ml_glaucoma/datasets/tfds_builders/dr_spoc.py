@@ -1,5 +1,6 @@
 import os
 from os import path
+from tempfile import mkdtemp
 
 import tensorflow as tf
 import tensorflow_datasets as tfds
@@ -42,8 +43,10 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
             dr_spoc_builder.t -= 1
             print(
                 'data_dir:'.ljust(just), '{!r}\n'.format(data_dir),
-                'manual_dir:'.ljust(just), '{!r}\n'.format(manual_dir),
-                '_get_manual_dir:'.ljust(just), '{!r}\n'.format(_get_manual_dir(dr_spoc_parent_dir, manual_dir)),
+                'manual_dir:'.ljust(just), '{!r}\n'.format(
+                    manual_dir),
+                '_get_manual_dir:'.ljust(just), '{!r}\n'.format(
+                    _get_manual_dir(dr_spoc_parent_dir, manual_dir)),
                 sep=''
             )
 
@@ -87,9 +90,7 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
             def _generate_examples(self, label_images):
                 """Generate example for each image in the dict."""
 
-                from tempfile import mkdtemp
-
-                tempdir = mkdtemp(prefix='dr_spoc')  # TODO: Cleanup
+                # tempdir = mkdtemp(prefix='dr_spoc')  # TODO: Cleanup
 
                 def decode_img(image):
                     # convert the compressed string to a 3D uint8 tensor
@@ -100,20 +101,66 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
                     return tf.image.resize(image, resolution)
 
                 def process_path(file_path):
-                    return decode_img(tf.io.read_file(file_path))
+                    if dr_spoc_builder.t > 0:
+                        dr_spoc_builder.t -= 1
+                        print('file_path:'.ljust(20), '{!r}'.format(file_path), sep='')
 
+                    # load the raw data from the file as a string
+                    image = tf.io.read_file(file_path)
+                    if dr_spoc_builder.t > 0:
+                        print('tf.io.read_file')
+                    image = decode_img(image)
+                    if dr_spoc_builder.t > 0:
+                        print('decode_img')
+
+                    return image
+
+                temp_dir = mkdtemp(prefix='dr_spoc')
                 for label, image_paths in label_images.items():
                     for image_path in image_paths:
                         key = '/'.join((label, os.path.basename(image_path)))
-                        temp_f = path.join(tempdir, '_'.join((label, os.path.basename(image_path))))
-                        img = process_path(image_path)
-                        with open(temp_f, 'wb') as f:
-                            f.write(img)
+
+                        '''
+                        # temp_f = path.join(tempdir, '_'.join((label, os.path.basename(image_path))))
+                        if dr_spoc_builder.t > 0:
+                            dr_spoc_builder.t -= 1
+                            print('image_path:'.ljust(20), '{!r}\n'.format(
+                                image_path,
+                                  'key:'.ljust(20), '{!r}\n'.format(
+                                    key),
+                                  sep='')
+                        img = tf.image.encode_jpeg(process_path(image_path),
+                                                   'rgb' if rgb else 'grayscale',
+                                                   quality=100, chroma_downsampling=False
+                                                   )
+                        temp_image_filename = tf.constant(path.join(temp_dir, key.replace(path.sep, '_')))
+                        if dr_spoc_builder.t > 0:
+                            print('img of type {}:'.format(type(img).__name__).ljust(20), '{!r}\n'.format(img),
+                                  'temp_image_filename:'.ljust(20), '{!r}\n'.format(temp_image_filename),
+                                  sep='')
+                        tf.io.write_file(temp_image_filename, img, 'temporary image file')
+                        if dr_spoc_builder.t > 0:
+                            print('yield')
+                        # with open(temp_f, 'wb') as f:
+                        #    f.write(img)
+                        '''
+
+                        temp_image_filename = path.join(temp_dir, key.replace(path.sep, '_'))
+
+                        # TODO: Some batch version of this, as this is slow af
+                        with tf.compat.v1.Session() as sess:
+                            image_decoded = tf.image.decode_jpeg(tf.io.read_file(image_path), channels=3 if rgb else 1)
+                            resized = tf.image.resize(image_decoded, resolution)
+                            enc = tf.image.encode_jpeg(resized, 'rgb' if rgb else 'grayscale',
+                                                       quality=100, chroma_downsampling=False)
+                            fwrite = tf.io.write_file(tf.constant(temp_image_filename), enc)
+                            result = sess.run(fwrite)
 
                         yield key, {
-                            "image": temp_f,
+                            "image": temp_image_filename,
                             "label": label,
                         }
+                print('resolved all files, now you should delete: {!r}'.format(temp_dir))
 
         builder = DrSpocImageLabelFolder(
             dataset_name=dataset_name,
@@ -130,7 +177,7 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
     return builder_factory, data_dir, manual_dir
 
 
-dr_spoc_builder.t = 1
+dr_spoc_builder.t = 5
 
 
 def _get_manual_dir(dr_spoc_parent_dir, manual_dir):  # type: (str, str) -> str
