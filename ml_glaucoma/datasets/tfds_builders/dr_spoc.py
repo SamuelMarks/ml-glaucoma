@@ -120,15 +120,13 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
                     for image_path in image_paths:
                         key = '/'.join((label, os.path.basename(image_path)))
 
-                        '''
                         # temp_f = path.join(tempdir, '_'.join((label, os.path.basename(image_path))))
                         if dr_spoc_builder.t > 0:
                             dr_spoc_builder.t -= 1
-                            print('image_path:'.ljust(20), '{!r}\n'.format(
-                                image_path,
-                                  'key:'.ljust(20), '{!r}\n'.format(
-                                    key),
+                            print('image_path:'.ljust(20), '{!r}\n'.format(image_path),
+                                  'key:'.ljust(20), '{!r}\n'.format(key),
                                   sep='')
+                        '''
                         img = tf.image.encode_jpeg(process_path(image_path),
                                                    'rgb' if rgb else 'grayscale',
                                                    quality=100, chroma_downsampling=False
@@ -151,14 +149,15 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
                         with tf.compat.v1.Session() as sess:
                             image_decoded = tf.image.decode_jpeg(tf.io.read_file(image_path), channels=3 if rgb else 1)
                             resized = tf.image.resize(image_decoded, resolution)
-                            enc = tf.image.encode_jpeg(resized, 'rgb' if rgb else 'grayscale',
+                            enc = tf.image.encode_jpeg(tf.cast(resized, tf.uint8),
+                                                       'rgb' if rgb else 'grayscale',
                                                        quality=100, chroma_downsampling=False)
                             fwrite = tf.io.write_file(tf.constant(temp_image_filename), enc)
                             result = sess.run(fwrite)
 
                         yield key, {
-                            "image": temp_image_filename,
-                            "label": label,
+                            'image': temp_image_filename,
+                            'label': label,
                         }
                 print('resolved all files, now you should delete: {!r}'.format(temp_dir))
 
