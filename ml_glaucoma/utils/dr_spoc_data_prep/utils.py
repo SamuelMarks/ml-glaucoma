@@ -456,7 +456,7 @@ def combine_spreadsheet_db(filename2cat, db_df):  # type: (pd.Series, pd.DataFra
             g.t -= 1
             print('val:', val, '\n',
                   'idx:', idx, '\n',
-                  )
+                  sep='')
         if idx in g.db_df.index:
             if g.tt > 0:
                 g.tt -= 1

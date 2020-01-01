@@ -146,20 +146,27 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
                         temp_image_filename = path.join(temp_dir, key.replace(path.sep, '_'))
 
                         # TODO: Some batch version of this, as this is slow af
-                        with tf.compat.v1.Session() as sess:
-                            image_decoded = tf.image.decode_jpeg(tf.io.read_file(image_path), channels=3 if rgb else 1)
-                            resized = tf.image.resize(image_decoded, resolution)
-                            enc = tf.image.encode_jpeg(tf.cast(resized, tf.uint8),
-                                                       'rgb' if rgb else 'grayscale',
-                                                       quality=100, chroma_downsampling=False)
-                            fwrite = tf.io.write_file(tf.constant(temp_image_filename), enc)
-                            result = sess.run(fwrite)
+                        if dr_spoc_builder.session._closed:
+                            dr_spoc_builder.session = tf.compat.v1.Session()
+                            dr_spoc_builder.session.__enter__()
+
+                        image_decoded = tf.image.decode_jpeg(tf.io.read_file(image_path), channels=3 if rgb else 1)
+                        resized = tf.image.resize(image_decoded, resolution)
+                        enc = tf.image.encode_jpeg(tf.cast(resized, tf.uint8),
+                                                   'rgb' if rgb else 'grayscale',
+                                                   quality=100, chroma_downsampling=False)
+                        fwrite = tf.io.write_file(tf.constant(temp_image_filename), enc)
+                        result = dr_spoc_builder.session.run(fwrite)
 
                         yield key, {
                             'image': temp_image_filename,
                             'label': label,
                         }
+
                 print('resolved all files, now you should delete: {!r}'.format(temp_dir))
+                if not dr_spoc_builder.session._closed:
+                    # dr_spoc_builder.session.close()
+                    dr_spoc_builder.session.__exit__(None, None, None)
 
         builder = DrSpocImageLabelFolder(
             dataset_name=dataset_name,
@@ -177,6 +184,8 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
 
 
 dr_spoc_builder.t = 5
+
+dr_spoc_builder.session = type('FakeSession', tuple(), {'_closed': True})()
 
 
 def _get_manual_dir(dr_spoc_parent_dir, manual_dir):  # type: (str, str) -> str
