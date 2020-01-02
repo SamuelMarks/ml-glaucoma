@@ -1,6 +1,7 @@
 from abc import ABC
 
 import tensorflow as tf
+import tensorflow_addons as tfa
 
 from ml_glaucoma import losses as losses_module, metrics as metrics_module, problems as p
 from ml_glaucoma.cli_options.base import Configurable
@@ -37,7 +38,7 @@ class ConfigurableProblemBase(Configurable, ABC):
             for metric in metrics
         ]
 
-        '''
+        # metrics.append(metrics_module.AUCall())
         # multiple threshold values don't seem to work for metrics
         metrics += [
                        tf.keras.metrics.TruePositives(
@@ -72,7 +73,6 @@ class ConfigurableProblemBase(Configurable, ABC):
                            name='recall{:d}'.format(int(100 * r)))
                        for r in recall_thresholds
                    ]
-        '''
 
         kwargs = dict(
             loss=(tf.keras.losses.deserialize(dict(class_name=loss, config={})) if loss in dir(tf.keras.losses)
