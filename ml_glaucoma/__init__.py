@@ -26,4 +26,4 @@ if environ['TF']:
     import ml_glaucoma.tfds_checksums
 
 # logging.getLogger('dataset_builder').setLevel(logging.WARNING)
-# logging.getLogger('matplotlib').setLevel(logging.ERROR)
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
