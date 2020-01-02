@@ -21,8 +21,11 @@ class AUCall(tf.keras.metrics.AUC):
                                      thresholds=thresholds)
 
     def result(self):
-        tf.summary.scalar('auc_tp', data=self.true_positives)
-        tf.summary.scalar('auc_fp', data=self.false_positives)
-        tf.summary.scalar('auc_tn', data=self.true_negatives)
-        tf.summary.scalar('auc_fn', data=self.false_negatives)
+        print('AUCall::result')
+        with tf.name_scope('auc'):
+            tf.summary.scalar('tp', data=self.true_positives, description='true_positives')
+            tf.summary.scalar('fp', data=self.false_positives, description='false_positives')
+            tf.summary.scalar('tn', data=self.true_negatives, description='true_negatives')
+            tf.summary.scalar('fn', data=self.false_negatives, description='false_negatives')
+
         return super(AUCall, self).result()
