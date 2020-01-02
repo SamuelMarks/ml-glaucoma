@@ -6,7 +6,7 @@ redis
 matplotlib
 tqdm
 tflearn
-h5py==2.9.0
+h5py
 scipy
 #tensorflow==2.0.0 # omitting because you should compile your own
 tensorflow-addons
@@ -19,12 +19,12 @@ quantumrandom
 tensorflow_datasets
 xlrd
 pydot
-https://github.com/jackd/gin-config/zipball/tf2#egg=gin-config
-https://github.com/SamuelMarks/MNet_DeepCDR/zipball/setup#egg=mnet_deep_cdr
-https://github.com/SamuelMarks/efficientnet/zipball/tf-no-attribute-fix#egg=efficientnet
-https://github.com/SamuelMarks/keras-squeeze-excite-network/zipball/master#egg=keras-squeeze-excite-network
+gin-config
+https://github.com/HzFu/MNet_DeepCDR/zipball/setup#egg=mnet_deep_cdr
+efficientnet
+https://github.com/titu1994/keras-squeeze-excite-network/zipball/master#egg=keras-squeeze-excite-network
 pyyaml
 # torch==1.17.2
-torchvision==0.4.1
+torchvision==0.4.2
 sqlalchemy
 psycopg2
