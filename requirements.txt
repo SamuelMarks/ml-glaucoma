@@ -21,7 +21,7 @@ xlrd
 pydot
 gin-config
 https://github.com/HzFu/MNet_DeepCDR/zipball/master#egg=mnet-deep-cdr
-efficientnet
+https://github.com/SamuelMarks/efficientnet/zipball/tensorflow-v2#egg=efficientnet
 https://github.com/titu1994/keras-squeeze-excite-network/zipball/master#egg=keras-squeeze-excite-network
 pyyaml
 # torch==1.17.2
