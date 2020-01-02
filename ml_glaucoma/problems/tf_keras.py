@@ -321,7 +321,8 @@ class TfdsMultiProblem(BaseProblem):
         )
 
     def examples_per_epoch(self, split=tfds.Split.TRAIN):
-        return sum(_examples_per_epoch(b, split) for b in self._builders)
+        return sum(_examples_per_epoch(b, split)
+                   for b in self._builders)
 
     def input_spec(self):
         return self.dataset_spec()[0]

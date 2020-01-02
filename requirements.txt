@@ -8,7 +8,7 @@ tqdm
 tflearn
 h5py
 scipy
-#tensorflow==2.0.0 # omitting because you should compile your own
+# tensorflow==2.0.0 # omitting because you should compile your own
 tensorflow-addons
 opencv-python
 scikit-learn

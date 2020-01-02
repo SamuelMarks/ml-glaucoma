@@ -38,8 +38,11 @@ class ConfigurableProblemBase(Configurable, ABC):
             for metric in metrics
         ]
 
-        # metrics.append(metrics_module.AUCall())
+        metrics.append(metrics_module.AUCall(
+            writer=tf.summary.create_file_writer(kwargs['tensorboard_log_dir'])
+        ))
         # multiple threshold values don't seem to work for metrics
+
         metrics += [
                        tf.keras.metrics.TruePositives(
                            thresholds=[t],
