@@ -126,7 +126,7 @@ class TfdsMultiProblem(BaseProblem):
     def get_dataset(self, split, batch_size=None, repeat=False, prefetch=True):
         raise NotImplementedError()
 
-    def examples_per_epoch(self, split):
+    def examples_per_epoch(self, split=None):
         raise NotImplementedError()
 
     def input_spec(self):

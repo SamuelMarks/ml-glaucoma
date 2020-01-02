@@ -18,18 +18,24 @@ else:
     def Refuge(*args, **kwargs):
         raise NotImplementedError()
 
-builder = Refuge()
-builder.download_and_prepare()
-dataset = builder.as_dataset(as_supervised=True, split='validation')
 
-dataset = dataset.map(functools.partial(
-    preprocess_example, pad_to_square=True, resolution=(256, 256)))
-
-if __name__ == '__main__':
+def main():
     import matplotlib.pyplot as plt
+
+    builder = Refuge()
+    builder.download_and_prepare()
+    dataset = builder.as_dataset(as_supervised=True, split='validation')
+
+    dataset = dataset.map(functools.partial(
+        preprocess_example, pad_to_square=True, resolution=(256, 256)))
+
     for image, label in tfds.as_numpy(dataset):
         image -= np.min(image)
         image /= np.max(image)
         plt.imshow(image)
         print('label: {}'.format(label))
         plt.show()
+
+
+if __name__ == '__main__':
+    main()

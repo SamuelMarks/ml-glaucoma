@@ -23,7 +23,6 @@ gin-config
 https://github.com/HzFu/MNet_DeepCDR/zipball/master#egg=mnet-deep-cdr
 https://github.com/SamuelMarks/efficientnet/zipball/tensorflow-v2#egg=efficientnet
 https://github.com/titu1994/keras-squeeze-excite-network/zipball/master#egg=keras-squeeze-excite-network
-pyyaml
 # torch==1.17.2
 torchvision==0.4.2
 sqlalchemy

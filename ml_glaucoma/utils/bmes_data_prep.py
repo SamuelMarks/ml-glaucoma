@@ -12,6 +12,7 @@ from random import sample
 from shutil import rmtree
 from socket import getfqdn
 from sys import modules
+from typing import Iterator
 
 from six import iteritems, itervalues
 
