@@ -37,7 +37,7 @@ class ConfigurableProblem(ConfigurableProblemBase, ABC):
         parser.add_argument(
             '-m', '--metrics', nargs='*',
             choices=SUPPORTED_METRICS,
-            default=['AUC'],
+            default=['AUCall'],
             help='metric functions to use')
         parser.add_argument(
             '-pt', '--precision_thresholds',

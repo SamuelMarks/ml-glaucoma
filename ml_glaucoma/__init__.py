@@ -4,7 +4,7 @@ import logging.config
 from os import path, environ
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.81'
+__version__ = '0.0.82'
 
 
 def get_logger(name=None):

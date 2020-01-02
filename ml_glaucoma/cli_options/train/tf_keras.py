@@ -8,6 +8,4 @@ valid_callbacks.update(get_upper_kv(callbacks_module))
 SUPPORTED_CALLBACKS = tuple(sorted(valid_callbacks.keys()))
 
 # Cleanup namespace
-del callbacks_module
-del tf
-del get_upper_kv
+del callbacks_module, tf, get_upper_kv
