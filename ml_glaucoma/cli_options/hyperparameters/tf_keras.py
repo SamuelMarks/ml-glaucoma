@@ -39,7 +39,8 @@ class ConfigurableProblemBase(Configurable, ABC):
         ]
 
         metrics.append(metrics_module.AUCall(
-            writer=tf.summary.create_file_writer(kwargs['tensorboard_log_dir'])
+            writer=tf.summary.create_file_writer(kwargs['tensorboard_log_dir'],
+                                                 filename_suffix='.metrics')
         ))
         # multiple threshold values don't seem to work for metrics
 
@@ -90,7 +91,7 @@ class ConfigurableProblemBase(Configurable, ABC):
 
 
 # Cleanup namespace
-del losses_module, metrics_module, get_upper_kv
+del losses_module, get_upper_kv
 
 __all__ = [
     'ConfigurableProblemBase',

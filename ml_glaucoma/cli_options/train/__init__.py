@@ -4,7 +4,6 @@ from yaml import load as yaml_load
 
 import ml_glaucoma.runners
 from ml_glaucoma.cli_options.base import Configurable
-from ml_glaucoma.utils import pp
 
 if environ['TF']:
     from ml_glaucoma.cli_options.train.tf_keras import *
@@ -89,7 +88,8 @@ class ConfigurableTrain(Configurable):
                    delete_lt, rest, **_kwargs):
 
         print('ConfigurableTrain::model_fn:', model_fn, ';')
-        assert rest is None or len(rest) == 0, 'train subcommand does not handle chaining next subcommand, got: {!r}'.format(rest)
+        assert rest is None or len(
+            rest) == 0, 'train subcommand does not handle chaining next subcommand, got: {!r}'.format(rest)
 
         if disable_gpu:
             environ['CUDA_VISIBLE_DEVICES'] = '-1'
@@ -118,7 +118,9 @@ class ConfigurableTrain(Configurable):
                 torch.backends.cudnn.deterministic = True
                 torch.backends.cudnn.benchmark = False
 
-        if path.isdir(model_dir) and len(listdir(model_dir)) > 0:
+        if path.isdir(model_dir) and sum(1 for _ in filter(lambda s: not s.endswith('.metrics'),
+                                                           listdir(model_dir))) > 0:
+            print('listdir(model_dir):', listdir(model_dir))
             raise EnvironmentError('\'{model_dir}\' unexpectedly has contents; try using another dir'.format(
                 model_dir=model_dir
             ))
