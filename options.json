@@ -1,0 +1,15 @@
+{
+  "models": [
+    {"DenseNet169": 0},
+    {"EfficientNetB0": 0}
+  ],
+  "losses": [
+    {"BinaryCrossentropy": 0},
+    {"JaccardDistance": 0}
+  ],
+  "optimizers": [
+    {"Adadelta": 0},
+    {"Adagrad": 0},
+    {"Adam": 0}
+  ]
+}
