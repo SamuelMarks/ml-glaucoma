@@ -23,7 +23,9 @@ valid_metrics = {metric: getattr(tf.keras.metrics, metric)
 valid_metrics.update(get_upper_kv(metrics_module))
 SUPPORTED_METRICS = tuple(sorted(valid_metrics.keys()))
 
-valid_optimizers = get_upper_kv(tf.keras.optimizers)
+valid_optimizers = {optimizer_name: optimizer
+                    for optimizer_name, optimizer in get_upper_kv(tf.keras.optimizers).items()
+                    if optimizer_name not in ('Optimizer', 'OptimizerV2')}
 SUPPORTED_OPTIMIZERS = tuple(sorted(valid_optimizers.keys()))
 
 
@@ -38,10 +40,10 @@ class ConfigurableProblemBase(Configurable, ABC):
             for metric in metrics
         ]
 
-        #metrics.append(metrics_module.AUCall(
+        # metrics.append(metrics_module.AUCall(
         #    writer=tf.summary.create_file_writer(kwargs['tensorboard_log_dir'],
         #                                         filename_suffix='.metrics')
-        #))
+        # ))
         # multiple threshold values don't seem to work for metrics
 
         metrics += [
