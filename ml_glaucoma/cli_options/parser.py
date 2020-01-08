@@ -33,7 +33,7 @@ def _reparse_cli(cmd):  # type: ([str] or None) -> [str] or None
         elif skip:
             skip = False
         else:
-            new_cmd.append(str(opt))
+            new_cmd.append(str(opt) if isinstance(opt, (float, int)) else opt)
 
     return new_cmd
 
@@ -42,7 +42,8 @@ def cli_handler(cmd=None, return_namespace=False):
     parser, commands = get_parser()
 
     args, rest = parser.parse_known_args(cmd if cmd is None
-                                         else tuple(map(lambda c: c if c is None else str(c),
+                                         else tuple(map(lambda c: (c if c is None or not isinstance(c, (float, int))
+                                                                   else str(c)),
                                                         _reparse_cli(cmd))))
 
     if return_namespace:
