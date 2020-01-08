@@ -587,7 +587,7 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
 
         no_no_grad_dir = path.join(
             symlink_dir,
-            dr_spoc_datasets[dr_spoc_datasets.index('dr_spoc_no_no_grad_dir')],
+            dr_spoc_datasets[dr_spoc_datasets.index('dr_spoc_no_no_grad')],
             current_tier,
             category
         )

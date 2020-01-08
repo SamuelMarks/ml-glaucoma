@@ -10,7 +10,7 @@ from ml_glaucoma import get_logger
 logger = get_logger('.'.join((path.basename(path.dirname(__file__)),
                               path.basename(__file__).rpartition('.')[0])))
 
-dr_spoc_datasets = 'dr_spoc', 'dr_spoc_grad_and_no_grad', 'dr_spoc_no_no_grad_dir'
+dr_spoc_datasets = 'dr_spoc', 'dr_spoc_grad_and_no_grad', 'dr_spoc_no_no_grad'
 dr_spoc_datasets_set = frozenset(dr_spoc_datasets)
 
 
