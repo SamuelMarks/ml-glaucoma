@@ -7,8 +7,8 @@ dataset="${DATASET:-dr_spoc}"
 
 python -m ml_glaucoma pipeline \
     --options="$OPTIONS" \
-    --options="[ losses: [{BinaryCrossentropy: 0}, {JaccardDistance: 0}],
-                 optimizer: [{Adam: 5}, {RMSProp: 10}]" \
+    --options="{ losses: [{BinaryCrossentropy: 0}, {JaccardDistance: 0}],
+                 optimizer: [{Adam: 5}, {RMSProp: 10}] }" \
     --strategy='grid|random|biggest-grid|smallest-grid|bayes|genetic|raytune' \
     train \
     -ds "$dataset" \
@@ -21,7 +21,7 @@ python -m ml_glaucoma pipeline \
 python -m ml_glaucoma pipeline \
     --options="{ models: [{DenseNet169: 0}, {EfficientNetB0: 0}],
                  losses: [{BinaryCrossentropy: 0}, {JaccardDistance: 0}],
-                 optimizers: [{Adadelta: 0}, {Adagrad: 0}, {Adam: 0}]}" \
+                 optimizers: [{Adadelta: 0}, {Adagrad: 0}, {Adam: 0}] }" \
     --key 'models' \
     --threshold '1' \
     --logfile "$manual_dir"'/pipeline.log' \
