@@ -15,6 +15,7 @@ from ml_glaucoma.cli_options.train import ConfigurableTrain
 
 def cli_handler(cmd=None, return_namespace=False):
     parser, commands = get_parser()
+    print('type(cmd):', type(cmd))
     args, rest = parser.parse_known_args(cmd if cmd is None
                                          else tuple(map(lambda c: c if c is None else str(c),
                                                         cmd)))

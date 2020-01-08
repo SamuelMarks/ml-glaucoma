@@ -7,21 +7,18 @@ from shutil import copyfile
 from sys import stderr, modules
 from tempfile import gettempdir, mkdtemp
 
-from pandas.core.indexes.frozen import FrozenList
 from six import iteritems
 
 import ml_glaucoma.cli_options.parser
-from ml_glaucoma import get_logger
-from ml_glaucoma.utils import update_d
-from ml_glaucoma.cli_options.logparser.utils import get_metrics, parse_line
 import ml_glaucoma.cli_options.parser
+from ml_glaucoma import get_logger
 from ml_glaucoma.cli_options.hyperparameters import SUPPORTED_LOSSES, SUPPORTED_OPTIMIZERS
-from ml_glaucoma.models import valid_models
 from ml_glaucoma.cli_options.logparser.utils import ParsedLine
+from ml_glaucoma.models import valid_models
+from ml_glaucoma.utils import update_d
 
 logger = get_logger(modules[__name__].__name__.rpartition('.')[0])
 
-FrozenList
 
 def pipeline_runner(logfile, key, options, replacement_options, threshold, dry_run, rest):
     log = lambda obj: logfile.write(
@@ -41,8 +38,9 @@ def pipeline_runner(logfile, key, options, replacement_options, threshold, dry_r
 
     # TODO: Checkpointing: Check if option was last one tried—by checking if 0.5—and if so, skip to next one
 
+
 def _new_prepare_options(log, logfile, options, rest, try_all=True):
-    '''
+    """
         This is run for every experiment
         From rest, we can use get_metrics to open 'tensorboard_log_dir' to get the result of all the previous experiments
             (change the prefix to 'epoch_') (using the validation subdirectory)
@@ -51,7 +49,7 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
         Build some data structure to determine next best choice
         Select set of options to run for next experiment
         Call upsert_rest_arg() to set parameters for the next experiment
-    '''
+    """
     rest_namespace = ml_glaucoma.cli_options.parser.cli_handler(cmd=rest, return_namespace=True)
     # if not path.isdir(rest_namespace.tensorboard_log_dir) or len(listdir(rest_namespace.tensorboard_log_dir)) == 0:
     #     return  # first run!
@@ -65,7 +63,8 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
     maybe_options_space = None
     while idx > 0:
         maybe_options_space = loads(prev_logfile_lines[idx])
-        if isinstance(maybe_options_space, dict) and 'type' in maybe_options_space and maybe_options_space['type'] == 'options_space':
+        if isinstance(maybe_options_space, dict) and 'type' in maybe_options_space and maybe_options_space[
+            'type'] == 'options_space':
             break
         maybe_options_space = None
         idx -= 1
@@ -89,7 +88,7 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
                                        optimizer=o,
                                        optimizer_params=rest_namespace.optimizer,
                                        base='transfer')
-                                       )
+                        )
         options_space = {
             'type': 'options_space',
             'last_idx': 0,
@@ -110,6 +109,7 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
     print('cur_experiment_index:', options_space['last_idx'])
     return options_space['space'][options_space['last_idx']]
 
+
 def _new_modify_options(parsed_line, rest):
     if parsed_line is None:
         return
@@ -128,12 +128,12 @@ def _execute_command(key, log, next_key, options, dry_run, rest):
 
     if dry_run:
         just = 10
-        print(#'key:'.ljust(just), key, ';\n',
-              'log:'.ljust(just), log, ';\n',
-              #'next_key:'.ljust(just), next_key, ';\n',
-              'options:'.ljust(just), dumps(options), ';\n',
-              'dry_run:'.ljust(just), dry_run, ';\n',
-              'rest:'.ljust(just), dumps(rest), ';', sep='')
+        print(  # 'key:'.ljust(just), key, ';\n',
+            'log:'.ljust(just), log, ';\n',
+            # 'next_key:'.ljust(just), next_key, ';\n',
+            'options:'.ljust(just), dumps(options), ';\n',
+            'dry_run:'.ljust(just), dry_run, ';\n',
+            'rest:'.ljust(just), dumps(rest), ';', sep='')
     else:
         err, cli_resp = _handle_rest(key, locals().get('next_key'), rest, options)
         if err is not None:
@@ -158,7 +158,6 @@ def _execute_command(key, log, next_key, options, dry_run, rest):
 
 
 def _prepare_options(key, log, logfile, options, rest):
-
     assert type(options) is dict, '--options value could not be parsed into a Python dictionary, got: {}'.format(
         options
     )
@@ -254,7 +253,10 @@ def _upsert_cli_arg(arg, value, cli):
 
 
 def _handle_rest(key, next_key, rest, options):
-    assert rest[0] == 'train'
+    if rest[0] != 'train':
+        raise NotImplementedError(rest[0])
+    elif options is None or len(options) > 0:
+        raise NotImplementedError('options in _handle_rest')
 
     upsert_rest_arg = partial(_upsert_cli_arg, cli=rest)
 
