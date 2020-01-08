@@ -8,8 +8,9 @@ import pandas as pd
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
 from ml_glaucoma.cli_options.hyperparameters import SUPPORTED_LOSSES, SUPPORTED_OPTIMIZERS
+from ml_glaucoma.datasets.tfds_builders.dr_spoc import dr_spoc_datasets
 from ml_glaucoma.models import valid_models
-from ml_glaucoma.utils import update_d
+from ml_glaucoma.utils import update_d, lcs
 
 valid_models_upper = frozenset((model.upper() for model in valid_models))
 
@@ -23,7 +24,8 @@ valid_bases = frozenset(('dc0', 'dc1', 'dc2', 'dc3', 'dc4', 'dr0'))
 valid_bases_upper = frozenset((model.upper() for model in valid_bases))
 
 
-def parse_line(line):
+def parse_line(line):  # type: (str) -> ParsedLine
+    line = path.basename(line)
     optimizer_params = {}
     if line.count(' ') == 0:
         name, epoch, value = line, 0, 0
@@ -39,6 +41,14 @@ def parse_line(line):
 
     def _get_name(st, it):
         return next(s for s in it if s.upper() == st.upper())
+
+    ###########
+    #         #
+    # dataset #
+    #         #
+    ###########
+    if ds == 'dr':
+        ds = max((lcs(line, ds) for ds in dr_spoc_datasets), key=len)
 
     for idx, word in enumerate(split_name, 2):
         prev_prev_word = split_name[idx - 2] if len(split_name) > idx - 2 else ''
@@ -60,7 +70,7 @@ def parse_line(line):
         #        #
         ##########
         if prev_prev_word == 'epochs':
-            epochs = previous_word
+            epochs = int(previous_word)
 
         ############
         #          #
