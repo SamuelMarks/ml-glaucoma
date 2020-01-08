@@ -241,7 +241,7 @@ def _handle_model_change(rest, upsert_rest_arg, model):
     )
 
 
-def _upsert_cli_arg(arg, value, cli):
+def _upsert_cli_arg(arg, value, cli):  # type: (str, [str]) -> [str]
     if not arg.startswith('-'):
         arg = '--{arg}'.format(arg=arg)
     try:
@@ -252,9 +252,23 @@ def _upsert_cli_arg(arg, value, cli):
     return cli
 
 
+def _del_cli_arg(arg, cli):  # type: (str, [str]) -> [str]
+    if not arg.startswith('-'):
+        arg = '--{arg}'.format(arg=arg)
+    try:
+        idx = cli.index(arg)
+        del cli[idx]
+        del cli[idx]
+    except ValueError:
+        pass
+    return cli
+
+
 def _handle_rest(key, next_key, rest):
     if rest[0] != 'train':
         raise NotImplementedError(rest[0])
+    for arg in 'value', 'transfer', 'base':
+        _del_cli_arg(arg, rest)
 
     upsert_rest_arg = partial(_upsert_cli_arg, cli=rest)
 
