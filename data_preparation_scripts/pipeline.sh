@@ -6,8 +6,12 @@ manual_dir="${MANUAL_DIR:-/mnt}"
 dataset="${DATASET:-dr_spoc}"
 
 python -m ml_glaucoma pipeline \
-    --options='{losses:    [{BinaryCrossentropy: 0}, {JaccardDistance: 0}], ' \
-              ' optimizer: {Adam: 5, RMSProp: 10}]}' \
+    --options="$OPTIONS" \
+    --options="$(cat <<-END
+      {losses:    [{BinaryCrossentropy: 0}, {JaccardDistance: 0}],
+                    optimizer: {Adam: 5, RMSProp: 10}]}
+      END
+    )" \
     --strategy='grid|random|biggest-grid|smallest-grid|bayes|genetic|raytune' \
     train \
     -ds "$dataset" \
@@ -18,9 +22,12 @@ python -m ml_glaucoma pipeline \
     --epochs '1'
 
 python -m ml_glaucoma pipeline \
-    --options '{ models: [{DenseNet169: 0}, {EfficientNetB0: 0}], ' \
-                'losses: [{BinaryCrossentropy: 0}, {JaccardDistance: 0}], ' \
-                'optimizers": [{Adadelta: 0}, {Adagrad: 0}, {Adam: 0}]}' \
+    --options="$(cat <<-END
+      { models: [{DenseNet169: 0}, {EfficientNetB0: 0}],
+                  losses: [{BinaryCrossentropy: 0}, {JaccardDistance: 0}],
+                  optimizers: [{Adadelta: 0}, {Adagrad: 0}, {Adam: 0}]}
+      END
+    )" \
     --key 'models' \
     --threshold '1' \
     --logfile "$manual_dir"'/pipeline.log' \
