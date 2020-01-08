@@ -6,6 +6,7 @@ from os import environ, path
 from shutil import copyfile
 from tempfile import mkdtemp, gettempdir
 
+from six import string_types
 from yaml import load as yaml_load
 
 from ml_glaucoma import get_logger
@@ -98,7 +99,7 @@ class ConfigurableOptimizer(Configurable):
         )
 
     def build(self, optimizer, learning_rate, optimizer_params=None, **kwargs):
-        if optimizer_params is None:
+        if optimizer_params is None or isinstance(optimizer_params, string_types):
             optimizer_params = {}
         elif 'lr' in optimizer_params:
             logger.warn('Learning rate is being replaced by `--learning_rate` value or its default')

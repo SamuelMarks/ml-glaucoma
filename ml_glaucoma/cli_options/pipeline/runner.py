@@ -54,7 +54,7 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
     # if not path.isdir(rest_namespace.tensorboard_log_dir) or len(listdir(rest_namespace.tensorboard_log_dir)) == 0:
     #     return  # first run!
 
-    print('rest_namespace.tensorboard_log_dir:', rest_namespace.tensorboard_log_dir, ';')
+    print('rest_namespace.tensorboard_log_dir:'.ljust(20), '{!r};'.format(rest_namespace.tensorboard_log_dir), sep='')
 
     with open(logfile.name, 'rt') as f:
         prev_logfile_lines = f.readlines()
@@ -74,19 +74,19 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
         # First go!
         # Generate the entire options_space
         # this will be logged and then loaded back in
-        if try_all == True:
-            for m in valid_models:
-                for l in SUPPORTED_LOSSES:
-                    for o in SUPPORTED_OPTIMIZERS:
+        if try_all is True:
+            for model in valid_models:
+                for loss in SUPPORTED_LOSSES:
+                    for optimizer in SUPPORTED_OPTIMIZERS:
                         generated_space.append(
                             ParsedLine(dataset=rest_namespace.dataset,
                                        epoch=0,
                                        value='value',
                                        epochs=250,
-                                       transfer=m,
-                                       loss=l,
-                                       optimizer=o,
-                                       optimizer_params=rest_namespace.optimizer,
+                                       transfer=model,
+                                       loss=loss,
+                                       optimizer=optimizer,
+                                       optimizer_params=rest_namespace.optimizer_params,
                                        base='transfer')
                         )
         options_space = {
@@ -106,7 +106,7 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
         # prev_options = parse_line(rest_namespace.tensorboard_log_dir)
 
     log(options_space)
-    print('cur_experiment_index:', options_space['last_idx'])
+    print('cur_experiment_index:'.ljust(20), options_space['last_idx'], sep='')
     return options_space['space'][options_space['last_idx']]
 
 
