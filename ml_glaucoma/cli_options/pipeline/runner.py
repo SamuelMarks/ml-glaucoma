@@ -81,7 +81,7 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
                         generated_space.append(
                             ParsedLine(dataset=rest_namespace.dataset,
                                        epoch=0,
-                                       value='value',
+                                       value=None,
                                        epochs=250,
                                        transfer=model,
                                        loss=loss,

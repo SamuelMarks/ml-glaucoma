@@ -203,7 +203,7 @@ options_space = {
     'space': [
         ParsedLine(dataset='refuge',
                    epoch=64,
-                   value='value',
+                   value=None,
                    epochs=250,
                    transfer='Resnet50',
                    loss='BinaryCrossentropy',
@@ -212,7 +212,7 @@ options_space = {
                    base='transfer'),
         ParsedLine(dataset='refuge',
                    epoch=64,
-                   value='value',
+                   value=None,
                    epochs=250,
                    transfer='MobileNet',
                    loss='CategoricalCrossentropy',
