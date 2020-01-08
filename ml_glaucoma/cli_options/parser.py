@@ -13,12 +13,37 @@ from ml_glaucoma.cli_options.prepare import ConfigurableBuilders
 from ml_glaucoma.cli_options.train import ConfigurableTrain
 
 
+def _reparse_cli(cmd):  # type: ([str] or None) -> [str] or None
+    """
+    Namespace parsing will cause all nargs to be put into ['--carg', ['a','b']] lists,
+     to pass it back this needs to revert to ['--carg', 'a', '--carg', 'b')
+    """
+    if cmd is None:
+        return cmd
+
+    skip = False
+    len_cmd = len(cmd)
+    a = []
+    for i, c in enumerate(cmd):
+        j = i + 1
+        if j < len_cmd and isinstance(cmd[j], list):
+            for cj in cmd[j]:
+                a += [c, cj]
+            skip = True
+        elif skip:
+            skip = False
+        else:
+            a.append(c)
+
+    return a
+
+
 def cli_handler(cmd=None, return_namespace=False):
     parser, commands = get_parser()
-    print('type(cmd):', type(cmd))
+
     args, rest = parser.parse_known_args(cmd if cmd is None
                                          else tuple(map(lambda c: c if c is None else str(c),
-                                                        cmd)))
+                                                        _reparse_cli(cmd))))
 
     if return_namespace:
         cmd = commands[args.command]
