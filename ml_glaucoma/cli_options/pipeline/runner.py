@@ -135,7 +135,7 @@ def _execute_command(key, log, next_key, options, dry_run, rest):
             'dry_run:'.ljust(just), dry_run, ';\n',
             'rest:'.ljust(just), dumps(rest), ';', sep='')
     else:
-        err, cli_resp = _handle_rest(key, locals().get('next_key'), rest, options)
+        err, cli_resp = _handle_rest(key, locals().get('next_key'), rest)
         if err is not None:
             if environ.get('NO_EXCEPTIONS'):
                 print(err, file=stderr)
@@ -252,11 +252,9 @@ def _upsert_cli_arg(arg, value, cli):
     return cli
 
 
-def _handle_rest(key, next_key, rest, options):
+def _handle_rest(key, next_key, rest):
     if rest[0] != 'train':
         raise NotImplementedError(rest[0])
-    elif options is None or len(options) > 0:
-        raise NotImplementedError('options in _handle_rest')
 
     upsert_rest_arg = partial(_upsert_cli_arg, cli=rest)
 
