@@ -15,27 +15,27 @@ from ml_glaucoma.cli_options.train import ConfigurableTrain
 
 def _reparse_cli(cmd):  # type: ([str] or None) -> [str] or None
     """
-    Namespace parsing will cause all nargs to be put into ['--carg', ['a','b']] lists,
-     to pass it back this needs to revert to ['--carg', 'a', '--carg', 'b')
+    Namespace parsing will cause all nargs to be put into ['--carg', ['a',5]] lists,
+     and types to change to whatever it expects, to pass it back this needs to revert to ['--carg', 'a', '--carg', '5']
     """
     if cmd is None:
         return cmd
 
     skip = False
     len_cmd = len(cmd)
-    a = []
-    for i, c in enumerate(cmd):
-        j = i + 1
-        if j < len_cmd and isinstance(cmd[j], list):
-            for cj in cmd[j]:
-                a += [c, str(cj)]
+    new_cmd = []
+    for index, opt in enumerate(cmd):
+        next_index = index + 1
+        if next_index < len_cmd and isinstance(cmd[next_index], list):
+            for next_opt in cmd[next_index]:
+                new_cmd += [opt, str(next_opt)]
             skip = True
         elif skip:
             skip = False
         else:
-            a.append(str(c))
+            new_cmd.append(str(opt))
 
-    return a
+    return new_cmd
 
 
 def cli_handler(cmd=None, return_namespace=False):
