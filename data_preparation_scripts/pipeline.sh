@@ -6,7 +6,6 @@ manual_dir="${MANUAL_DIR:-/mnt}"
 dataset="${DATASET:-dr_spoc}"
 
 python -m ml_glaucoma pipeline \
-    --options="$OPTIONS" \
     --options="{ losses: [{BinaryCrossentropy: 0}, {JaccardDistance: 0}],
                  optimizer: [{Adam: 5}, {RMSProp: 10}] }" \
     --strategy='grid|random|biggest-grid|smallest-grid|bayes|genetic|raytune' \
