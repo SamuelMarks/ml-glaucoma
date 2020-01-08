@@ -28,12 +28,12 @@ def _reparse_cli(cmd):  # type: ([str] or None) -> [str] or None
         j = i + 1
         if j < len_cmd and isinstance(cmd[j], list):
             for cj in cmd[j]:
-                a += [c, cj]
+                a += [c, str(cj)]
             skip = True
         elif skip:
             skip = False
         else:
-            a.append(c)
+            a.append(str(c))
 
     return a
 

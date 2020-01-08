@@ -271,6 +271,8 @@ def _handle_rest(key, next_key, rest):
     if next_key is not None:
         upsert_rest_arg(key, next_key)
 
+    rest = ml_glaucoma.cli_options.parser._reparse_cli(rest)
+
     print('Running command:'.ljust(16), '{} {}'.format(
         rest[0], ' '.join(map(lambda r: r if r.startswith('-') else '\'{}\''.format(r),
                               rest[1:]))))
