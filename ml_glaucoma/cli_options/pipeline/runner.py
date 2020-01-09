@@ -120,7 +120,7 @@ def _new_modify_options(parsed_line, rest):
 
 def _execute_command(key, log, next_key, options, dry_run, rest):
     print('-------------------------------------------\n'
-          '|                {cmd}ing…                |\n'
+          '|                {cmd}ing                 |\n'
           '-------------------------------------------'.format(cmd=rest[0]), sep='')
 
     if rest[0] != 'train':

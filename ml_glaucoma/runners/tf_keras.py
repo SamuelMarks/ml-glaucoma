@@ -162,39 +162,41 @@ def train(problem, batch_size, epochs,
     )
 
     if delete_lt is not None:
-        dire, best_runs = log_parser(directory=os.path.join(callbacks[-1].log_dir, 'validation'), top=1,
+        result = log_parser(directory=os.path.join(callbacks[-1].log_dir, 'validation'), top=1,
                                      tag='epoch_auc', infile=None, by_diff=None, threshold=None, rest=None)
-        print('{} ({}) had a best_runs of {}'.format(dire, callbacks[-1].log_dir, best_runs))
-        #  if not next((True for run in best_runs if run < delete_lt), False):
-        if best_runs[0][1] < delete_lt:
-            print('Insufficient AUC ({}) for storage, '
-                  'removing h5 files to save disk space. `dire`:'.format(best_runs[0][1]), dire)
-            if os.path.isfile(dire):
-                dire = os.path.dirname(dire)
-            root = os.path.splitdrive(os.getcwd())[0] or '/'
-            while not os.path.isfile(os.path.join(dire, 'model-0001.h5')):
-                dire = os.path.dirname(dire)
-                if dire == root:
-                    raise EnvironmentError('No h5 files generated')
-
-            for fname in os.listdir(dire):
-                full_path = os.path.join(dire, fname)
-                if os.path.isfile(full_path) and full_path.endswith('h5'):
-                    os.remove(full_path)
-                    if os.path.isfile(full_path):
-                        from pathlib import Path
-
-                        Path(full_path).unlink()
-
-            # Make directory read-only
-            mode = os.stat(dire).st_mode
-            ro_mask = 0o777 ^ (S_IWRITE | S_IWGRP | S_IWOTH)
-            os.chmod(dire, mode & ro_mask)
-
+        if result is None:
+            return None
         else:
-            print('{} >= {}; so not removing h5 files'.format(best_runs[0][1], delete_lt))
+            dire, best_runs = result
+            print('{} ({}) had a best_runs of {}'.format(dire, callbacks[-1].log_dir, best_runs))
+            #  if not next((True for run in best_runs if run < delete_lt), False):
+            if best_runs[0][1] < delete_lt:
+                print('Insufficient AUC ({}) for storage, '
+                      'removing h5 files to save disk space. `dire`:'.format(best_runs[0][1]), dire)
+                if os.path.isfile(dire):
+                    dire = os.path.dirname(dire)
+                root = os.path.splitdrive(os.getcwd())[0] or '/'
+                while not os.path.isfile(os.path.join(dire, 'model-0001.h5')):
+                    dire = os.path.dirname(dire)
+                    if dire == root:
+                        raise EnvironmentError('No h5 files generated')
 
-    return fit_result
+                for fname in os.listdir(dire):
+                    full_path = os.path.join(dire, fname)
+                    if os.path.isfile(full_path) and full_path.endswith('h5'):
+                        os.remove(full_path)
+                        if os.path.isfile(full_path):
+                            from pathlib import Path
+
+                            Path(full_path).unlink()
+
+                # Make directory read-only
+                mode = os.stat(dire).st_mode
+                ro_mask = 0o777 ^ (S_IWRITE | S_IWGRP | S_IWOTH)
+                os.chmod(dire, mode & ro_mask)
+            else:
+                print('{} >= {}; so not removing h5 files'.format(best_runs[0][1], delete_lt))
+            return fit_result
 
 
 def evaluate(problem, batch_size, model_fn, optimizer, model_dir=None):
