@@ -46,7 +46,7 @@ def get_callbacks(
     initial_epoch = 0
     if checkpoint_freq is not None:
         saver_callback = LoadingModelCheckpoint(
-            model_dir, save_freq=checkpoint_freq)
+            model_dir, save_freq=checkpoint_freq, save_best_only=True)
         latest_checkpoint = saver_callback.latest_checkpoint
         if latest_checkpoint is not None:
             initial_epoch = LoadingModelCheckpoint.filename_epoch(latest_checkpoint)

@@ -10,7 +10,6 @@ from tempfile import gettempdir, mkdtemp
 from six import iteritems
 
 import ml_glaucoma.cli_options.parser
-import ml_glaucoma.cli_options.parser
 from ml_glaucoma import get_logger
 from ml_glaucoma.cli_options.hyperparameters import SUPPORTED_LOSSES, SUPPORTED_OPTIMIZERS
 from ml_glaucoma.cli_options.logparser.utils import ParsedLine

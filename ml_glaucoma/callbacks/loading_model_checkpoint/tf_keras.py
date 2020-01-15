@@ -1,6 +1,9 @@
 from os import path, listdir
 
+import numpy as np
 import tensorflow as tf
+
+from ml_glaucoma.cli_options.logparser import log_parser
 
 
 class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
@@ -68,3 +71,30 @@ class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
 
     def _on_begin(self):
         self.restore()
+
+    def _save_model(self, epoch, logs):
+        # Save for subsequent restoration
+        monitor_op, save_best_only, best = self.monitor_op, self.save_best_only, self.best
+        # if save_best_only is True: self.save_best_only = False
+
+        filepath = self._get_file_path(epoch, logs)
+
+        def monitor_op(current, _best):
+            if self._save_model.t > 0:
+                print('current:\t', current,
+                      'self.best:\t', _best, sep='')
+                print('log_parser:\t', log_parser(path.dirname(filepath), top=epoch, tag='epoch_auc'))
+            return np.less
+
+        self.monitor_op = monitor_op
+
+        super(LoadingModelCheckpoint, self)._save_model(epoch, logs)
+
+        #
+        # remove(filepath)
+
+        # Restore
+        self.monitor_op, self.save_best_only, self.best = monitor_op, save_best_only, best
+        pass
+
+    _save_model.t = 3

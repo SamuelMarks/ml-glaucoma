@@ -175,11 +175,11 @@ class TfdsProblem(BaseProblem):
     def __init__(self, builder, loss, metrics=None, as_supervised=True,
                  output_spec=None, map_fn=None, shuffle_buffer=1024,
                  use_inverse_freq_weights=False,
-                 class_counts=None):
+                 class_counts=None):  # type: (tfds.core.DatasetBuilder, tf.keras.losses.Loss, [tf.keras.metrics.Metric] or None, bool, dict, None or (int) -> int, int, bool or None, int or None)
         """
         Args:
             builder: `tfds.core.DatasetBuilder` instance.
-            rest: see `ml_glaucoma.problems.BaseProblem`
+            metrics: `tf.metrics.`
         """
         if map_fn is not None:
             assert (callable(map_fn) or
