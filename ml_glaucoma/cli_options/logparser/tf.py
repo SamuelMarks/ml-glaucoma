@@ -30,7 +30,6 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
     elif path.isdir(directory):
         process_dir(directory)
 
-    last_result = None
     for fname in files:
         total_images = 0
         try:
@@ -66,4 +65,4 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
                             for k, v in sorted_values[:top]))
             last_result = fname, sorted_values[:top]
 
-    return last_result
+            return last_result
