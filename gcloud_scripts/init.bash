@@ -4,10 +4,7 @@ declare -r DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )";
 
 set -euo pipefail
 
-if [ -z "$NETWORK" ]; then
-  printf '$NETWORK not defined; try including all environment variables specified in README.md\n' >&2
-  exit 2
-fi
+"$DIR/preflight.bash"
 
 gcloud compute networks create "$NETWORK"
 gcloud compute firewall-rules create --network "$NETWORK" --allow='tcp:22,tcp:3389,tcp:443,tcp:80,icmp' \

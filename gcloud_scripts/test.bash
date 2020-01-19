@@ -2,12 +2,9 @@
 
 declare -r DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )";
 
-if [ -z "$NETWORK" ]; then
-  printf '$NETWORK not defined; try including all environment variables specified in README.md\n' >&2
-  exit 2
-fi
+set -euo pipefail
 
-set -euov pipefail
+"$DIR/preflight.bash"
 
 declare -r TPU_ADDR="$(gcloud compute tpus describe $TPU_NAME --format='value[separator=":"](networkEndpoints.ipAddress, networkEndpoints.port)')"
 
