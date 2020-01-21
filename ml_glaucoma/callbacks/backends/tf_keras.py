@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+from ml_glaucoma.callbacks.DropWorseModels.tf_keras import DropWorseModels
 from ml_glaucoma.callbacks.loading_model_checkpoint.tf_keras import LoadingModelCheckpoint
 from ml_glaucoma.tf_compat import is_tf_v1
 
@@ -46,7 +47,7 @@ def get_callbacks(
     initial_epoch = 0
     if checkpoint_freq is not None:
         saver_callback = LoadingModelCheckpoint(
-            model_dir, save_freq=checkpoint_freq, save_best_only=True)
+            model_dir, save_freq=checkpoint_freq, save_best_only=False)
         latest_checkpoint = saver_callback.latest_checkpoint
         if latest_checkpoint is not None:
             initial_epoch = LoadingModelCheckpoint.filename_epoch(latest_checkpoint)
@@ -74,6 +75,8 @@ def get_callbacks(
             tb_callback._total_val_batches_seen = initial_val_steps
 
         callbacks.append(tb_callback)
+
+        callbacks.append(DropWorseModels(save_best_only=True))
 
     if lr_schedule is not None:
         callbacks.append(tf.keras.callbacks.LearningRateScheduler(lr_schedule))
