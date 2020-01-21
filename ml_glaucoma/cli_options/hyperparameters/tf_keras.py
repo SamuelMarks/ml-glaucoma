@@ -40,6 +40,8 @@ class ConfigurableProblemBase(Configurable, ABC):
             for metric in metrics
         ]
 
+        metrics.append(tf.metrics.AUC(curve='PR'))
+
         # metrics.append(metrics_module.AUCall(
         #    writer=tf.summary.create_file_writer(kwargs['tensorboard_log_dir'],
         #                                         filename_suffix='.metrics')
