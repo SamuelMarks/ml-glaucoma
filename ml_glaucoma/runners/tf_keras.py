@@ -146,7 +146,6 @@ def train(problem, batch_size, epochs,
         '\nloss:'.ljust(15), problem.loss.__class__.__name__,
         '\ncallbacks:'.ljust(15), ', '.join(map(lambda c: type(c).__name__, callbacks)),
         '\nmetrics:'.ljust(15), ', '.join(map(lambda m: type(m).__name__, problem.metrics)),
-        '\ncallbacks:'.ljust(15), ', '.join(map(lambda c: c.__name__, callbacks)),
         '\ntotal_epochs:'.ljust(15), epochs, '\n\n',
         '_________________________________________________________________\n',
         sep=''
