@@ -144,8 +144,10 @@ def train(problem, batch_size, epochs,
         '\ntransfer:'.ljust(15), parsed_line.transfer,
         '\noptimizer:'.ljust(15), optimizer.__class__.__name__,
         '\nloss:'.ljust(15), problem.loss.__class__.__name__,
-        '\ntotal_epochs:'.ljust(15), epochs, '\n',
-        '\ncallbacks:'.ljust(15), callbacks, '\n\n',
+        '\ncallbacks:'.ljust(15), ', '.join(map(lambda c: c.__name__, callbacks)),
+        '\nmetrics:'.ljust(15), ', '.join(map(lambda m: m.__name__, problem.metrics)),
+        '\ncallbacks:'.ljust(15), ', '.join(map(lambda c: c.__name__, callbacks)),
+        '\ntotal_epochs:'.ljust(15), epochs, '\n\n',
         '_________________________________________________________________\n',
         sep=''
     )
@@ -164,7 +166,7 @@ def train(problem, batch_size, epochs,
 
     if delete_lt is not None:
         result = log_parser(directory=os.path.join(callbacks[-1].log_dir, 'validation'), top=1,
-                                     tag='epoch_auc', infile=None, by_diff=None, threshold=None, rest=None)
+                            tag='epoch_auc', infile=None, by_diff=None, threshold=None, rest=None)
         if result is None:
             return None
         else:
