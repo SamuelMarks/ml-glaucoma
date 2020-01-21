@@ -144,7 +144,8 @@ def train(problem, batch_size, epochs,
         '\ntransfer:'.ljust(15), parsed_line.transfer,
         '\noptimizer:'.ljust(15), optimizer.__class__.__name__,
         '\nloss:'.ljust(15), problem.loss.__class__.__name__,
-        '\ntotal_epochs:'.ljust(15), epochs, '\n\n',
+        '\ntotal_epochs:'.ljust(15), epochs, '\n',
+        '\ncallbacks:'.ljust(15), callbacks, '\n\n',
         '_________________________________________________________________\n',
         sep=''
     )

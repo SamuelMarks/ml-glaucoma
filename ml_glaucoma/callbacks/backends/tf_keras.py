@@ -76,10 +76,10 @@ def get_callbacks(
 
         callbacks.append(tb_callback)
 
-        if checkpoint_freq is not None:
-            callbacks.append(DropWorseModels(
-                model_dir, save_freq=checkpoint_freq, save_best_only=True
-            ))
+    if checkpoint_freq is not None:
+        callbacks.append(DropWorseModels(
+            model_dir, save_freq=checkpoint_freq, save_best_only=True
+        ))
 
     if lr_schedule is not None:
         callbacks.append(tf.keras.callbacks.LearningRateScheduler(lr_schedule))
