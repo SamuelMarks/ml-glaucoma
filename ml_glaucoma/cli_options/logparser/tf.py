@@ -1,4 +1,3 @@
-from collections import Counter
 from io import IOBase
 from operator import itemgetter
 from os import path, listdir
@@ -44,7 +43,8 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
         dirn = path.dirname(directory).rpartition(path.sep)[2]
 
         if tag == 'all':
-            for e in tf.train.summary_iterator(fname):
+            last_result = None
+            for e in tf.compat.v1.train.summary_iterator(fname):
                 for v in e.summary.value:
                     last_result = {
                         'idx': e.step,
@@ -60,7 +60,7 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
                                              for v in e.summary.value
                                              if v.tag == tag), key=itemgetter(1), reverse=True)
 
-            print('\n'.join('{dirn}\tmodel-{k:04d}.h5\t{v}'.format(dirn=dirn.ljust(34),
+            print('\n'.join('{dirn}\tmodel-{k:04d}.h5\t{v}'.format(dirn=dirn.ljust(54),
                                                                    k=k, v=v)
                             for k, v in sorted_values[:top]))
             last_result = fname, sorted_values[:top]
