@@ -41,7 +41,7 @@ if is_tf_v1:
         del losses_impl
         del Loss
     elif tf_version.version[1] == 14:
-        from tensorflow.python.keras.utils import losses_utils
+        from tensorflow.keras.utils import losses_utils
 
         tf.keras.losses.Reduction = losses_utils.ReductionV2
         del losses_utils

@@ -1,5 +1,5 @@
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.optimizers import Optimizer
+from tensorflow.keras import backend as K
+from tensorflow.keras.optimizers import Optimizer
 
 
 # From: https://github.com/titu1994/keras-adabound/blob/5ce819b/adabound.py

@@ -1,5 +1,5 @@
 import tensorflow.keras.backend as K
-from tensorflow.python.keras.optimizers import Optimizer
+from tensorflow.keras.optimizers import Optimizer
 from tensorflow.python.ops import state_ops, math_ops
 
 
