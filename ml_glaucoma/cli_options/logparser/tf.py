@@ -78,7 +78,7 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
                     value = event.summary.value.pop(0)
                     if value.tag == tag:
                         # q.put(event.value)
-                        values.append(event.value)
+                        values.append(value.simple_value)
 
                         last_result = {
                             'idx': event.step,
