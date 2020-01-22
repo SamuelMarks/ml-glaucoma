@@ -26,7 +26,7 @@ class DropWorseModels(tf.keras.callbacks.ModelCheckpoint):
 
     def _save_model(self, epoch, logs):
         with open('/tmp/log.txt', 'a') as f:
-            f.write('_save_model')
+            f.write('\n_save_model\n')
 
         # Save for subsequent restoration
         monitor_op, save_best_only, best = self.monitor_op, self.save_best_only, self.best
@@ -37,9 +37,9 @@ class DropWorseModels(tf.keras.callbacks.ModelCheckpoint):
         def monitor_op(current, _best):
             # if self._save_model.t > 0:
             with open('/tmp/log.txt', 'a') as f:
-                f.write('current:\t{}\nself.best:\t{}'.format(current, _best))
-                f.write('log_parser with tag=\'epoch_auc\':\t{}'.format(log_parser(path.dirname(filepath),
-                                                                                   top=epoch, tag='epoch_auc')))
+                f.write('current:\t{}\nself.best:\t{}\n'.format(current, _best))
+                f.write('log_parser with tag=\'epoch_auc\':\t{}\n\n'.format(log_parser(path.dirname(filepath),
+                                                                                       top=epoch, tag='epoch_auc')))
             return np.less
 
         self.monitor_op = monitor_op

@@ -10,7 +10,7 @@ from tensorboard.backend.event_processing.event_accumulator import EventAccumula
 from ml_glaucoma.cli_options.hyperparameters import SUPPORTED_LOSSES, SUPPORTED_OPTIMIZERS
 from ml_glaucoma.datasets.tfds_builders.dr_spoc import dr_spoc_datasets
 from ml_glaucoma.models import valid_models
-from ml_glaucoma.utils import update_d, lcs
+from ml_glaucoma.utils import update_d
 
 valid_models_upper = frozenset((model.upper() for model in valid_models))
 
@@ -48,7 +48,9 @@ def parse_line(line):  # type: (str) -> ParsedLine
     #         #
     ###########
     if ds == 'dr':
-        ds = max((lcs(line, ds) for ds in dr_spoc_datasets), key=len)
+        ds = next(dataset
+                  for dataset in dr_spoc_datasets
+                  if line.startswith(dataset))
 
     for idx, word in enumerate(split_name, 2):
         prev_prev_word = split_name[idx - 2] if len(split_name) > idx - 2 else ''
@@ -128,7 +130,6 @@ def parse_line(line):  # type: (str) -> ParsedLine
         elif prev_prev_word_upper in valid_optimizers_upper:
             optimizer = _get_name(prev_prev_word_upper, valid_optimizers)
 
-
         ####################
         #                  #
         # optimizer params #
@@ -136,7 +137,6 @@ def parse_line(line):  # type: (str) -> ParsedLine
         ####################
         elif previous_word in frozenset(('lr', 'alpha')) and len(split_name) != idx:
             optimizer_params[previous_word] = float(split_name[idx])
-
 
         ########
         #      #

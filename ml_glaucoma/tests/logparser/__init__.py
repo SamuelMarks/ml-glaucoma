@@ -36,6 +36,19 @@ class TestLogparserUtils(TestCase):
                        base='transfer')
         )))
 
+        self.assertEqual(*map(namedtuple2dict, (
+            parse_line(path.join(base, 'dr_spoc_EfficientNetB2_epochs_250')),
+            ParsedLine(dataset='dr_spoc',
+                       epoch=0,
+                       value=0,
+                       epochs=250,
+                       transfer='EfficientNetB2',
+                       loss='BinaryCrossentropy',
+                       optimizer='Adam',
+                       optimizer_params={'lr': 1e-3},
+                       base='transfer')
+        )))
+
 
 if __name__ == '__main__':
     unittest_main()
