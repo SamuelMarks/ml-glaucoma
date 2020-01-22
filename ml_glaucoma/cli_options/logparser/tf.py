@@ -1,9 +1,11 @@
 from io import IOBase
 from operator import itemgetter
 from os import path, listdir
+from queue import PriorityQueue
 from sys import stderr
 
 import tensorflow as tf
+from tensorflow.core.util import event_pb2
 from tensorflow_core.python.lib.io.tf_record import tf_record_iterator
 
 
@@ -53,12 +55,40 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
                         'dirn': dirn
                     }
                     print('{idx:04d}\t{simple_value:09f}\t{tag:>20}\t{dirn}'.format(**last_result))
+
+            for record in tf.data.TFRecordDataset(fname):
+                event = event_pb2.Event.FromString(tf.get_static_value(record))
+                if event.HasField('summary'):
+                    value = event.summary.value.pop(0)
+                    last_result = {
+                        'idx': event.step,
+                        'simple_value': value.simple_value,
+                        'tag': value.tag,
+                        'dirn': dirn
+                    }
+                    print('{idx:04d}\t{simple_value:09f}\t{tag:>20}\t{dirn}'.format(**last_result))
+
             return last_result
         else:
-            sorted_values = sorted(enumerate(v.simple_value
-                                             for e in tf.compat.v1.train.summary_iterator(fname)
-                                             for v in e.summary.value
-                                             if v.tag == tag), key=itemgetter(1), reverse=True)
+            # q = PriorityQueue()
+            values = []
+            for record in tf.data.TFRecordDataset(fname):
+                event = event_pb2.Event.FromString(tf.get_static_value(record))
+                if event.HasField('summary'):
+                    value = event.summary.value.pop(0)
+                    if value.tag == tag:
+                        # q.put(event.value)
+                        values.append(event.value)
+
+                        last_result = {
+                            'idx': event.step,
+                            'simple_value': value.simple_value,
+                            'tag': value.tag,
+                            'dirn': dirn
+                        }
+                        print('{idx:04d}\t{simple_value:09f}\t{tag:>20}\t{dirn}'.format(**last_result))
+
+            sorted_values = sorted(enumerate(values), key=itemgetter(1), reverse=True)
 
             print('\n'.join('{dirn}\tmodel-{k:04d}.h5\t{v}'.format(dirn=dirn.ljust(54),
                                                                    k=k, v=v)

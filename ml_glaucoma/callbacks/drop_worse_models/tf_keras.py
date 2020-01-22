@@ -30,7 +30,7 @@ class DropWorseModels(tf.keras.callbacks.ModelCheckpoint):
 
     def _save_model(self, epoch, logs):
         with open('/tmp/log.txt', 'a') as f:
-            f.write('\n_save_model::logs:\t{}_save_model::epoch:\t{}\n'.format(logs, epoch))
+            f.write('\n_save_model::epoch:\t{}\n_save_model::logs:\t{}\n'.format(epoch, logs))
 
         # Save for subsequent restoration
         monitor_op, save_best_only, best = self.monitor_op, self.save_best_only, self.best
