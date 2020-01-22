@@ -33,7 +33,7 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
     for fname in files:
         total_images = 0
         try:
-            total_images += sum(1 for _ in tf_record_iterator(fname))  # Check corrupted tf records
+            total_images += sum(1 for _ in tf.data.TFRecordDataset(fname))  # Check corrupted tf records
         except:
             print("{} in {} is corrupted".format(fname, directory), file=stderr)
         else:
@@ -45,15 +45,6 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
 
         if tag == 'all':
             last_result = None
-            for e in tf.compat.v1.train.summary_iterator(fname):
-                for v in e.summary.value:
-                    last_result = {
-                        'idx': e.step,
-                        'simple_value': v.simple_value,
-                        'tag': v.tag,
-                        'dirn': dirn
-                    }
-                    print('{idx:04d}\t{simple_value:09f}\t{tag:>20}\t{dirn}'.format(**last_result))
 
             for record in tf.data.TFRecordDataset(fname):
                 event = event_pb2.Event.FromString(tf.get_static_value(record))
