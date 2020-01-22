@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from ml_glaucoma.callbacks.DropWorseModels.tf_keras import DropWorseModels
+from ml_glaucoma.callbacks.drop_worse_models.tf_keras import DropWorseModels
 from ml_glaucoma.callbacks.loading_model_checkpoint.tf_keras import LoadingModelCheckpoint
 from ml_glaucoma.tf_compat import is_tf_v1
 

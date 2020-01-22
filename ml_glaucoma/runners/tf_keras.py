@@ -139,14 +139,15 @@ def train(problem, batch_size, epochs,
 
     parsed_line = parse_line(os.path.basename(model_dir))
 
+    just = 15
     print(
-        'dataset:'.ljust(14), parsed_line.dataset, '\n',
-        'transfer:'.ljust(15), parsed_line.transfer, '\n',
-        'optimizer:'.ljust(15), optimizer.__class__.__name__, '\n',
-        'loss:'.ljust(15), problem.loss.__class__.__name__, '\n',
-        'callbacks:'.ljust(15), ', '.join(map(lambda c: type(c).__name__, callbacks)), '\n',
-        'metrics:'.ljust(15), ', '.join(map(lambda m: type(m).__name__, problem.metrics)), '\n',
-        'total_epochs:'.ljust(15), epochs, '\n',
+        'dataset:'.ljust(just), parsed_line.dataset, '\n',
+        'transfer:'.ljust(just), parsed_line.transfer, '\n',
+        'optimizer:'.ljust(just), optimizer.__class__.__name__, '\n',
+        'loss:'.ljust(just), problem.loss.__class__.__name__, '\n',
+        'callbacks:'.ljust(just), ', '.join(map(lambda c: type(c).__name__, callbacks)), '\n',
+        'metrics:'.ljust(just), ', '.join(map(lambda m: type(m).__name__, problem.metrics)), '\n',
+        'total_epochs:'.ljust(just), epochs, '\n',
         '_' * 98, '\n',
         sep=''
     )

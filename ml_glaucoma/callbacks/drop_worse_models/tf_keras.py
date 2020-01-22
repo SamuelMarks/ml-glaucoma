@@ -11,22 +11,26 @@ class DropWorseModels(tf.keras.callbacks.ModelCheckpoint):
     Designed around making `save_best_only` work for arbitrary metrics and thresholds between metrics
     """
 
-    def __init__(self, model_dir, **kwargs):
+    def __init__(self, model_dir, monitor, **kwargs):
         """
         Args:
             model_dir: directory to save weights. Files will have format
                 '{model_dir}/{epoch:04d}.h5'.
+            monitor: quantity to monitor.
             **kwargs: passed to `ModelCheckpoint.__init__`.
                 All keys valid except `filepath`.
         """
         self._model_dir = model_dir
         self._filename = 'model-{epoch:04d}.h5'
+        self._delete = []
+        self._last_epoch_ran = -1
         super(DropWorseModels, self).__init__(
-            filepath=path.join(self._model_dir, self._filename), **kwargs)
+            filepath=path.join(self._model_dir, self._filename), monitor=monitor, **kwargs
+        )
 
     def _save_model(self, epoch, logs):
         with open('/tmp/log.txt', 'a') as f:
-            f.write('\n_save_model\n')
+            f.write('\n_save_model::logs:\t{}_save_model::epoch:\t{}\n'.format(logs, epoch))
 
         # Save for subsequent restoration
         monitor_op, save_best_only, best = self.monitor_op, self.save_best_only, self.best
@@ -43,6 +47,7 @@ class DropWorseModels(tf.keras.callbacks.ModelCheckpoint):
             return np.less
 
         self.monitor_op = monitor_op
+        self._last_epoch_ran = epoch
 
         super(DropWorseModels, self)._save_model(epoch, logs)
 
