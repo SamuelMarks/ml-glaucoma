@@ -1,7 +1,6 @@
 from io import IOBase
 from operator import itemgetter
 from os import path, listdir
-from queue import PriorityQueue
 from sys import stderr
 
 import tensorflow as tf
@@ -70,23 +69,13 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
 
             return last_result
         else:
-            # q = PriorityQueue()
             values = []
             for record in tf.data.TFRecordDataset(fname):
                 event = event_pb2.Event.FromString(tf.get_static_value(record))
                 if event.HasField('summary'):
                     value = event.summary.value.pop(0)
                     if value.tag == tag:
-                        # q.put(event.value)
                         values.append(value.simple_value)
-
-                        last_result = {
-                            'idx': event.step,
-                            'simple_value': value.simple_value,
-                            'tag': value.tag,
-                            'dirn': dirn
-                        }
-                        print('{idx:04d}\t{simple_value:09f}\t{tag:>20}\t{dirn}'.format(**last_result))
 
             sorted_values = sorted(enumerate(values), key=itemgetter(1), reverse=True)
 
