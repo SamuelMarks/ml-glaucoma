@@ -5,7 +5,6 @@ from sys import stderr
 
 import tensorflow as tf
 from tensorflow.core.util import event_pb2
-from tensorflow_core.python.lib.io.tf_record import tf_record_iterator
 
 
 def log_parser(infile, top, threshold, by_diff, directory, rest,
@@ -58,7 +57,7 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
                     }
                     print('{idx:04d}\t{simple_value:09f}\t{tag:>20}\t{dirn}'.format(**last_result))
 
-            return last_result
+            return last_result, (last_result,)
         else:
             values = []
             for record in tf.data.TFRecordDataset(fname):
@@ -68,11 +67,11 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
                     if value.tag == tag:
                         values.append(value.simple_value)
 
-            sorted_values = sorted(enumerate(values), key=itemgetter(1), reverse=True)
+            sorted_values = tuple(sorted(enumerate(values), key=itemgetter(1), reverse=True))
 
             print('\n'.join('{dirn}\tmodel-{k:04d}.h5\t{v}'.format(dirn=dirn.ljust(54),
                                                                    k=k, v=v)
                             for k, v in sorted_values[:top]))
             last_result = fname, sorted_values[:top]
 
-            return last_result
+            return last_result, sorted_values

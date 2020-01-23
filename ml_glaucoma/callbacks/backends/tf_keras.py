@@ -78,7 +78,11 @@ def get_callbacks(
 
     if checkpoint_freq is not None:
         callbacks.append(DropWorseModels(
-            model_dir, save_freq=checkpoint_freq, save_best_only=True, monitor='epoch_auc'
+            monitor='epoch_auc',
+            model_dir=model_dir,
+            save_best_only=True,
+            save_freq=checkpoint_freq,
+            log_dir=tensorboard_log_dir or model_dir,
         ))
 
     if lr_schedule is not None:
