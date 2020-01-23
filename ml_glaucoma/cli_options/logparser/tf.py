@@ -7,7 +7,7 @@ import tensorflow as tf
 from tensorflow.core.util import event_pb2
 
 
-def log_parser(infile, top, threshold, by_diff, directory, rest,
+def log_parser(infile, top, threshold, by_diff, directory, rest, output=True,
                tag='epoch_val_auc'):  # type: (IOBase, int, int, int, str, [str], str) -> (str, [(float, float)])
     if directory is not None and path.isdir(directory):
         infile = directory  # type: str
@@ -55,7 +55,7 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
                         'tag': value.tag,
                         'dirn': dirn
                     }
-                    print('{idx:04d}\t{simple_value:09f}\t{tag:>20}\t{dirn}'.format(**last_result))
+                    output and print('{idx:04d}\t{simple_value:09f}\t{tag:>20}\t{dirn}'.format(**last_result))
 
             return last_result, (last_result,)
         else:
@@ -69,9 +69,9 @@ def log_parser(infile, top, threshold, by_diff, directory, rest,
 
             sorted_values = tuple(sorted(enumerate(values), key=itemgetter(1), reverse=True))
 
-            print('\n'.join('{dirn}\tmodel-{k:04d}.h5\t{v}'.format(dirn=dirn.ljust(54),
-                                                                   k=k, v=v)
-                            for k, v in sorted_values[:top]))
+            output and print('\n'.join('{dirn}\tmodel-{k:04d}.h5\t{v}'.format(dirn=dirn.ljust(54),
+                                                                              k=k, v=v)
+                                       for k, v in sorted_values[:top]))
             last_result = fname, sorted_values[:top]
 
             return last_result, sorted_values

@@ -1,17 +1,18 @@
-from os import path
+from operator import itemgetter
+from os import path, listdir, remove
 
-import numpy as np
 import tensorflow as tf
 
 from ml_glaucoma.cli_options.logparser import log_parser
+from ml_glaucoma.utils import it_consumes
 
 
-class DropWorseModels(tf.keras.callbacks.ModelCheckpoint):
+class DropWorseModels(tf.keras.callbacks.Callback):
     """
     Designed around making `save_best_only` work for arbitrary metrics and thresholds between metrics
     """
 
-    def __init__(self, model_dir, monitor, log_dir, **kwargs):
+    def __init__(self, model_dir, monitor, log_dir, keep_best=2):
         """
         Args:
             model_dir: directory to save weights. Files will have format
@@ -19,58 +20,56 @@ class DropWorseModels(tf.keras.callbacks.ModelCheckpoint):
             monitor: quantity to monitor.
             log_dir: the path of the directory where to save the log files to be
                         parsed by TensorBoard.
-            **kwargs: passed to `ModelCheckpoint.__init__`.
-                        All keys valid except `filepath`.
+            keep_best: number of models to keep, sorted by monitor value
         """
+        super(DropWorseModels, self).__init__()
         self._model_dir = model_dir
-        self._filename = 'model-{epoch:04d}.h5'
-        self._delete = []
-        self._last_epoch_ran = -1
-        self._logs = {}
+        self._filename = 'model-{:04d}.h5'
         self._log_dir = log_dir
-        super(DropWorseModels, self).__init__(
-            filepath=path.join(self._model_dir, self._filename), monitor=monitor, **kwargs
-        )
+        self._keep_best = keep_best
+        self.monitor = monitor
 
-    def _save_model(self, epoch, logs):
+    def on_epoch_end(self, epoch, logs=None):
+        super(DropWorseModels, self).on_epoch_end(epoch, logs)
+        if epoch < self._keep_best: return
+
+        tf_events_logs = log_parser(infile=None, top=epoch, threshold=None, by_diff=None,
+                                    directory=self._log_dir, rest=None, tag=self.monitor,
+                                    output=False)[1][:self._keep_best]
+        keep_models = frozenset(map(self._filename.format, map(itemgetter(0), tf_events_logs)))
+
+        remove_these = tuple(map(lambda filename: path.join(self._model_dir, filename),
+                                 filter(lambda filename: filename not in keep_models,
+                                        filter(lambda filename: filename.endswith('{}h5'.format(path.extsep)),
+                                               listdir(self._model_dir)))))
+        out_of = listdir(self._model_dir)
+
+        h5_files = frozenset(filter(lambda filename: filename.endswith('{}h5'.format(path.extsep)),
+                                    listdir(self._model_dir)))
+
+        #it_consumes(map(lambda filename: remove(path.join(self._model_dir, filename)),
+        #                frozenset(filter(lambda filename: filename.endswith('{}h5'.format(path.extsep)),
+        #                                 listdir(self._model_dir))
+        #                          ) - keep_models))
+
+        # it_consumes(map(remove,
+        #                map(lambda filename: path.join(self._model_dir, filename),
+        #                    filter(lambda filename: filename not in keep_models,
+        #                           h5_files))))
         with open('/tmp/log.txt', 'a') as f:
-            f.write('\n_save_model::epoch:\t{}\n_save_model::logs:\t{}\n'.format(epoch, logs))
-
-        # Save for subsequent restoration
-        monitor_op, save_best_only, best = self.monitor_op, self.save_best_only, self.best
-        # if save_best_only is True: self.save_best_only = False
-
-        filepath = self._get_file_path(epoch, logs)
-
-        parsed_log = log_parser(infile=None, top=3, threshold=None, by_diff=None,
-                           directory=self._log_dir, rest=None, tag=self.monitor)
-        with open('/tmp/log.txt', 'a') as f:
-            f.write('_save_model::parsed_log:\t{}\n'.format(parsed_log))
-        if epoch in self._logs:
-            pass
-        else:
-            pass
-            # if self._logs[epoch]
-
-        # TODO: Run for last epoch
-
-        def monitor_op(current, _best):
-            # if self._save_model.t > 0:
-            with open('/tmp/log.txt', 'a') as f:
-                f.write('current:\t{}\nself.best:\t{}\n'.format(current, _best))
-                f.write('log_parser with tag=\'epoch_auc\':\t{}\n\n'.format(log_parser(path.dirname(filepath),
-                                                                                       top=epoch, tag='epoch_auc')))
-            return np.less
-
-        self.monitor_op = monitor_op
-        self._last_epoch_ran = epoch
-
-        super(DropWorseModels, self)._save_model(epoch, logs or parsed_log)
-
-        #
-        # remove(filepath)
-
-        # Restore
-        self.monitor_op, self.save_best_only, self.best = monitor_op, save_best_only, best
-
-    _save_model.t = 3
+            f.write('\n\n_save_model::epoch:\t{}'
+                    '\n_save_model::logs:\t{}'
+                    '\n_save_model::tf_events_logs:\t{}'
+                    '\n_save_model::keep_models:\t{}'
+                    '\n_save_model::remove_these:\t{}'
+                    '\n_save_model::out_of:\t{}'
+                    '\n_save_model::h5_files - keep_models:\t{}'
+                    '\n_save_model::keep_models - h5_files:\t{}'
+                    '\n'.format(epoch,
+                                logs,
+                                tf_events_logs,
+                                keep_models,
+                                remove_these,
+                                out_of,
+                                h5_files - keep_models,
+                                keep_models - h5_files))

@@ -80,8 +80,6 @@ def get_callbacks(
         callbacks.append(DropWorseModels(
             monitor='epoch_auc',
             model_dir=model_dir,
-            save_best_only=True,
-            save_freq=checkpoint_freq,
             log_dir=tensorboard_log_dir or model_dir,
         ))
 
