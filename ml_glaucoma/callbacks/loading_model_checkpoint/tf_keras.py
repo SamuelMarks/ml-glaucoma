@@ -3,6 +3,7 @@ from os import path, listdir
 import numpy as np
 import tensorflow as tf
 
+from ml_glaucoma.constants import SAVE_FORMAT_WITH_SEP
 from ml_glaucoma.cli_options.logparser import log_parser
 
 
@@ -25,7 +26,7 @@ class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
                 All keys valid except `filepath`.
         """
         self._model_dir = model_dir
-        self._filename = 'model-{epoch:04d}.h5'
+        self._filename = 'model-{epoch:04d}' + SAVE_FORMAT_WITH_SEP
         super(LoadingModelCheckpoint, self).__init__(
             filepath=path.join(self._model_dir, self._filename), **kwargs)
         self._restored = False
@@ -57,7 +58,7 @@ class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
     @staticmethod
     def filename_epoch(filename):
         """Get the epoch of the given file/path."""
-        assert filename.endswith('.h5')
+        assert path.splitext(filename) == SAVE_FORMAT_WITH_SEP
         return int(filename[-7:-3])
 
     def on_train_begin(self, logs=None):

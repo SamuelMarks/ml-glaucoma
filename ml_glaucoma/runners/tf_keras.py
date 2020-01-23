@@ -1,9 +1,11 @@
 import os
+from os import path
 from stat import S_IWOTH, S_IWGRP, S_IWRITE
 from sys import modules
 
 import tensorflow as tf
 
+from ml_glaucoma.constants import SAVE_FORMAT_WITH_SEP
 from ml_glaucoma import callbacks as cb, runners, get_logger
 from ml_glaucoma.cli_options.logparser.tf import log_parser
 from ml_glaucoma.cli_options.logparser.utils import parse_line
@@ -179,14 +181,14 @@ def train(problem, batch_size, epochs,
                 if os.path.isfile(dire):
                     dire = os.path.dirname(dire)
                 root = os.path.splitdrive(os.getcwd())[0] or '/'
-                while not os.path.isfile(os.path.join(dire, 'model-0001.h5')):
+                while not os.path.isfile(os.path.join(dire, 'model-0001{}'.format(SAVE_FORMAT_WITH_SEP))):
                     dire = os.path.dirname(dire)
                     if dire == root:
                         raise EnvironmentError('No h5 files generated')
 
                 for fname in os.listdir(dire):
                     full_path = os.path.join(dire, fname)
-                    if os.path.isfile(full_path) and full_path.endswith('h5'):
+                    if os.path.isfile(full_path) and path.splitext(full_path) == SAVE_FORMAT_WITH_SEP:
                         os.remove(full_path)
                         if os.path.isfile(full_path):
                             from pathlib import Path
