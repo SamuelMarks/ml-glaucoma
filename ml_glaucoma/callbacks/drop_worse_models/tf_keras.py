@@ -4,8 +4,8 @@ from os import path, listdir, remove
 
 import tensorflow as tf
 
-from ml_glaucoma.constants import SAVE_FORMAT_WITH_SEP
 from ml_glaucoma.cli_options.logparser import log_parser
+from ml_glaucoma.constants import SAVE_FORMAT_WITH_SEP
 from ml_glaucoma.utils import it_consumes
 
 
@@ -36,10 +36,10 @@ class DropWorseModels(tf.keras.callbacks.Callback):
         if epoch < self._keep_best:
             return
 
-        h5_files = frozenset(filter(lambda filename: path.splitext(filename)[1] == SAVE_FORMAT_WITH_SEP,
-                                    listdir(self._model_dir)))
+        model_files = frozenset(filter(lambda filename: path.splitext(filename)[1] == SAVE_FORMAT_WITH_SEP,
+                                       listdir(self._model_dir)))
 
-        if len(h5_files) < self._keep_best:
+        if len(model_files) < self._keep_best:
             return
 
         tf_events_logs = tuple(islice(log_parser(infile=None,
@@ -54,5 +54,19 @@ class DropWorseModels(tf.keras.callbacks.Callback):
         if len(keep_models) < self._keep_best:
             return
 
+        with open('/tmp/log.txt', 'a') as f:
+            f.write('\n\n_save_model::epoch:\t{}'
+                    '\n_save_model::logs:\t{}'
+                    '\n_save_model::tf_events_logs:\t{}'
+                    '\n_save_model::keep_models:\t{}'
+                    '\n_save_model::model_files - keep_models:\t{}'
+                    '\n_save_model::keep_models - model_files:\t{}'
+                    '\n'.format(epoch,
+                                logs,
+                                tf_events_logs,
+                                keep_models,
+                                model_files - keep_models,
+                                keep_models - model_files))
+
         it_consumes(map(lambda filename: remove(path.join(self._model_dir, filename)),
-                        h5_files - keep_models))
+                        model_files - keep_models))
