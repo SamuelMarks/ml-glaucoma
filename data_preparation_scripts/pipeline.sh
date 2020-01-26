@@ -13,7 +13,7 @@ python -m ml_glaucoma pipeline \
     --threshold '1' \
     --logfile "$manual_dir"'/pipeline.log' \
     --dry-run
-    train \
+    echo \
     -ds "$dataset" \
     --data_dir "$data_dir" \
     --model_file "$transfer_gin" \

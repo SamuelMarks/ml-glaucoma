@@ -4,6 +4,7 @@ from stat import S_IWOTH, S_IWGRP, S_IWRITE
 from sys import modules
 
 import tensorflow as tf
+from sklearn.model_selection import StratifiedKFold
 
 from ml_glaucoma.constants import SAVE_FORMAT_WITH_SEP
 from ml_glaucoma import callbacks as cb, runners, get_logger
@@ -21,7 +22,7 @@ def train(problem, batch_size, epochs,
           model_fn, optimizer, class_weight=None,
           model_dir=None, callbacks=None, verbose=True,
           checkpoint_freq=5, summary_freq=10, lr_schedule=None,
-          tensorboard_log_dir=None, write_images=False, delete_lt=None):
+          tensorboard_log_dir=None, write_images=False, delete_lt=None, cv=10):
     """
     Train a model on the given problem
 
@@ -93,6 +94,18 @@ def train(problem, batch_size, epochs,
     train_ds, val_ds = tf.nest.map_structure(
         lambda split: problem.get_dataset(split, batch_size, repeat=True),
         ('train', 'validation'))
+
+    new_splits = train_ds + val_ds
+    new_val = new_splits[0,15,1,4,3,6]
+    new_train = new_splits[1,16,2,5,4,7]
+    # Your job is to generate these indexes, such that for 10 sets of val, train indexes, they are sufficiently different (e.g.: 20% variance)?
+
+    print('Printing train_ds')
+    print(train_ds.take(1))
+    input('this okay?')
+
+    # Create 10 selections of train / validation data
+
     inputs = tf.nest.map_structure(
         lambda spec: tf.keras.layers.Input(
             shape=spec.shape, dtype=spec.dtype),
@@ -153,6 +166,8 @@ def train(problem, batch_size, epochs,
         '_' * 98, '\n',
         sep=''
     )
+
+    # Fit model against all 10 selections
 
     fit_result = model.fit(
         train_ds,

@@ -11,6 +11,7 @@ from ml_glaucoma.cli_options.logparser import ConfigurableLogParser
 from ml_glaucoma.cli_options.pipeline import ConfigurablePipeline
 from ml_glaucoma.cli_options.prepare import ConfigurableBuilders
 from ml_glaucoma.cli_options.train import ConfigurableTrain
+from ml_glaucoma.cli_options.reprocessdatasets import ConfigurableReprocessDatasets
 
 
 def _reparse_cli(cmd):  # type: ([str] or None) -> [str] or None
@@ -129,5 +130,11 @@ def get_parser():
     pipeline_configurable = ConfigurablePipeline()
     pipeline_configurable.fill(pipeline_parser)
     _commands['pipeline'] = pipeline_configurable
+
+    # REPROCESS_DATASETS
+    reprocess_datasets_parser = subparsers.add_parser('reprocess_datasets', help=ConfigurableReprocessDatasets.description)
+    reprocess_datasets_configurable = ConfigurableReprocessDatasets()
+    reprocess_datasets_configurable.fill(reprocess_datasets_parser)
+    _commands['reprocess_datasets'] = reprocess_datasets_configurable
 
     return _parser, _commands
