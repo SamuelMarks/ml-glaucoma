@@ -45,6 +45,7 @@ class ConfigurableProblemBase(Configurable, ABC):
         metrics += [
                        metrics_module.F1All(
                            name='F1ALL',
+                           num_classes=2,
                            average='micro',
                            writer=tf.summary.create_file_writer(kwargs['tensorboard_log_dir'],
                                                                 filename_suffix='.metrics')
