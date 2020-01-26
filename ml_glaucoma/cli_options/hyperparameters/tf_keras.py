@@ -54,8 +54,7 @@ class ConfigurableProblemBase(Configurable, ABC):
                        tfa.metrics.F1Score(num_classes=2, average='micro'),
                        # tfa.metrics.CohenKappa(num_classes=2),
                        # tfa.metrics.MatthewsCorrelationCoefficient(num_classes=2),
-                       tfa.metrics.FBetaScore(num_classes=2, average='micro'),
-                       tf.keras.metrics.SparseCategoricalAccuracy()
+                       tfa.metrics.FBetaScore(num_classes=2, average='micro')
                    ] + [
                        tf.keras.metrics.TruePositives(
                            thresholds=[t],
