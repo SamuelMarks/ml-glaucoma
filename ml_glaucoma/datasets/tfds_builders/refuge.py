@@ -8,6 +8,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_datasets.public_api as tfds
 
+from ml_glaucoma.constants import IMAGE_RESOLUTION
 from ml_glaucoma.datasets.tfds_builders import transformer
 
 
@@ -277,7 +278,7 @@ class Refuge(tfds.core.GeneratorBasedBuilder):
                 }
 
 
-def get_refuge_builder(resolution=(256, 256), rgb=True, data_dir=None):
+def get_refuge_builder(resolution=IMAGE_RESOLUTION, rgb=True, data_dir=None):
     if resolution is None:
         config = base_rgb if rgb else base_gray
     else:

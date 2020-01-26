@@ -4,6 +4,7 @@ from __future__ import print_function
 import os
 from platform import python_version_tuple
 
+from ml_glaucoma.constants import IMAGE_RESOLUTION
 from ml_glaucoma.utils.bmes_data_prep import prepare_bmes_splits
 
 if python_version_tuple()[0] == '2':
@@ -118,7 +119,7 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
                 )
 
 
-def get_bmes_builder(resolution=(256, 256), rgb=True, data_dir=None):
+def get_bmes_builder(resolution=IMAGE_RESOLUTION, rgb=True, data_dir=None):
     if resolution is None:
         config = base_rgb if rgb else base_gray
     else:

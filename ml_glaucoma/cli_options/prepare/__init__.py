@@ -1,6 +1,7 @@
 from os import environ
 
 from ml_glaucoma.cli_options.base import Configurable
+from ml_glaucoma.constants import IMAGE_RESOLUTION
 from ml_glaucoma.datasets.tfds_builders.dr_spoc import dr_spoc_datasets
 
 if environ['TF']:
@@ -39,7 +40,7 @@ class ConfigurableBuilders(Configurable):
             ),
             help='tfds.GenerateMode')
         parser.add_argument(
-            '-r', '--resolution', nargs=2, default=(256, 256), type=int,
+            '-r', '--resolution', nargs=2, default=IMAGE_RESOLUTION, type=int,
             help='image resolution')
         parser.add_argument(
             '--gray_on_disk', action='store_true',

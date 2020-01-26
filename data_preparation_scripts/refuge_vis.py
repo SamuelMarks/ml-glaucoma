@@ -7,6 +7,7 @@ from os import environ
 import numpy as np
 import tensorflow_datasets as tfds
 
+from ml_glaucoma.constants import IMAGE_RESOLUTION
 from ml_glaucoma.problems import preprocess_example
 
 if environ['TF']:
@@ -27,7 +28,7 @@ def main():
     dataset = builder.as_dataset(as_supervised=True, split='validation')
 
     dataset = dataset.map(functools.partial(
-        preprocess_example, pad_to_square=True, resolution=(256, 256)))
+        preprocess_example, pad_to_square=True, resolution=IMAGE_RESOLUTION))
 
     for image, label in tfds.as_numpy(dataset):
         image -= np.min(image)

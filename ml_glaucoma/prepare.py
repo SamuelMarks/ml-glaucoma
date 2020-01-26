@@ -8,6 +8,7 @@ import h5py
 import numpy as np
 from sklearn.utils import shuffle
 
+from ml_glaucoma.constants import IMAGE_RESOLUTION
 from ml_glaucoma.utils.bmes_data_prep import get_data
 
 if python_version_tuple()[0] == '2':
@@ -64,7 +65,7 @@ def prepare_data(preprocess_to, pixels, force_new=False):
 
     x, y = shuffle(x, y, random_state=0)
     x = x.astype('float32')
-    x /= 255.
+    x /= float(IMAGE_RESOLUTION[0])
 
     # train_fraction = 0.9
     train_amount = int(x.shape[0] * 0.9)
