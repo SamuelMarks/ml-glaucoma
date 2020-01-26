@@ -673,7 +673,7 @@ def main(root_directory, manual_dir):  # type: (str, str or None) -> (str, pd.Da
     # combined_df.apply(partition_symlink, 1)
 
     if manual_dir is None or path.realpath(manual_dir) == path.realpath(root_directory):
-        manual_dir = path.join(root_directory, 'symlinked_datasets', )
+        manual_dir = path.join(root_directory, 'symlinked_datasets')
 
     symbolically_link(manual_dir, combined_df)
 

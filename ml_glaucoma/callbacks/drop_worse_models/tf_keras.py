@@ -47,26 +47,28 @@ class DropWorseModels(tf.keras.callbacks.Callback):
                                                  directory=self._log_dir,
                                                  tag=self.monitor,
                                                  stdout=False)[1],
-                                      0,
+                                      # 0,
                                       self._keep_best))
         keep_models = frozenset(map(self._filename.format, map(itemgetter(0), tf_events_logs)))
 
         if len(keep_models) < self._keep_best:
             return
 
-        with open('/tmp/log.txt', 'a') as f:
-            f.write('\n\n_save_model::epoch:\t{}'
-                    '\n_save_model::logs:\t{}'
-                    '\n_save_model::tf_events_logs:\t{}'
-                    '\n_save_model::keep_models:\t{}'
-                    '\n_save_model::model_files - keep_models:\t{}'
-                    '\n_save_model::keep_models - model_files:\t{}'
-                    '\n'.format(epoch,
-                                logs,
-                                tf_events_logs,
-                                keep_models,
-                                model_files - keep_models,
-                                keep_models - model_files))
+        files_to_remove = model_files - keep_models
 
-        it_consumes(map(lambda filename: remove(path.join(self._model_dir, filename)),
-                        model_files - keep_models))
+        with open('/tmp/log.txt', 'a') as f:
+            f.write('\n\n_save_model::epoch:                  \t{}'.format(epoch).ljust(30))
+            f.write('\n_save_model::logs:                     \t{}'.format(logs).ljust(30))
+            f.write('\n_save_model::tf_events_logs:           \t{}'.format(tf_events_logs).ljust(30))
+            f.write('\n_save_model::keep_models:              \t{}'.format(keep_models).ljust(30))
+            f.write('\n_save_model::model_files:              \t{}'.format(model_files).ljust(30))
+            f.write('\n_save_model::model_files - keep_models:\t{}'.format(files_to_remove).ljust(30))
+            f.write('\n_save_model::keep_models - model_files:\t{}\n'.format(keep_models - model_files).ljust(30))
+
+        it_consumes(
+            islice(map(lambda filename: remove(path.join(self._model_dir, filename)),
+                       files_to_remove),
+                   # 0,
+                   len(keep_models) - self._keep_best
+                   )
+        )
