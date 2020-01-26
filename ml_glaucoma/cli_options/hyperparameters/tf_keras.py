@@ -40,15 +40,22 @@ class ConfigurableProblemBase(Configurable, ABC):
             for metric in metrics
         ]
 
-        metrics.append(tf.metrics.AUC(curve='PR', name='AUCPR'))
-
-        metrics.append(metrics_module.F1All(
-            writer=tf.summary.create_file_writer(kwargs['tensorboard_log_dir'],
-                                                 filename_suffix='.metrics')
-        ))
         # multiple threshold values don't seem to work for metrics
 
         metrics += [
+                       metrics_module.F1All(
+                           name='F1ALL',
+                           average='micro',
+                           writer=tf.summary.create_file_writer(kwargs['tensorboard_log_dir'],
+                                                                filename_suffix='.metrics')
+                       ),
+                       tf.metrics.AUC(curve='PR', name='AUCPR'),
+                       tfa.metrics.F1Score(num_classes=2, average='micro'),
+                       tfa.metrics.CohenKappa(num_classes=2),
+                       tfa.metrics.MatthewsCorrelationCoefficient(num_classes=2),
+                       tfa.metrics.FBetaScore(num_classes=2),
+                       tf.keras.metrics.SparseCategoricalAccuracy()
+                   ] + [
                        tf.keras.metrics.TruePositives(
                            thresholds=[t],
                            name='tp{:d}'.format(int(100 * t)))
@@ -68,8 +75,6 @@ class ConfigurableProblemBase(Configurable, ABC):
                            thresholds=[t],
                            name='fn{:d}'.format(int(100 * t)))
                        for t in precision_thresholds
-                   ] + [
-                       tfa.metrics.F1Score(num_classes=2, average='micro')
                    ] + [
                        tf.keras.metrics.Precision(
                            thresholds=[t],
