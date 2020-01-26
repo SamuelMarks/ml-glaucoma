@@ -40,12 +40,12 @@ class ConfigurableProblemBase(Configurable, ABC):
             for metric in metrics
         ]
 
-        # metrics.append(tf.metrics.AUC(curve='PR'))
+        metrics.append(tf.metrics.AUC(curve='PR', name='AUCPR'))
 
-        metrics.append(metrics_module.AUCall(
-            writer=tf.summary.create_file_writer(kwargs['tensorboard_log_dir'],
-                                                 filename_suffix='.metrics')
-        ))
+        #metrics.append(metrics_module.AUCall(
+        #    writer=tf.summary.create_file_writer(kwargs['tensorboard_log_dir'],
+        #                                         filename_suffix='.metrics')
+        #))
         # multiple threshold values don't seem to work for metrics
 
         metrics += [
