@@ -43,13 +43,13 @@ class ConfigurableProblemBase(Configurable, ABC):
         # multiple threshold values don't seem to work for metrics
 
         metrics += [
-                       metrics_module.F1All(
-                           name='F1ALL',
-                           num_classes=2,
-                           average='micro',
-                           writer=tf.summary.create_file_writer(kwargs['tensorboard_log_dir'],
-                                                                filename_suffix='.metrics')
-                       ),
+                       # metrics_module.F1All(
+                       #    name='F1ALL',
+                       #    num_classes=2,
+                       #    average='micro',
+                       #    writer=tf.summary.create_file_writer(kwargs['tensorboard_log_dir'],
+                       #                                         filename_suffix='.metrics')
+                       # ),
                        tf.metrics.AUC(curve='PR', name='AUCPR'),
                        tfa.metrics.F1Score(num_classes=2, average='micro'),
                        tfa.metrics.CohenKappa(num_classes=2),
