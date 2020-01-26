@@ -53,7 +53,7 @@ class ConfigurableProblemBase(Configurable, ABC):
                        tf.metrics.AUC(curve='PR', name='AUCPR'),
                        tfa.metrics.F1Score(num_classes=2, average='micro'),
                        # tfa.metrics.CohenKappa(num_classes=2),
-                       tfa.metrics.MatthewsCorrelationCoefficient(num_classes=2),
+                       # tfa.metrics.MatthewsCorrelationCoefficient(num_classes=2),
                        tfa.metrics.FBetaScore(num_classes=2),
                        tf.keras.metrics.SparseCategoricalAccuracy()
                    ] + [
