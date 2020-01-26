@@ -91,18 +91,16 @@ def train(problem, batch_size, epochs,
     if not os.path.isdir(model_dir):
         os.makedirs(model_dir)
 
-    train_ds, val_ds = tf.nest.map_structure(
+    train_ds, val_ds, test_ds = tf.nest.map_structure(
         lambda split: problem.get_dataset(split, batch_size, repeat=True),
-        ('train', 'validation'))
+        ('train', 'validation', 'test')
+    )
+    val_ds = val_ds.concatenate(test_ds)
 
-    new_splits = train_ds + val_ds
-    new_val = new_splits[0,15,1,4,3,6]
-    new_train = new_splits[1,16,2,5,4,7]
+    # new_splits = train_ds + val_ds
+    # new_val = new_splits[0,15,1,4,3,6]
+    # new_train = new_splits[1,16,2,5,4,7]
     # Your job is to generate these indexes, such that for 10 sets of val, train indexes, they are sufficiently different (e.g.: 20% variance)?
-
-    print('Printing train_ds')
-    print(train_ds.take(1))
-    input('this okay?')
 
     # Create 10 selections of train / validation data
 
