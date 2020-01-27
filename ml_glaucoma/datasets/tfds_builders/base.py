@@ -69,9 +69,9 @@ def base_builder(dataset_name, data_dir, init,
 
                         temp_image_filename = path.join(temp_dir, key.replace(path.sep, '_'))
 
-                        if builder.session._closed:
-                            builder.session = tf.compat.v1.Session()
-                            builder.session.__enter__()
+                        if base_builder.session._closed:
+                            base_builder.session = tf.compat.v1.Session()
+                            base_builder.session.__enter__()
 
                         image_decoded = tf.image.decode_jpeg(tf.io.read_file(image_path), channels=3 if rgb else 1)
                         resized = tf.image.resize(image_decoded, resolution)
@@ -79,7 +79,7 @@ def base_builder(dataset_name, data_dir, init,
                                                    'rgb' if rgb else 'grayscale',
                                                    quality=100, chroma_downsampling=False)
                         fwrite = tf.io.write_file(tf.constant(temp_image_filename), enc)
-                        result = builder.session.run(fwrite)
+                        result = base_builder.session.run(fwrite)
 
                         yield key, {
                             'image': temp_image_filename,
@@ -87,8 +87,8 @@ def base_builder(dataset_name, data_dir, init,
                         }
 
                 print('resolved all files, now you should delete: {!r}'.format(temp_dir))
-                if not builder.session._closed:
-                    builder.session.__exit__(None, None, None)
+                if not base_builder.session._closed:
+                    base_builder.session.__exit__(None, None, None)
 
         builder = BaseImageLabelFolder(
             dataset_name=dataset_name,
