@@ -14,4 +14,5 @@ def bmes_builder(data_dir, init,
                         parent_dir=parent_dir,
                         manual_dir=manual_dir,
                         get_data=get_data,
-                        force_create=force_create)
+                        force_create=force_create,
+                        supported_names=frozenset(('bmes',)))
