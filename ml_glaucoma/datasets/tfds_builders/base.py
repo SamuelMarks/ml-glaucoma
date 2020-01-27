@@ -10,27 +10,24 @@ from ml_glaucoma import get_logger
 logger = get_logger('.'.join((path.basename(path.dirname(__file__)),
                               path.basename(__file__).rpartition('.')[0])))
 
-dr_spoc_datasets = 'dr_spoc_grad_and_no_grad', 'dr_spoc_no_no_grad', 'dr_spoc'
-dr_spoc_datasets_set = frozenset(dr_spoc_datasets)
 
+def base_builder(dataset_name, data_dir, init,
+                 parent_dir, manual_dir,
+                 get_data,
+                 force_create=False,
+                 supported_names=frozenset()):  # type: (str,str,str,str,str,bool, frozenset) -> (((int, bool, str) -> (tfds.image.ImageLabelFolder)), str, str)
+    assert dataset_name in supported_names, '{!r} not found in {!r}'.format(dataset_name, supported_names)
 
-def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
-                    dr_spoc_parent_dir, manual_dir,
-                    force_create=False):  # type: (str,str,str,str,str,bool) -> (((int, bool, str) -> (tfds.image.ImageLabelFolder)), str, str)
-    assert dataset_name in dr_spoc_datasets_set, '{!r} not found in {!r}'.format(dataset_name, dr_spoc_datasets_set)
-
-    if dr_spoc_init:
-        from ml_glaucoma.utils.dr_spoc_data_prep import get_data
-
+    if init:
         if manual_dir is None:
             raise ValueError(
-                '`manual_dir` must be provided if `dr_spoc_init is True`')
-        elif dr_spoc_parent_dir is None:
+                '`manual_dir` must be provided if `init is True`')
+        elif parent_dir is None:
             raise ValueError(
-                '`dr_spoc_parent_dir` must be provided if '
-                '`dr_spoc_init is True`')
-        elif force_create or not path.isdir(path.join(_get_manual_dir(dr_spoc_parent_dir, manual_dir), dataset_name)):
-            get_data(root_directory=dr_spoc_parent_dir, manual_dir=manual_dir)
+                '`parent_dir` must be provided if '
+                '`init is True`')
+        elif force_create or not path.isdir(path.join(_get_manual_dir(parent_dir, manual_dir), dataset_name)):
+            get_data(root_directory=parent_dir, manual_dir=manual_dir)
         else:
             logger.info('Using already created symlinks')
 
@@ -38,7 +35,7 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
         if not data_dir.endswith(part):
             data_dir = path.join(data_dir, part)
 
-        manual_dir = _get_manual_dir(dr_spoc_parent_dir, manual_dir)
+        manual_dir = _get_manual_dir(parent_dir, manual_dir)
         assert path.isdir(manual_dir), 'Manual directory {!r} does not exist. ' \
                                        'Create it and download/extract dataset artifacts ' \
                                        'in there. Additional instructions: ' \
@@ -49,7 +46,7 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
     def builder_factory(resolution, rgb, data_dir):  # type: (int, bool, str) -> tfds.image.ImageLabelFolder
         print('resolution:'.ljust(20), '{!r}'.format(resolution), sep='')
 
-        class DrSpocImageLabelFolder(tfds.image.ImageLabelFolder):
+        class BaseImageLabelFolder(tfds.image.ImageLabelFolder):
             def _info(self):
                 return tfds.core.DatasetInfo(
                     builder=self,
@@ -72,9 +69,9 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
 
                         temp_image_filename = path.join(temp_dir, key.replace(path.sep, '_'))
 
-                        if dr_spoc_builder.session._closed:
-                            dr_spoc_builder.session = tf.compat.v1.Session()
-                            dr_spoc_builder.session.__enter__()
+                        if builder.session._closed:
+                            builder.session = tf.compat.v1.Session()
+                            builder.session.__enter__()
 
                         image_decoded = tf.image.decode_jpeg(tf.io.read_file(image_path), channels=3 if rgb else 1)
                         resized = tf.image.resize(image_decoded, resolution)
@@ -82,7 +79,7 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
                                                    'rgb' if rgb else 'grayscale',
                                                    quality=100, chroma_downsampling=False)
                         fwrite = tf.io.write_file(tf.constant(temp_image_filename), enc)
-                        result = dr_spoc_builder.session.run(fwrite)
+                        result = builder.session.run(fwrite)
 
                         yield key, {
                             'image': temp_image_filename,
@@ -90,10 +87,10 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
                         }
 
                 print('resolved all files, now you should delete: {!r}'.format(temp_dir))
-                if not dr_spoc_builder.session._closed:
-                    dr_spoc_builder.session.__exit__(None, None, None)
+                if not builder.session._closed:
+                    builder.session.__exit__(None, None, None)
 
-        builder = DrSpocImageLabelFolder(
+        builder = BaseImageLabelFolder(
             dataset_name=dataset_name,
             data_dir=data_dir
         )
@@ -103,14 +100,14 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
     return builder_factory, data_dir, manual_dir
 
 
-dr_spoc_builder.session = type('FakeSession', tuple(), {'_closed': True})()
+base_builder.session = type('FakeSession', tuple(), {'_closed': True})()
 
 
-def _get_manual_dir(dr_spoc_parent_dir, manual_dir):  # type: (str, str) -> str
+def _get_manual_dir(parent_dir, manual_dir):  # type: (str, str) -> str
     if path.dirname(manual_dir) != 'DR SPOC Dataset' \
         and not path.isdir(path.join(manual_dir, 'DR SPOC')) \
         and not path.isdir(path.join(path.dirname(manual_dir), 'DR SPOC')):
-        symlinked_datasets_directory = path.join(dr_spoc_parent_dir,
+        symlinked_datasets_directory = path.join(parent_dir,
                                                  'symlinked_datasets')
         manual_dir = symlinked_datasets_directory
     return manual_dir
