@@ -95,7 +95,7 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
                 name=split_folder.split,
                 gen_kwargs=dict(folder=split_folder.folder)
             ),
-            prepare_bmes_splits(path.join(manual_dir, 'symlinked_datasets'))
+            prepare_bmes_splits(path.join(manual_dir, 'symlinked_datasets', 'bmes'))
         ))
 
     def _generate_examples(self, folder):
