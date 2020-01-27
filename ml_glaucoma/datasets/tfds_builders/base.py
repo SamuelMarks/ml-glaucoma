@@ -15,7 +15,7 @@ def base_builder(dataset_name, data_dir, init,
                  parent_dir, manual_dir,
                  get_data,
                  force_create=False,
-                 supported_names=frozenset()):  # type: (str,str,str,str,str,bool, frozenset) -> (((int, bool, str) -> (tfds.image.ImageLabelFolder)), str, str)
+                 supported_names=frozenset()):  # type: (str,str,str,str,str,((str, str) -> None),bool, frozenset) -> (((int, bool, str) -> (tfds.image.ImageLabelFolder)), str, str)
     assert dataset_name in supported_names, '{!r} not found in {!r}'.format(dataset_name, supported_names)
 
     if init:
@@ -27,7 +27,7 @@ def base_builder(dataset_name, data_dir, init,
                 '`parent_dir` must be provided if '
                 '`init is True`')
         elif force_create or not path.isdir(path.join(_get_manual_dir(parent_dir, manual_dir), dataset_name)):
-            get_data(root_directory=parent_dir, manual_dir=manual_dir)
+            get_data(parent_dir, manual_dir)
         else:
             logger.info('Using already created symlinks')
 

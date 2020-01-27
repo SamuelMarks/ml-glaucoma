@@ -3,6 +3,7 @@ from os import path
 import tensorflow_datasets as tfds
 
 from ml_glaucoma import problems as p, get_logger
+from ml_glaucoma.datasets.tfds_builders.bmes import bmes_builder
 from ml_glaucoma.datasets.tfds_builders.dr_spoc import dr_spoc_builder, dr_spoc_datasets_set
 
 logger = get_logger('.'.join((path.basename(path.dirname(__file__)),
@@ -32,7 +33,7 @@ def dataset_builder(dataset, data_dir, download_dir,
                         '`bmes_parent_dir` must be provided if doing '
                         'bmes_init')
 
-                get_data(bmes_parent_dir, manual_dir)
+            builder_factory, data_dir, manual_dir = bmes_builder(data_dir, bmes_init, bmes_parent_dir, manual_dir)
         elif ds == 'refuge':
             from ml_glaucoma.datasets.tfds_builders import refuge
 
