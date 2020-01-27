@@ -564,9 +564,12 @@ def get_data(base_dir, split_dir,
         )
         rand_cache_obj.save(rand_cache)
 
-    return link_distribute_dataset(train_ratio=train_ratio, test_ratio=test_ratio,
-                                   train_positive_ratio=train_positive_ratio, test_positive_ratio=test_positive_ratio,
-                                   split_dir=split_dir, max_imgs=max_imgs)
+    return link_distribute_dataset(train_ratio=train_ratio,
+                                   test_ratio=test_ratio,
+                                   train_positive_ratio=train_positive_ratio,
+                                   test_positive_ratio=test_positive_ratio,
+                                   split_dir=path.join(split_dir, 'symlinked_datasets'),
+                                   max_imgs=max_imgs)
 
 
 def old(no_oags, oags, skip_save):
