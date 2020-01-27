@@ -18,12 +18,7 @@ def dataset_builder(dataset, data_dir, download_dir,
                     builders):
     for ds in frozenset(dataset):  # remove duplicates
         if ds == 'bmes':
-            from ml_glaucoma.datasets.tfds_builders import bmes
-
-            builder_factory = bmes.get_bmes_builder
             if bmes_init:
-                from ml_glaucoma.utils.bmes_data_prep import get_data
-
                 if manual_dir is None:
                     raise ValueError(
                         '`manual_dir` must be provided if doing bmes_init')
@@ -33,15 +28,21 @@ def dataset_builder(dataset, data_dir, download_dir,
                         '`bmes_parent_dir` must be provided if doing '
                         'bmes_init')
 
-            builder_factory, data_dir, manual_dir = bmes_builder(data_dir, bmes_init, bmes_parent_dir, manual_dir)
+            builder_factory, data_dir, manual_dir = bmes_builder(data_dir=data_dir,
+                                                                 init=bmes_init,
+                                                                 parent_dir=bmes_parent_dir,
+                                                                 manual_dir=manual_dir)
         elif ds == 'refuge':
             from ml_glaucoma.datasets.tfds_builders import refuge
 
             builder_factory = refuge.get_refuge_builder
 
         elif ds in dr_spoc_datasets_set:  # 'DR SPOC', 'DR SPOC - grad_and_no_grad_dir', 'DR SPOC - no_no_grad_dir'
-            builder_factory, data_dir, manual_dir = dr_spoc_builder(ds, data_dir, dr_spoc_init,
-                                                                    dr_spoc_parent_dir, manual_dir)
+            builder_factory, data_dir, manual_dir = dr_spoc_builder(dataset_name=ds,
+                                                                    data_dir=data_dir,
+                                                                    dr_spoc_init=dr_spoc_init,
+                                                                    dr_spoc_parent_dir=dr_spoc_parent_dir,
+                                                                    manual_dir=manual_dir)
         else:
             raise NotImplementedError()
 
