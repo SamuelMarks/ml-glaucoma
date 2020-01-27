@@ -648,6 +648,8 @@ def prepare_bmes_splits(root_dir):  # type: (str) -> Iterator[SplitFolder]
     subdirs = {'validation': 'valid'}
 
     assert root_dir is not None
+    if path.basename(root_dir) != 'symlinked_datasets':
+        root_dir = path.join(root_dir, 'symlinked_datasets')
 
     def process_split(split):
         folder = path.join(root_dir, subdirs.get(split, split))
