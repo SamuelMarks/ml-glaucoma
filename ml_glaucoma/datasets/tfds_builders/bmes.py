@@ -2,6 +2,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+from os import path
 from platform import python_version_tuple
 
 from ml_glaucoma.constants import IMAGE_RESOLUTION
@@ -94,8 +95,8 @@ class Bmes(tfds.core.GeneratorBasedBuilder):
                 name=split_folder.split,
                 gen_kwargs=dict(folder=split_folder.folder)
             ),
-            prepare_bmes_splits(manual_dir))
-        )
+            prepare_bmes_splits(path.join(manual_dir, 'symlinked_datasets'))
+        ))
 
     def _generate_examples(self, folder):
         i = -1
