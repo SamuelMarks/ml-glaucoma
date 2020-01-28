@@ -70,8 +70,8 @@ class ConfigurableTrain(Configurable):
             help='Set the seed, combine with `--disable-gpu` to disable GPU for added determinism'
         )
         parser.add_argument(
-            '--delete-lt', type=float,
-            help='delete *.h5 files that are less than this threshold'
+            '--tpu', type=str,
+            help='TPU address. Don\'t specify and TPU will be disabled'
         )
 
     def set_defaults(self, kwargs):
@@ -84,8 +84,8 @@ class ConfigurableTrain(Configurable):
                    model_fn, optimizer, model_dir,
                    callbacks, checkpoint_freq, summary_freq,
                    lr_schedule, tensorboard_log_dir, class_weight,
-                   write_images, seed, disable_gpu,
-                   delete_lt, rest, **_kwargs):
+                   write_images, seed, disable_gpu, tpu,
+                   rest, **_kwargs):
 
         print('ConfigurableTrain::model_fn:', model_fn, ';')
         assert rest is None or len(
@@ -139,5 +139,5 @@ class ConfigurableTrain(Configurable):
             lr_schedule=lr_schedule,
             tensorboard_log_dir=tensorboard_log_dir,
             write_images=write_images,
-            delete_lt=delete_lt
+            tpu=tpu
         )

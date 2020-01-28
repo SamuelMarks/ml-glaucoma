@@ -18,16 +18,6 @@ def dataset_builder(dataset, data_dir, download_dir,
                     builders):
     for ds in frozenset(dataset):  # remove duplicates
         if ds == 'bmes':
-            if bmes_init:
-                if manual_dir is None:
-                    raise ValueError(
-                        '`manual_dir` must be provided if doing bmes_init')
-
-                if bmes_parent_dir is None:
-                    raise ValueError(
-                        '`bmes_parent_dir` must be provided if doing '
-                        'bmes_init')
-
             builder_factory, data_dir, manual_dir = bmes_builder(data_dir=data_dir,
                                                                  init=bmes_init,
                                                                  parent_dir=bmes_parent_dir,
@@ -44,7 +34,7 @@ def dataset_builder(dataset, data_dir, download_dir,
                                                                     dr_spoc_parent_dir=dr_spoc_parent_dir,
                                                                     manual_dir=manual_dir)
         else:
-            raise NotImplementedError()
+            raise NotImplementedError(ds)
 
         builder = builder_factory(resolution=resolution,
                                   rgb=not gray_on_disk,
@@ -60,7 +50,8 @@ def dataset_builder(dataset, data_dir, download_dir,
         p.download_and_prepare(
             builder=builder,
             download_config=tfds.download.DownloadConfig(
-                extract_dir=extract_dir, manual_dir=manual_dir,
+                extract_dir=extract_dir,
+                manual_dir=manual_dir,
                 download_mode=download_mode
             ),
             download_dir=download_dir
@@ -69,4 +60,4 @@ def dataset_builder(dataset, data_dir, download_dir,
         builders.append(builder)
 
 
-dataset_builder.t = 1
+dataset_builder.t = 0

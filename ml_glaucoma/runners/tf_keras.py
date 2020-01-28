@@ -1,14 +1,10 @@
 import os
-from os import path
-from stat import S_IWOTH, S_IWGRP, S_IWRITE
+from contextlib import nullcontext
 from sys import modules
 
 import tensorflow as tf
-from sklearn.model_selection import StratifiedKFold
 
-from ml_glaucoma.constants import SAVE_FORMAT_WITH_SEP
 from ml_glaucoma import callbacks as cb, runners, get_logger
-from ml_glaucoma.cli_options.logparser.tf import log_parser
 from ml_glaucoma.cli_options.logparser.utils import parse_line
 from ml_glaucoma.runners.utils import default_model_dir, batch_steps
 
@@ -22,7 +18,8 @@ def train(problem, batch_size, epochs,
           model_fn, optimizer, class_weight=None,
           model_dir=None, callbacks=None, verbose=True,
           checkpoint_freq=5, summary_freq=10, lr_schedule=None,
-          tensorboard_log_dir=None, write_images=False, delete_lt=None, cv=10):
+          tensorboard_log_dir=None, write_images=False,
+          cv=10, tpu=None):
     """
     Train a model on the given problem
 
@@ -77,8 +74,11 @@ def train(problem, batch_size, epochs,
     :param write_images: passed to `tf.keras.callbacks.TensorBoard`
     :param write_images: bool
 
-    :param delete_lt: delete *.h5 files that are less than this threshold
-    :param delete_lt: float
+    :param cv: cross-validation amount
+    :param cv: int
+
+    :param tpu: TPU to use
+    :param tpu: None or URL of TPU
 
     :return `History` object as returned by `model.fit`
     :rtype ``tf.keras.History``
@@ -91,130 +91,105 @@ def train(problem, batch_size, epochs,
     if not os.path.isdir(model_dir):
         os.makedirs(model_dir)
 
-    train_ds, val_ds, test_ds = tf.nest.map_structure(
-        lambda split: problem.get_dataset(split, batch_size, repeat=True),
-        ('train', 'validation', 'test')
-    )
-    val_ds = val_ds.concatenate(test_ds)
-
-    # new_splits = train_ds + val_ds
-    # new_val = new_splits[0,15,1,4,3,6]
-    # new_train = new_splits[1,16,2,5,4,7]
-    # Your job is to generate these indexes, such that for 10 sets of val, train indexes, they are sufficiently different (e.g.: 20% variance)?
-
-    # Create 10 selections of train / validation data
-
-    inputs = tf.nest.map_structure(
-        lambda spec: tf.keras.layers.Input(
-            shape=spec.shape, dtype=spec.dtype),
-        problem.input_spec())
-    model = model_fn(inputs, problem.output_spec())  # type: tf.keras.Model
-    model.compile(
-        optimizer=optimizer,
-        loss=problem.loss,
-        metrics=problem.metrics)
-
-    train_steps = batch_steps(
-        problem.examples_per_epoch('train'), batch_size)
-    validation_steps = batch_steps(
-        problem.examples_per_epoch('validation'), batch_size)
-
-    common_callbacks, initial_epoch = cb.backends.get_callbacks(
-        batch_size=batch_size,
-        checkpoint_freq=checkpoint_freq,
-        summary_freq=summary_freq,
-        model_dir=model_dir,
-        train_steps_per_epoch=train_steps,
-        val_steps_per_epoch=validation_steps,
-        lr_schedule=lr_schedule,
-        tensorboard_log_dir=tensorboard_log_dir,
-        write_images=write_images,
-    )
-    if callbacks is None:
-        callbacks = common_callbacks
+    if tpu is not None:
+        resolver = tf.distribute.cluster_resolver.TPUClusterResolver(
+            tpu=tpu if tpu.startswith('grpc') else 'grpc://{}'.format(tpu)
+        )
+        tf.config.experimental_connect_to_cluster(resolver)
+        tf.tpu.experimental.initialize_tpu_system(resolver)
+        strategy = tf.distribute.experimental.TPUStrategy(resolver)
+        strategy_scope = strategy.scope
     else:
-        callbacks.extend(common_callbacks)
+        strategy_scope = nullcontext()
 
-    try:
-        dot = tf.keras.utils.model_to_dot(model)
-        if dot is not None:
-            dotfile = os.path.join(os.path.dirname(model_dir),
-                                   os.path.basename(model_dir) + '.dot')
-            dot.write(dotfile)
-            print('graphviz diagram of model generated to:', dotfile)
-    except ImportError:
-        logger.warn('Install graphviz and pydot to generate graph')
+    with strategy_scope():
+        train_ds, val_ds, test_ds = tf.nest.map_structure(
+            lambda split: problem.get_dataset(split, batch_size, repeat=True),
+            ('train', 'validation', 'test')
+        )
+        val_ds = val_ds.concatenate(test_ds)
 
-    if model.name == 'model':
-        model._name = os.path.basename(model_dir)
+        # new_splits = train_ds + val_ds
+        # new_val = new_splits[0,15,1,4,3,6]
+        # new_train = new_splits[1,16,2,5,4,7]
+        # Your job is to generate these indexes, such that for 10 sets of val, train indexes, they are sufficiently different (e.g.: 20% variance)?
 
-    model.summary()
+        # Create 10 selections of train / validation data
 
-    parsed_line = parse_line(os.path.basename(model_dir))
+        inputs = tf.nest.map_structure(
+            lambda spec: tf.keras.layers.Input(
+                shape=spec.shape, dtype=spec.dtype),
+            problem.input_spec())
+        model = model_fn(inputs, problem.output_spec())  # type: tf.keras.Model
+        model.compile(
+            optimizer=optimizer,
+            loss=problem.loss,
+            metrics=problem.metrics)
 
-    just = 15
-    print(
-        'dataset:'.ljust(just), parsed_line.dataset, '\n',
-        'transfer:'.ljust(just), parsed_line.transfer, '\n',
-        'optimizer:'.ljust(just), optimizer.__class__.__name__, '\n',
-        'loss:'.ljust(just), problem.loss.__class__.__name__, '\n',
-        'callbacks:'.ljust(just), ', '.join(map(lambda c: type(c).__name__, callbacks)), '\n',
-        'metrics:'.ljust(just), ', '.join(map(lambda m: type(m).__name__, problem.metrics)), '\n',
-        'total_epochs:'.ljust(just), epochs, '\n',
-        '_' * 65, '\n',
-        sep=''
-    )
+        train_steps = batch_steps(
+            problem.examples_per_epoch('train'), batch_size)
+        validation_steps = batch_steps(
+            problem.examples_per_epoch('validation'), batch_size)
 
-    # Fit model against all 10 selections
-
-    fit_result = model.fit(
-        train_ds,
-        epochs=epochs,
-        class_weight=class_weight,
-        verbose=verbose,
-        callbacks=callbacks,
-        validation_data=val_ds,
-        steps_per_epoch=train_steps,
-        validation_steps=validation_steps,
-        initial_epoch=initial_epoch,
-    )
-
-    if delete_lt is not None:
-        result = log_parser(directory=os.path.join(callbacks[-1].log_dir, 'validation'), top=1,
-                            tag='epoch_auc', infile=None, by_diff=None, threshold=None, rest=None)
-        if result is None:
-            return None
+        common_callbacks, initial_epoch = cb.backends.get_callbacks(
+            batch_size=batch_size,
+            checkpoint_freq=checkpoint_freq,
+            summary_freq=summary_freq,
+            model_dir=model_dir,
+            train_steps_per_epoch=train_steps,
+            val_steps_per_epoch=validation_steps,
+            lr_schedule=lr_schedule,
+            tensorboard_log_dir=tensorboard_log_dir,
+            write_images=write_images,
+        )
+        if callbacks is None:
+            callbacks = common_callbacks
         else:
-            dire, best_runs = result
-            print('{} ({}) had a best_runs of {}'.format(dire, callbacks[-1].log_dir, best_runs))
-            #  if not next((True for run in best_runs if run < delete_lt), False):
-            if best_runs[0][1] < delete_lt:
-                print('Insufficient AUC ({}) for storage, '
-                      'removing h5 files to save disk space. `dire`:'.format(best_runs[0][1]), dire)
-                if os.path.isfile(dire):
-                    dire = os.path.dirname(dire)
-                root = os.path.splitdrive(os.getcwd())[0] or '/'
-                while not os.path.isfile(os.path.join(dire, 'model-0001{}'.format(SAVE_FORMAT_WITH_SEP))):
-                    dire = os.path.dirname(dire)
-                    if dire == root:
-                        raise EnvironmentError('No h5 files generated')
+            callbacks.extend(common_callbacks)
 
-                for fname in os.listdir(dire):
-                    full_path = os.path.join(dire, fname)
-                    if os.path.isfile(full_path) and path.splitext(full_path) == SAVE_FORMAT_WITH_SEP:
-                        os.remove(full_path)
-                        if os.path.isfile(full_path):
-                            from pathlib import Path
+        try:
+            dot = tf.keras.utils.model_to_dot(model)
+            if dot is not None:
+                dotfile = os.path.join(os.path.dirname(model_dir),
+                                       os.path.basename(model_dir) + '.dot')
+                dot.write(dotfile)
+                print('graphviz diagram of model generated to:', dotfile)
+        except ImportError:
+            logger.warn('Install graphviz and pydot to generate graph')
 
-                            Path(full_path).unlink()
+        if model.name == 'model':
+            model._name = os.path.basename(model_dir)
 
-                # Make directory read-only
-                mode = os.stat(dire).st_mode
-                ro_mask = 0o777 ^ (S_IWRITE | S_IWGRP | S_IWOTH)
-                os.chmod(dire, mode & ro_mask)
-            else:
-                print('{} >= {}; so not removing h5 files'.format(best_runs[0][1], delete_lt))
-            return fit_result
+        model.summary()
+
+        parsed_line = parse_line(os.path.basename(model_dir))
+
+        just = 15
+        print(
+            'dataset:'.ljust(just), parsed_line.dataset, '\n',
+            'transfer:'.ljust(just), parsed_line.transfer, '\n',
+            'optimizer:'.ljust(just), optimizer.__class__.__name__, '\n',
+            'loss:'.ljust(just), problem.loss.__class__.__name__, '\n',
+            'callbacks:'.ljust(just), ', '.join(map(lambda c: type(c).__name__, callbacks)), '\n',
+            'metrics:'.ljust(just), ', '.join(map(lambda m: type(m).__name__, problem.metrics)), '\n',
+            'total_epochs:'.ljust(just), epochs, '\n',
+            '_' * 65, '\n',
+            sep=''
+        )
+
+        # Fit model against all 10 selections
+
+        fit_result = model.fit(
+            train_ds,
+            epochs=epochs,
+            class_weight=class_weight,
+            verbose=verbose,
+            callbacks=callbacks,
+            validation_data=val_ds,
+            steps_per_epoch=train_steps,
+            validation_steps=validation_steps,
+            initial_epoch=initial_epoch,
+        )
 
 
 def evaluate(problem, batch_size, model_fn, optimizer, model_dir=None):
