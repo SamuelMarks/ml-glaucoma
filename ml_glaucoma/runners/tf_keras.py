@@ -1,5 +1,5 @@
 import os
-from contextlib import nullcontext
+from contextlib import suppress
 from sys import modules
 
 import tensorflow as tf
@@ -100,7 +100,7 @@ def train(problem, batch_size, epochs,
         strategy = tf.distribute.experimental.TPUStrategy(resolver)
         strategy_scope = strategy.scope
     else:
-        strategy_scope = nullcontext()
+        strategy_scope = suppress
 
     with strategy_scope():
         train_ds, val_ds, test_ds = tf.nest.map_structure(
