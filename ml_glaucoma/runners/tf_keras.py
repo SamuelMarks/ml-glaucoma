@@ -126,70 +126,72 @@ def train(problem, batch_size, epochs,
             loss=problem.loss,
             metrics=problem.metrics)
 
-        train_steps = batch_steps(
-            problem.examples_per_epoch('train'), batch_size)
-        validation_steps = batch_steps(
-            problem.examples_per_epoch('validation'), batch_size)
+    train_steps = batch_steps(
+        problem.examples_per_epoch('train'), batch_size)
+    validation_steps = batch_steps(
+        problem.examples_per_epoch('validation'), batch_size)
 
-        common_callbacks, initial_epoch = cb.backends.get_callbacks(
-            batch_size=batch_size,
-            checkpoint_freq=checkpoint_freq,
-            summary_freq=summary_freq,
-            model_dir=model_dir,
-            train_steps_per_epoch=train_steps,
-            val_steps_per_epoch=validation_steps,
-            lr_schedule=lr_schedule,
-            tensorboard_log_dir=tensorboard_log_dir,
-            write_images=write_images,
-        )
-        if callbacks is None:
-            callbacks = common_callbacks
-        else:
-            callbacks.extend(common_callbacks)
+    common_callbacks, initial_epoch = cb.backends.get_callbacks(
+        batch_size=batch_size,
+        checkpoint_freq=checkpoint_freq,
+        summary_freq=summary_freq,
+        model_dir=model_dir,
+        train_steps_per_epoch=train_steps,
+        val_steps_per_epoch=validation_steps,
+        lr_schedule=lr_schedule,
+        tensorboard_log_dir=tensorboard_log_dir,
+        write_images=write_images,
+    )
+    if callbacks is None:
+        callbacks = common_callbacks
+    else:
+        callbacks.extend(common_callbacks)
 
-        try:
-            dot = tf.keras.utils.model_to_dot(model)
-            if dot is not None:
-                dotfile = os.path.join(os.path.dirname(model_dir),
-                                       os.path.basename(model_dir) + '.dot')
-                dot.write(dotfile)
-                print('graphviz diagram of model generated to:', dotfile)
-        except ImportError:
-            logger.warn('Install graphviz and pydot to generate graph')
+    try:
+        dot = tf.keras.utils.model_to_dot(model)
+        if dot is not None:
+            dotfile = os.path.join(os.path.dirname(model_dir),
+                                   os.path.basename(model_dir) + '.dot')
+            dot.write(dotfile)
+            print('graphviz diagram of model generated to:', dotfile)
+    except ImportError:
+        logger.warn('Install graphviz and pydot to generate graph')
 
-        if model.name == 'model':
-            model._name = os.path.basename(model_dir)
+    if model.name == 'model':
+        model._name = os.path.basename(model_dir)
 
-        model.summary()
+    model.summary()
 
-        parsed_line = parse_line(os.path.basename(model_dir))
+    parsed_line = parse_line(os.path.basename(model_dir))
 
-        just = 15
-        print(
-            'dataset:'.ljust(just), parsed_line.dataset, '\n',
-            'transfer:'.ljust(just), parsed_line.transfer, '\n',
-            'optimizer:'.ljust(just), optimizer.__class__.__name__, '\n',
-            'loss:'.ljust(just), problem.loss.__class__.__name__, '\n',
-            'callbacks:'.ljust(just), ', '.join(map(lambda c: type(c).__name__, callbacks)), '\n',
-            'metrics:'.ljust(just), ', '.join(map(lambda m: type(m).__name__, problem.metrics)), '\n',
-            'total_epochs:'.ljust(just), epochs, '\n',
-            '_' * 65, '\n',
-            sep=''
-        )
+    just = 15
+    print(
+        'dataset:'.ljust(just), parsed_line.dataset, '\n',
+        'transfer:'.ljust(just), parsed_line.transfer, '\n',
+        'optimizer:'.ljust(just), optimizer.__class__.__name__, '\n',
+        'loss:'.ljust(just), problem.loss.__class__.__name__, '\n',
+        'callbacks:'.ljust(just), ', '.join(map(lambda c: type(c).__name__, callbacks)), '\n',
+        'metrics:'.ljust(just), ', '.join(map(lambda m: type(m).__name__, problem.metrics)), '\n',
+        'total_epochs:'.ljust(just), epochs, '\n',
+        '_' * 65, '\n',
+        sep=''
+    )
 
-        # Fit model against all 10 selections
+    # Fit model against all 10 selections
 
-        fit_result = model.fit(
-            train_ds,
-            epochs=epochs,
-            class_weight=class_weight,
-            verbose=verbose,
-            callbacks=callbacks,
-            validation_data=val_ds,
-            steps_per_epoch=train_steps,
-            validation_steps=validation_steps,
-            initial_epoch=initial_epoch,
-        )
+    fit_result = model.fit(
+        train_ds,
+        epochs=epochs,
+        class_weight=class_weight,
+        verbose=verbose,
+        callbacks=callbacks,
+        validation_data=val_ds,
+        steps_per_epoch=train_steps,
+        validation_steps=validation_steps,
+        initial_epoch=initial_epoch,
+    )
+
+    return fit_result
 
 
 def evaluate(problem, batch_size, model_fn, optimizer, model_dir=None):
