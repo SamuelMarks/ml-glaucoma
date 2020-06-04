@@ -3,7 +3,6 @@ from os import path
 
 from torchvision.datasets import ImageFolder
 
-from ml_glaucoma import logger
 from ml_glaucoma.constants import IMAGE_RESOLUTION
 from ml_glaucoma.utils.bmes_data_prep import prepare_bmes_splits
 

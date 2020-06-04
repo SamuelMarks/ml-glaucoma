@@ -34,6 +34,6 @@ def Kappa(y_pred, y_true, y_pow=2, eps=1e-10, N=5, batch_size=1, name='kappa'):
         nom = tf.reduce_sum(input_tensor=weights * conf_mat)
         denom = tf.reduce_sum(input_tensor=weights * tf.matmul(
             tf.reshape(hist_rater_a, [N, 1]), tf.reshape(hist_rater_b, [1, N])) /
-                              tf.cast(batch_size, dtype=tf.float32))
+                                           tf.cast(batch_size, dtype=tf.float32))
 
         return nom / (denom + eps)

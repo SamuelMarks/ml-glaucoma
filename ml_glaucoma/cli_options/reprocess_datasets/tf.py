@@ -8,11 +8,13 @@ def reprocess_datasets(filepaths):
         for record in tf.data.TFRecordDataset(filepath):
             event = event_pb2.Event.FromString(tf.get_static_value(record))
             if event.HasField('summary'):
-                pass # We don't care about summaries
+                pass  # We don't care about summaries
             else:
                 if reprocess_datasets.t > 0:
                     reprocess_datasets.t -= 1
                     print('dir(event):', dir(event))
                     print('dir(record):', dir(record))
                     print('event.ListFields():', event.ListFields())
+
+
 reprocess_datasets.t = 2

@@ -3,8 +3,8 @@ from os import path, listdir
 import numpy as np
 import tensorflow as tf
 
-from ml_glaucoma.constants import SAVE_FORMAT_WITH_SEP
 from ml_glaucoma.cli_options.logparser import log_parser
+from ml_glaucoma.constants import SAVE_FORMAT_WITH_SEP
 
 
 class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):

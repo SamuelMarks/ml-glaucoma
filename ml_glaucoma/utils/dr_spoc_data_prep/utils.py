@@ -2,12 +2,14 @@
 
 import pickle
 import sys
+from codecs import encode
 from collections import Counter
 from contextlib import suppress
 from functools import partial
 from itertools import filterfalse, chain
 from operator import itemgetter, contains
 from os import path, environ, listdir, makedirs, symlink
+from platform import python_version_tuple
 
 import numpy as np
 import pandas as pd
@@ -16,6 +18,9 @@ from sqlalchemy import create_engine, text
 from ml_glaucoma.datasets.tfds_builders.dr_spoc import dr_spoc_datasets
 from ml_glaucoma.utils import it_consumes
 from ml_glaucoma.utils.helpers import create_random_numbers, ensure_is_dir
+
+if python_version_tuple()[0] == 2:
+    FileExistsError = OSError
 
 
 def isnotebook():  # type: () -> bool
@@ -226,6 +231,7 @@ def prepare(root_directory, sheet_name):  # type: (str, str) -> pd.DataFrame
                 for col in chain_unique(map(itemgetter(1), df.axes[1]))
             ))))
 
+    '''
     axes = filter(lambda c: c[:2] in image_angle_types,
                   map(itemgetter(0), df.axes[1]))
     columns = filterfalse(
@@ -234,6 +240,7 @@ def prepare(root_directory, sheet_name):  # type: (str, str) -> pd.DataFrame
                     ('Overall quality of the photographs taken',
                      'Overall Finding'))),
         chain_unique(map(itemgetter(1), df.axes[1])))
+    '''
 
     return df
 
@@ -241,7 +248,7 @@ def prepare(root_directory, sheet_name):  # type: (str, str) -> pd.DataFrame
 prepare.t = 0
 
 
-def retrieve_from_db(root_directory):  # type: () -> (pd.DataFrame, Counter)
+def retrieve_from_db(root_directory):  # type: (str) -> (pd.DataFrame, Counter)
     engine = create_engine(environ['RDBMS_URI'])
 
     with engine.connect() as con:
@@ -269,14 +276,15 @@ def retrieve_from_db(root_directory):  # type: () -> (pd.DataFrame, Counter)
 
     assert r.rowcount == -1
 
-    df = pd.read_sql('''
-    SELECT replace(url_decode("artifactLocation"), 'fundus_images',
-                   '{directory_parent}') as "artifactLocation",
-           replace(lower(category), 'ungradable', 'No gradable image') as category
-    FROM categorise_tbl
-    WHERE username = 'hamo.dw@gmail.com';
-    '''.format(directory_parent=path.join(root_directory, 'Fundus Photographs for AI')), con=engine).set_index(
-        'artifactLocation')
+    df = pd.read_sql('SELECT replace(url_decode("artifactLocation"), '"'fundus_images',\n"
+                     '               %(directory_parent)s) as "artifactLocation",\n'
+                     "       replace(lower(category), 'ungradable', 'No gradable image') as category\n"
+                     'FROM categorise_tbl\n'
+                     'WHERE username = %(username)s;\n',
+                     params={'username': encode('nqevnashatv@lnubb.pbz.nh', 'rot13'),
+                             'directory_parent': path.join(root_directory, 'Fundus Photographs for AI')},
+                     con=engine) \
+        .set_index('artifactLocation')
 
     category2location = {cat: [] for cat in df.category.unique()}
 
@@ -380,10 +388,10 @@ def construct_worst_per_image(series, root_directory, new_df):
             else categories.index(cur_fname)
 
         new_df[fname] = (val.choice
-                         if fname not in new_df
-                            or pd.isnull(cur_fname)
-                            or pd.isnull(cur_idx)
-                            or cur_idx < new_idx
+                         if any((fname not in new_df,
+                                 pd.isnull(cur_fname),
+                                 pd.isnull(cur_idx),
+                                 cur_idx < new_idx))
                          else new_df[fname])
 
         return val
@@ -596,7 +604,6 @@ def symbolically_link(symlink_dir, df):  # type: (str, pd.DataFrame) -> pd.DataF
             makedirs(all_labels_dir)
 
         all_labels_dst = path.join(all_labels_dir, this_filename)
-        #
 
         try:
             symlink(filename, all_labels_dst, target_is_directory=False)
@@ -719,9 +726,8 @@ if __name__ == '__main__':
         1574,
         path.join(path.dirname(path.dirname(path.dirname(path.dirname(__file__)))), '_data', '.cache',
                   'dr_spoc_rand.pkl')
-        # partial(path.join, path.dirname(
-        #    resource_filename(sys.modules[__name__].__name__, '__init__.py')), '_conf')
+        # partial(path.join, path.dirname(resource_filename(sys.modules[__name__].__name__, '__init__.py')), '_conf')
     )
 
     # path.join(path.dirname(path.dirname(__file__)), '_data', '.cache',
-    #                'rand_cache.pkl'))
+    #           'rand_cache.pkl'))

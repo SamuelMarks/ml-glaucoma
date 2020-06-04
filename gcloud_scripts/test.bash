@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-declare -r DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )";
+declare -r DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 set -euo pipefail
 
@@ -9,7 +9,7 @@ set -euo pipefail
 declare -r TPU_ADDR="$(gcloud compute tpus describe $TPU_NAME --format='value[separator=":"](networkEndpoints.ipAddress, networkEndpoints.port)')"
 
 gcloud compute ssh "$INSTANCE" \
-       --command='( dpkg -s python3-venv &> /dev/null || sudo apt-get install -y python3-venv ) &&
+    --command='( dpkg -s python3-venv &> /dev/null || sudo apt-get install -y python3-venv ) &&
                   ( [ -d venv ] || python3 -m venv venv ) &&
                   . ~/venv/bin/activate &&
                   ( python -c "import pkgutil; exit(int(pkgutil.find_loader(\"tensorflow\") is not None))" &&

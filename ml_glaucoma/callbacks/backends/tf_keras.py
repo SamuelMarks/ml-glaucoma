@@ -58,7 +58,8 @@ def get_callbacks(
             write_graph=False,
             log_dir=tensorboard_log_dir or model_dir,
             update_freq=summary_freq,
-            write_images=write_images)
+            write_images=write_images
+        )
 
         # These hacks involve private members - will probably break
         if train_steps_per_epoch is not None and initial_epoch > 0:
