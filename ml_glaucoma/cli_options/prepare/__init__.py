@@ -45,6 +45,9 @@ class ConfigurableBuilders(Configurable):
         parser.add_argument(
             '--gray_on_disk', action='store_true',
             help='whether or not to save data as grayscale on disk')
+        parser.add_argument(
+            '--force_create', action='store_true',
+            help='force recreate dataset')
 
         # Specific to BMES
         parser.add_argument(
@@ -60,7 +63,7 @@ class ConfigurableBuilders(Configurable):
 
     def build_self(self, dataset, data_dir, download_dir,
                    extract_dir, manual_dir, download_mode,
-                   resolution, gray_on_disk,
+                   force_create, resolution, gray_on_disk,
                    bmes_init, bmes_parent_dir,
                    dr_spoc_init, dr_spoc_parent_dir, **kwargs):
         builders = []
@@ -70,6 +73,6 @@ class ConfigurableBuilders(Configurable):
                         resolution=resolution, gray_on_disk=gray_on_disk,
                         bmes_init=bmes_init, bmes_parent_dir=bmes_parent_dir,
                         dr_spoc_init=dr_spoc_init, dr_spoc_parent_dir=dr_spoc_parent_dir,
-                        builders=builders)
+                        builders=builders, force_create=force_create)
 
         return builders

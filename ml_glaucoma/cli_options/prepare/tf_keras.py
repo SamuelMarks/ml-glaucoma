@@ -15,13 +15,14 @@ def dataset_builder(dataset, data_dir, download_dir,
                     resolution, gray_on_disk,
                     bmes_init, bmes_parent_dir,
                     dr_spoc_init, dr_spoc_parent_dir,
-                    builders):
+                    builders, force_create=False):
     for ds in frozenset(dataset):  # remove duplicates
         if ds == 'bmes':
             builder_factory, data_dir, manual_dir = bmes_builder(data_dir=data_dir,
                                                                  init=bmes_init,
                                                                  parent_dir=bmes_parent_dir,
-                                                                 manual_dir=manual_dir)
+                                                                 manual_dir=manual_dir,
+                                                                 force_create=force_create)
         elif ds == 'refuge':
             from ml_glaucoma.datasets.tfds_builders import refuge
 
@@ -32,7 +33,8 @@ def dataset_builder(dataset, data_dir, download_dir,
                                                                     data_dir=data_dir,
                                                                     dr_spoc_init=dr_spoc_init,
                                                                     dr_spoc_parent_dir=dr_spoc_parent_dir,
-                                                                    manual_dir=manual_dir)
+                                                                    manual_dir=manual_dir,
+                                                                    force_create=force_create)
         else:
             raise NotImplementedError(ds)
 

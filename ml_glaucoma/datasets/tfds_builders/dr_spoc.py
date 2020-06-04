@@ -107,10 +107,8 @@ dr_spoc_builder.session = type('FakeSession', tuple(), {'_closed': True})()
 
 
 def _get_manual_dir(dr_spoc_parent_dir, manual_dir):  # type: (str, str) -> str
-    if path.dirname(manual_dir) != 'DR SPOC Dataset' \
-        and not path.isdir(path.join(manual_dir, 'DR SPOC')) \
-        and not path.isdir(path.join(path.dirname(manual_dir), 'DR SPOC')):
-        symlinked_datasets_directory = path.join(dr_spoc_parent_dir,
-                                                 'symlinked_datasets')
-        manual_dir = symlinked_datasets_directory
-    return manual_dir
+    return path.join(dr_spoc_parent_dir, 'symlinked_datasets') \
+        if all((path.dirname(manual_dir) != 'DR SPOC Dataset',
+                not path.isdir(path.join(manual_dir, 'DR SPOC')),
+                not path.isdir(path.join(path.dirname(manual_dir), 'DR SPOC')))) \
+        else manual_dir
