@@ -391,7 +391,7 @@ def construct_worst_per_image(series, root_directory, new_df):
                          if any((fname not in new_df,
                                  pd.isnull(cur_fname),
                                  pd.isnull(cur_idx),
-                                 cur_idx < new_idx))
+                                 cur_idx is None or cur_idx < new_idx))
                          else new_df[fname])
 
         return val
