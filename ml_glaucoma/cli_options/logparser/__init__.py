@@ -32,3 +32,6 @@ class ConfigurableLogParser(Configurable):
 
     def build_self(self, **kwargs):
         return log_parser(**kwargs)
+
+
+__all__ = ['ConfigurableLogParser']

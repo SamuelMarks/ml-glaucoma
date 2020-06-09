@@ -37,3 +37,6 @@ def Kappa(y_pred, y_true, y_pow=2, eps=1e-10, N=5, batch_size=1, name='kappa'):
                                            tf.cast(batch_size, dtype=tf.float32))
 
         return nom / (denom + eps)
+
+
+__all__ = ['Kappa']

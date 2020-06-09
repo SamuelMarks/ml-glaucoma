@@ -4,7 +4,7 @@ import logging.config
 from os import path, environ
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.88'
+__version__ = '0.0.89'
 
 
 def get_logger(name=None):
@@ -27,3 +27,5 @@ if environ['TF']:
 
 # logging.getLogger('dataset_builder').setLevel(logging.WARNING)
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
+
+__all__ = ['environ', 'get_logger', '__author__', '__version__']

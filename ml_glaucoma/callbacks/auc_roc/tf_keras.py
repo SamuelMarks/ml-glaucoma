@@ -17,3 +17,6 @@ def AucRocCallback(y_true, y_pred):
     with tf.control_dependencies([update_op]):
         value = tf.identity(value)
         return value
+
+
+__all__ = ['AucRocCallback']

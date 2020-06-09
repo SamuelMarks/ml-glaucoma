@@ -256,5 +256,8 @@ def vis(problem, split='train'):
         plt.title('Glaucoma' if label.numpy() else 'Non-glaucoma')
         plt.show()
 
+
 # Cleanup namespace
 # del modules, cb, runners, get_logger
+
+__all__ = ['train', 'evaluate', 'vis']

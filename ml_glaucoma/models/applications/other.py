@@ -9,3 +9,6 @@ def applications_model(inputs, output_spec, application='ResNet50',
                        kwargs=None):
     name = '_'.join((currentframe().f_code.co_name, application))
     raise NotImplementedError(name)
+
+
+__all__ = ['applications_model']

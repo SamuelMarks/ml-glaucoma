@@ -11,5 +11,6 @@ def efficient_net(inputs, output_spec, application='EfficientNetB0',
     raise NotImplementedError(name)
 
 
-del gin
-del currentframe
+del gin, currentframe
+
+__all__ = ['efficient_net']

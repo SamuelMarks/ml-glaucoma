@@ -20,3 +20,6 @@ def applications_model(inputs, output_spec, application='ResNet50', weights='ima
     model = tf.keras.models.Model(inputs=inputs, outputs=probs)
     model._name = '_'.join((currentframe().f_code.co_name, application))
     return model
+
+
+__all__ = ['applications_model']

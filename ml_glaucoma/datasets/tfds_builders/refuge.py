@@ -284,3 +284,6 @@ def get_refuge_builder(resolution=IMAGE_RESOLUTION, rgb=True, data_dir=None):
     else:
         config = RefugeConfig(resolution, rgb)
     return Refuge(config=config, data_dir=data_dir)
+
+
+__all__ = ['Refuge', 'RefugeTask', 'get_refuge_builder']

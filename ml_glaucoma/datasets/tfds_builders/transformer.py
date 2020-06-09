@@ -105,3 +105,6 @@ class ImageTransformerConfig(tfds.core.BuilderConfig):
             return None
         else:
             return Transformer(image_resolution, self.resolution, self.rgb)
+
+
+__all__ = ['Transformer', 'ImageTransformerConfig']

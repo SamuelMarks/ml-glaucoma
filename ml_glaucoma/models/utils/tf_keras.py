@@ -19,3 +19,5 @@ def features_to_probs(
 
 
 del tf
+
+__all__ = ['features_to_probs']

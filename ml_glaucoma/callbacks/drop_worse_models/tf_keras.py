@@ -72,3 +72,5 @@ class DropWorseModels(tf.keras.callbacks.Callback):
                    len(keep_models) - self._keep_best
                    )
         )
+
+__all__ = ['DropWorseModels']

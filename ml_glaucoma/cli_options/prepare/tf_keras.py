@@ -54,8 +54,7 @@ def dataset_builder(dataset, data_dir, download_dir,
             download_config=tfds.download.DownloadConfig(
                 extract_dir=extract_dir,
                 manual_dir=manual_dir,
-                download_mode=download_mode,
-                try_download_gcs=False
+                download_mode=download_mode
             ),
             download_dir=download_dir
         )
@@ -64,3 +63,5 @@ def dataset_builder(dataset, data_dir, download_dir,
 
 
 dataset_builder.t = 0
+
+__all__ = ['dataset_builder']

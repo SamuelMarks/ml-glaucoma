@@ -38,3 +38,5 @@ if __name__ == '__main__' and environ['TF']:
         else:
             with tf.compat.v1.Session() as sess:
                 print(sess.run(loss))
+
+__all__ = ['SoftAUC']

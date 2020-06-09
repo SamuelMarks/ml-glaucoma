@@ -95,3 +95,6 @@ def eval_cache(cache, key, call, replace=False, *args, **kwargs):
     if key not in cache or replace:
         cache[key] = call(*args, **kwargs)
     return cache[key]
+
+
+__all__ = ['Cache', 'eval_cache']

@@ -26,3 +26,6 @@ def efficient_net(inputs, output_spec, application='EfficientNetB0',
     model = tf.keras.models.Model(inputs=inputs, outputs=probs)
     model._name = '_'.join((currentframe().f_code.co_name, application))
     return model
+
+
+__all__ = ['efficient_net']

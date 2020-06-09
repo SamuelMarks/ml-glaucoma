@@ -139,3 +139,6 @@ def get_parser():
     _commands['reprocess_datasets'] = reprocess_datasets_configurable
 
     return _parser, _commands
+
+
+__all__ = ['cli_handler', 'get_parser']

@@ -52,3 +52,6 @@ def log_parser(infile, top, threshold, by_diff, directory, rest):
         pp(tuple(islice((epoch2stat[k[0]] for k in lowest_diff), 0, top)))
     else:
         pp(epoch2stat)
+
+
+__all__ = ['log_parser']

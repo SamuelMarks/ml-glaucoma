@@ -6,3 +6,5 @@ elif environ['TORCH']:
     from ml_glaucoma.losses.pair_loss.torch import PairLoss
 else:
     from ml_glaucoma.losses.pair_loss.other import PairLoss
+
+del environ

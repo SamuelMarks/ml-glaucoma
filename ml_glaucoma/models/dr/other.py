@@ -11,5 +11,6 @@ def dr0(inputs, output_spec,
     raise NotImplementedError(name)
 
 
-del currentframe
-del gin
+del currentframe, gin
+
+__all__ = ['dr0']

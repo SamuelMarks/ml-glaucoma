@@ -88,3 +88,6 @@ def get_callbacks(
         callbacks.append(tf.keras.callbacks.LearningRateScheduler(lr_schedule))
 
     return callbacks, initial_epoch
+
+
+__all__ = ['get_callbacks']

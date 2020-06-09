@@ -35,3 +35,5 @@ elif environ['TORCH']:
     valid_models = {}
 else:
     valid_models = {}
+
+__all__ = ['valid_models']

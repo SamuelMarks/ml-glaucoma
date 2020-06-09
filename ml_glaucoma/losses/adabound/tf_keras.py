@@ -127,3 +127,6 @@ class AdaBound(Optimizer):
                   'amsbound': self.amsbound}
         base_config = super(AdaBound, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
+
+
+__all__ = ['AdaBound']

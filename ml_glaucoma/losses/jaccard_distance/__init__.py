@@ -6,3 +6,5 @@ elif environ['TORCH']:
     from ml_glaucoma.losses.jaccard_distance.torch import JaccardDistance
 else:
     from ml_glaucoma.losses.jaccard_distance.other import JaccardDistance
+
+del environ

@@ -43,3 +43,6 @@ class ConfigurableProblemBase(Configurable, ABC):
 
 
 del Configurable, optimizer_module, losses_module, get_upper_kv
+
+__all__ = ['ConfigurableProblemBase', 'SUPPORTED_LOSSES',
+           'SUPPORTED_METRICS', 'SUPPORTED_OPTIMIZERS']

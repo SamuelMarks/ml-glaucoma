@@ -6,3 +6,5 @@ elif environ['TORCH']:
     raise NotImplementedError()
 else:
     raise NotImplementedError()
+
+del environ

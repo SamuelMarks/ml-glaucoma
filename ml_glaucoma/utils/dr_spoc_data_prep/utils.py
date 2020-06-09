@@ -6,8 +6,8 @@ from codecs import encode
 from collections import Counter
 from contextlib import suppress
 from functools import partial
-from itertools import filterfalse, chain
-from operator import itemgetter, contains
+from itertools import chain
+from operator import itemgetter
 from os import path, environ, listdir, makedirs, symlink
 from platform import python_version_tuple
 
@@ -731,3 +731,5 @@ if __name__ == '__main__':
 
     # path.join(path.dirname(path.dirname(__file__)), '_data', '.cache',
     #           'rand_cache.pkl'))
+
+__all__ = ['main']

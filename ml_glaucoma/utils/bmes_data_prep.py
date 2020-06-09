@@ -136,7 +136,7 @@ def _update_generated_types_py(args=None, replace=False):
             f.write('T0 = None')
         else:
             f.write('T0 = namedtuple({T0_args[0]!r}, {T0_args[1]})\n'.format(T0_args=args))
-        f.write('\n\n')
+        f.write('\n\ndel namedtuple\n')
 
 
 def _get_tbl(xlsx='glaucoma_20161205plus_Age23.xlsx'):
@@ -737,3 +737,5 @@ RecImg(rec=T0(IDNUM=u'0475', age1=64L, sex1=2L, age4=None, sex4=None, r4vf1=None
 Process finished with exit code 0
 
 '''
+
+__all__ = ['get_data']

@@ -6,3 +6,5 @@ elif environ['TORCH']:
     from ml_glaucoma.models.squeeze_excite_resnet.torch import *
 else:
     from ml_glaucoma.models.squeeze_excite_resnet.other import *
+
+del environ

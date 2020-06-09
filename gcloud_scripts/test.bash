@@ -17,7 +17,7 @@ gcloud compute ssh "$INSTANCE" \
                     pip3 install tensorflow tensorflow-datasets nbconvert ||
                     true ) &&
                   ( [ -f tpu-tester.py ] ||
-                    curl -sL https://raw.githubusercontent.com/tensorflow/docs/bef6f89/site/en/guide/tpu.ipynb |
+                    curl -sL https://raw.githubusercontent.com/tensorflow/docs/7931afd/site/en/guide/tpu.ipynb |
                     jupyter nbconvert --to script --stdin --output tpu-tester.py &&
                     sed "s/%/pass \#/g" tpu-tester.py.txt > tpu-tester.py ) &&
                   COLAB_TPU_ADDR="'"$TPU_ADDR"'" python tpu-tester.py'

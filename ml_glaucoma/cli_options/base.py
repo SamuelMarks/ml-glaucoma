@@ -48,3 +48,6 @@ class MappedConfigurable(Configurable):
 
     def build_self(self, base, **kwargs):
         return self.fn(base)
+
+
+__all__ = ['Configurable', 'MappedConfigurable']

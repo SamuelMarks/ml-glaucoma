@@ -52,3 +52,5 @@ class TestLogparserUtils(TestCase):
 
 if __name__ == '__main__':
     unittest_main()
+
+__all__ = ['TestLogparserUtils']

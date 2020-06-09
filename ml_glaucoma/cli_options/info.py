@@ -24,3 +24,6 @@ class ConfigurableInfo(Configurable):
         })}
         print(dumps({k: sorted(v) for k, v in iteritems(info)}, sort_keys=True, indent=4))
         return info
+
+
+__all__ = ['ConfigurableInfo']

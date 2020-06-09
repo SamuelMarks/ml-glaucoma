@@ -6,3 +6,5 @@ elif environ['TORCH']:
     from ml_glaucoma.models.efficientnet.torch import *
 else:
     from ml_glaucoma.models.efficientnet.other import *
+
+del environ

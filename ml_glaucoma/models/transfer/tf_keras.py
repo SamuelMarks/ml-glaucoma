@@ -24,3 +24,6 @@ def transfer_model(inputs, output_spec, transfer='ResNet50', weights='imagenet',
     model = tf.keras.models.Model(inputs=inputs, outputs=probs)
     model._name = '_'.join((currentframe().f_code.co_name, transfer))
     return model
+
+
+__all__ = ['transfer_model']

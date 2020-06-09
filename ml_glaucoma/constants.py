@@ -11,3 +11,5 @@ Either 'tf' or 'h5', indicating whether to save the model
 SAVE_FORMAT_WITH_SEP = '{}{}'.format(path.extsep, SAVE_FORMAT)
 
 IMAGE_RESOLUTION = 224, 224
+
+del path

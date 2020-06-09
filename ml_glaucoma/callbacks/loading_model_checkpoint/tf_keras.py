@@ -99,3 +99,6 @@ class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
         pass
 
     _save_model.t = 3
+
+
+__all__ = ['LoadingModelCheckpoint']

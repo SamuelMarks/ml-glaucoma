@@ -208,8 +208,9 @@ def dc4(inputs, output_spec, final_activation='default', class_mode='binary', dr
     return model
 
 
-for obj in (Conv2D, MaxPooling2D, Dense,
-            Dropout, GlobalAveragePooling2D,
-            GlobalMaxPooling2D, Flatten, Activation,
-            tf, currentframe, gin, utils):
-    del obj
+del (Conv2D, MaxPooling2D, Dense,
+     Dropout, GlobalAveragePooling2D,
+     GlobalMaxPooling2D, Flatten, Activation,
+     tf, currentframe, gin, utils)
+
+__all__ = ['dc0', 'dc1', 'dc2', 'dc3', 'dc4']

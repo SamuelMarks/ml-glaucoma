@@ -78,3 +78,6 @@ def log_parser(infile, top, directory, stdout=True,
             last_result = fname, sorted_values[:top]
 
             return last_result, sorted_values
+
+
+__all__ = ['log_parser']

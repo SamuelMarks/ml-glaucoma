@@ -49,3 +49,5 @@ def smooth_l1(sigma=3.0):
 
 
 SmoothL1 = smooth_l1()
+
+__all__ = ['SmoothL1', 'smooth_l1']

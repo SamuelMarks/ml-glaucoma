@@ -17,3 +17,6 @@ class ConfigurableReprocessDatasets(Configurable):
         print('ReprocessDatasets::filepaths:', filepaths,
               '\nReprocessDatasets::rest:', rest)
         return reprocess_datasets(filepaths)
+
+
+__all__ = ['ConfigurableReprocessDatasets']

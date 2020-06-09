@@ -33,3 +33,6 @@ def dataset_builder(bmes_init, bmes_parent_dir, builders, data_dir, dataset, dow
             raise NotImplementedError(ds)
         else:
             raise NotImplementedError(ds)
+
+
+__all__ = ['dataset_builder']

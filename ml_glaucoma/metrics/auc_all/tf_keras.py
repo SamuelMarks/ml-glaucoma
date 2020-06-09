@@ -43,3 +43,6 @@ class AUCall(tf.keras.metrics.AUC):
     def result(self):
         self.confusion_logger()
         return super(AUCall, self).result()
+
+
+__all__ = ['AUCall']

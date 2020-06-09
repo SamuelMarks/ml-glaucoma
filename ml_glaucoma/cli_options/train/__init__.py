@@ -141,3 +141,6 @@ class ConfigurableTrain(Configurable):
             write_images=write_images,
             tpu=tpu
         )
+
+
+__all__ = ['ConfigurableTrain']

@@ -173,3 +173,6 @@ def with_inverse_freq_weights(*args, **kwargs):
 
 
 del abstractmethod, modules, get_logger, Problem, pp
+
+__all__ = ['dataset_spec_to_input_spec', 'preprocess_example', 'BaseProblem',
+           'TfdsProblem', 'TfdsMultiProblem', 'with_inverse_freq_weights']

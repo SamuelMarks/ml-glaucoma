@@ -6,3 +6,5 @@ elif environ['TORCH']:
     from ml_glaucoma.models.applications.torch import applications_model
 else:
     from ml_glaucoma.models.applications.other import applications_model
+
+del environ

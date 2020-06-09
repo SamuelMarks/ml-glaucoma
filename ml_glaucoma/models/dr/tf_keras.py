@@ -33,3 +33,6 @@ def dr0(inputs, output_spec,
     model = tf.keras.models.Model(inputs=inputs, outputs=probs)
     model._name = currentframe().f_code.co_name
     return model
+
+
+__all__ = ['dr0']

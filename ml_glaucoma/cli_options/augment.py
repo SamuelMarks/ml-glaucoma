@@ -31,3 +31,6 @@ class ConfigurableMapFn(Configurable):
             'test': val_map_fn
         }
         return map_fn
+
+
+__all__ = ['ConfigurableMapFn']

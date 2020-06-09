@@ -392,3 +392,6 @@ def preprocess_example(image, labels,
 
 
 del DownloadConfig, get_logger, Problem
+
+__all__ = ['download_and_prepare', 'dataset_spec_to_input_spec', 'preprocess_example',
+           'BaseProblem', 'TfdsProblem', 'with_inverse_freq_weights', 'TfdsMultiProblem']

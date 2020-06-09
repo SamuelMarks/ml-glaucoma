@@ -112,3 +112,6 @@ def _get_manual_dir(dr_spoc_parent_dir, manual_dir):  # type: (str, str) -> str
                 not path.isdir(path.join(manual_dir, 'DR SPOC')),
                 not path.isdir(path.join(path.dirname(manual_dir), 'DR SPOC')))) \
         else manual_dir
+
+
+__all__ = ['dr_spoc_builder', 'dr_spoc_datasets', 'dr_spoc_datasets_set']

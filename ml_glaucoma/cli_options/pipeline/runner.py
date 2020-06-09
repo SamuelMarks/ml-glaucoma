@@ -347,3 +347,6 @@ def _get_next_avail_dir(directory, starting_suffix=None):  # type: (str, int) ->
         directory = path.join(directory, ''.join((fname[:-len(suffix_s)], suffix_s)))
 
     return suffix, directory
+
+
+__all__ = ['pipeline_runner']

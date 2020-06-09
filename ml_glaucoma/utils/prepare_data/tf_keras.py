@@ -43,3 +43,5 @@ def prepare_data(data_obj, pixels):
 
 
 del tf
+
+__all__ = ['prepare_data']

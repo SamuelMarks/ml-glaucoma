@@ -1,5 +1,7 @@
 from os import environ
 
+from tensorflow_datasets.core.download import DownloadConfig
+
 from ml_glaucoma.cli_options.base import Configurable
 from ml_glaucoma.constants import IMAGE_RESOLUTION
 from ml_glaucoma.datasets.tfds_builders.dr_spoc import dr_spoc_datasets
@@ -68,11 +70,17 @@ class ConfigurableBuilders(Configurable):
                    dr_spoc_init, dr_spoc_parent_dir, **kwargs):
         builders = []
 
-        dataset_builder(dataset=dataset, data_dir=data_dir, download_dir=download_dir,
-                        extract_dir=extract_dir, manual_dir=manual_dir, download_mode=download_mode,
-                        resolution=resolution, gray_on_disk=gray_on_disk,
-                        bmes_init=bmes_init, bmes_parent_dir=bmes_parent_dir,
-                        dr_spoc_init=dr_spoc_init, dr_spoc_parent_dir=dr_spoc_parent_dir,
-                        builders=builders, force_create=force_create)
+        if data_dir.startswith('gs://'):
+            builders.append(DownloadConfig())
+        else:
+            dataset_builder(dataset=dataset, data_dir=data_dir, download_dir=download_dir,
+                            extract_dir=extract_dir, manual_dir=manual_dir, download_mode=download_mode,
+                            resolution=resolution, gray_on_disk=gray_on_disk,
+                            bmes_init=bmes_init, bmes_parent_dir=bmes_parent_dir,
+                            dr_spoc_init=dr_spoc_init, dr_spoc_parent_dir=dr_spoc_parent_dir,
+                            builders=builders, force_create=force_create)
 
         return builders
+
+
+__all__ = ['ConfigurableBuilders']

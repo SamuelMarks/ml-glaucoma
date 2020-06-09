@@ -12,3 +12,5 @@ from os import environ
 
 if not environ['TF']:
     raise NotImplementedError('tensorflow_datasets is [currently] TensorFlow only')
+
+del environ

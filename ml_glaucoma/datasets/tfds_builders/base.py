@@ -111,3 +111,6 @@ def _get_manual_dir(parent_dir, manual_dir):  # type: (str, str) -> str
                                                  'symlinked_datasets')
         manual_dir = symlinked_datasets_directory
     return manual_dir
+
+
+__all__ = ['base_builder']

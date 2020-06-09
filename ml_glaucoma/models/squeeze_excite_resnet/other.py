@@ -11,5 +11,6 @@ def se_resnet(inputs, output_spec, application='SEResNet50',
     raise NotImplementedError(name)
 
 
-del currentframe
-del gin
+del currentframe, gin
+
+__all__ = ['se_resnet']

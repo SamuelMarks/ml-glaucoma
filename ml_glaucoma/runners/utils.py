@@ -25,3 +25,6 @@ def default_model_dir(base_dir=os.path.join(os.path.expanduser('~'), 'ml_glaucom
     else:
         model_dir = os.path.join(base_dir, model_id)
     return model_dir
+
+
+__all__ = ['batch_steps', 'default_model_dir']

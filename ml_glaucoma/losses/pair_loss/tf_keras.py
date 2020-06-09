@@ -12,3 +12,6 @@ def PairLoss(y_true, y_pred):
     y_neg = tf.expand_dims(y_neg, -1)
     out = K.sigmoid(y_neg - y_pos)
     return K.mean(out)
+
+
+__all__ = ['PairLoss']

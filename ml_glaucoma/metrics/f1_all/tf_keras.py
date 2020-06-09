@@ -33,3 +33,6 @@ class F1All(tfa.metrics.F1Score):
     def result(self):
         self._confusion_logger()
         return super(F1All, self).result()
+
+
+__all__ = ['F1All']

@@ -6,3 +6,5 @@ elif environ['TORCH']:
     from ml_glaucoma.losses.kappa_loss.torch import Kappa
 else:
     from ml_glaucoma.losses.kappa_loss.other import Kappa
+
+del environ

@@ -50,3 +50,6 @@ class ConfigurablePipeline(Configurable):
 
     def set_defaults(self, kwargs):
         pass
+
+
+__all__ = ['ConfigurablePipeline']

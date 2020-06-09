@@ -15,7 +15,9 @@ se_resnet_models = get_upper_kv(se_resnet)
 def se_resnet(inputs, output_spec, application='SEResNet50',
               weights='imagenet', pooling='avg', final_activation='default',
               kwargs=None):
-    assert application is not None and application in se_resnet_models, '`application` not found'
+    assert application is not None and application in se_resnet_models, '`application` {!r} not found'.format(
+        application
+    )
 
     if kwargs is None:
         kwargs = {}
@@ -29,5 +31,6 @@ def se_resnet(inputs, output_spec, application='SEResNet50',
     return model
 
 
-for obj in gin, tf, se_resnet, utils, get_upper_kv:
-    del obj
+del gin, tf, se_resnet, utils, get_upper_kv
+
+__all__ = ['se_resnet']

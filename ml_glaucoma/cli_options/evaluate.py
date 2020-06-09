@@ -27,3 +27,6 @@ class ConfigurableEvaluate(Configurable):
             optimizer=optimizer,
             model_dir=model_dir,
         )
+
+
+__all__ = ['ConfigurableEvaluate']

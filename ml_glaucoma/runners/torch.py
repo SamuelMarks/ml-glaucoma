@@ -85,3 +85,6 @@ def evaluate(*args, **kwargs):
 
 def vis(*args, **kwargs):
     raise NotImplementedError()
+
+
+__all__ = ['train', 'evaluate', 'vis']

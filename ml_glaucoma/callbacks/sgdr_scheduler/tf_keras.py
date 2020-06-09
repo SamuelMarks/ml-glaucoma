@@ -68,3 +68,6 @@ class SGDRScheduler(Callback):
             self.cycle_length = tf.math.ceil(self.cycle_length * self.mult_factor)
             self.next_restart += self.cycle_length
             self.max_lr *= self.lr_decay
+
+
+__all__ = ['SGDRScheduler']

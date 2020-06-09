@@ -104,10 +104,7 @@ del losses_module, get_upper_kv
 
 __all__ = [
     'ConfigurableProblemBase',
-    'valid_losses',
-    'SUPPORTED_LOSSES',
-    'valid_metrics',
-    'SUPPORTED_METRICS',
-    'valid_optimizers',
-    'SUPPORTED_OPTIMIZERS'
+    'valid_losses', 'SUPPORTED_LOSSES',
+    'valid_metrics', 'SUPPORTED_METRICS',
+    'valid_optimizers', 'SUPPORTED_OPTIMIZERS'
 ]

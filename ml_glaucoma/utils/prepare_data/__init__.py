@@ -6,3 +6,5 @@ elif environ['TORCH']:
     from ml_glaucoma.utils.prepare_data.torch import *
 else:
     from ml_glaucoma.utils.prepare_data.other import *
+
+del environ

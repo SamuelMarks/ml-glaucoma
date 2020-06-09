@@ -82,3 +82,5 @@ def prepare_data(preprocess_to, pixels, force_new=False):
 
 
 prepare_data.i = 1
+
+__all__ = ['prepare_data']

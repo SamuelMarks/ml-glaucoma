@@ -20,3 +20,5 @@ else:
     from ml_glaucoma.problems.other import *
 
 from ml_glaucoma.problems.shared import *
+
+del environ

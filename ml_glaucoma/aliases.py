@@ -83,3 +83,5 @@ tf_losses = tuple((
     'SmoothL1',
     'SoftAUC'
 ))
+
+del iteritems

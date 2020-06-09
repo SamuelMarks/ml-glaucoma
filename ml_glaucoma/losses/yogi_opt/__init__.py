@@ -6,3 +6,5 @@ elif environ['TORCH']:
     from ml_glaucoma.losses.yogi_opt.torch import Yogi
 else:
     from ml_glaucoma.losses.yogi_opt.other import Yogi
+
+del environ

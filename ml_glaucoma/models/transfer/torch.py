@@ -9,3 +9,8 @@ def transfer_model(inputs, output_spec, transfer='ResNet50',
                    kwargs=None):
     name = '_'.join((currentframe().f_code.co_name, transfer))
     raise NotImplementedError(name)
+
+
+del currentframe, gin
+
+__all__ = ['transfer_model']

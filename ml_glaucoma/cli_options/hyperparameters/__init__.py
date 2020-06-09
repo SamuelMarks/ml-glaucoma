@@ -128,3 +128,7 @@ class ConfigurableExponentialDecayLrSchedule(Configurable):
         else:
             from ml_glaucoma.callbacks.exponential_decay_lr_schedule import ExponentialDecayLrSchedule
             return ExponentialDecayLrSchedule(learning_rate, exp_lr_decay)
+
+
+__all__ = ['ConfigurableProblem', 'ConfigurableModelFn',
+           'ConfigurableOptimizer', 'ConfigurableExponentialDecayLrSchedule']

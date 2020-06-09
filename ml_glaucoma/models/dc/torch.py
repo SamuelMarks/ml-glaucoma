@@ -41,5 +41,6 @@ def dc4(inputs, output_spec, final_activation='default', class_mode='binary', dr
     raise NotImplementedError(name)
 
 
-del currentframe
-del gin
+del currentframe, gin
+
+__all__ = ['dc0', 'dc1', 'dc2', 'dc3', 'dc4']

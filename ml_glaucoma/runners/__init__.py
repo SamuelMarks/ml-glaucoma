@@ -8,3 +8,5 @@ elif environ['TORCH']:
     from ml_glaucoma.runners.torch import *
 else:
     from ml_glaucoma.runners.other import *
+
+del environ
