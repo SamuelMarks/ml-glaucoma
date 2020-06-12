@@ -100,7 +100,7 @@ def dr_spoc_builder(dataset_name, data_dir, dr_spoc_init,
 
         return builder
 
-    return builder_factory, data_dir, os.path.join(manual_dir, dataset_name)
+    return builder_factory, data_dir, manual_dir if manual_dir is None else os.path.join(manual_dir, dataset_name)
 
 
 dr_spoc_builder.session = type('FakeSession', tuple(), {'_closed': True})()

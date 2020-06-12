@@ -316,5 +316,4 @@ def get_metrics(logs, prefix='epoch_val_', tag='auc', total_epochs=250,
     return reduce(lambda p, c: update_d(p, {c[0]: c[1]}), map(get_metrics_from_one_logfile, logs), {})
 
 
-del (traceback, namedtuple, reduce, path, np, pd, EventAccumulator, update_d,
-     SUPPORTED_LOSSES, SUPPORTED_OPTIMIZERS, dr_spoc_datasets, valid_models)
+del traceback, namedtuple, reduce, np, pd, EventAccumulator, SUPPORTED_LOSSES, SUPPORTED_OPTIMIZERS
