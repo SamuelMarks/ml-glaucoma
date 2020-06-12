@@ -38,7 +38,10 @@ class Cache(object):
             directory = path.dirname(fname)
             if not path.isdir(directory):
                 makedirs(directory)
-            open(self.fname, 'a').close()
+            try:
+                open(self.fname, 'a').close()
+            except PermissionError:
+                pass
 
     def load(self, fname=None, key=None, marshall=pickle):
         self.fname = fname or self.fname
