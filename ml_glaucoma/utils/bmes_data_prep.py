@@ -14,6 +14,7 @@ from socket import getfqdn
 from sys import modules
 from typing import Iterator
 
+from pkg_resources import resource_filename
 from six import iteritems, itervalues
 
 from ml_glaucoma.utils.helpers import create_random_numbers
@@ -118,7 +119,9 @@ def get_image_size(file_path):  # type: (str) -> (int, int)
 
 
 def _update_generated_types_py(args=None, replace=False):
-    gen_py = 'generated_types.py'
+    gen_py = path.join(path.dirname(resource_filename('ml_glaucoma', '__init__.py')), 'utils',
+                       'generated_types.py')
+
     if path.isfile(gen_py):
         if not replace:
             return

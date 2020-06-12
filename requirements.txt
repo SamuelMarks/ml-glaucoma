@@ -27,3 +27,4 @@ https://github.com/titu1994/keras-squeeze-excite-network/zipball/master#egg=kera
 torchvision==0.4.2
 sqlalchemy
 #psycopg2
+cloud-tpu-client

@@ -90,7 +90,7 @@ def lcs(a, b):
     return result
 
 
-del deque, namedtuple, datetime, islice, environ, python_version_tuple, PrettyPrinter
+del namedtuple, datetime, islice, environ, python_version_tuple, PrettyPrinter
 
 __all__ = ['pp', 'it_consumes', 'run_once', 'json_serial', 'find_nth',
            'sorted_enumerate', 'obj_to_d', 'namedtuple2dict', 'lcs']

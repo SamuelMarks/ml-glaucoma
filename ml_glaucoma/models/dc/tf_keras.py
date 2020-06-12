@@ -208,8 +208,7 @@ def dc4(inputs, output_spec, final_activation='default', class_mode='binary', dr
     return model
 
 
-del (Conv2D, MaxPooling2D, Dense,
-     Dropout, GlobalAveragePooling2D,
+del (Dropout, GlobalAveragePooling2D,
      GlobalMaxPooling2D, Flatten, Activation,
      tf, currentframe, gin, utils)
 
