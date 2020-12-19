@@ -1,6 +1,6 @@
 from itertools import islice
 from operator import itemgetter
-from os import path, listdir, remove
+from os import listdir, path, remove
 
 import tensorflow as tf
 
@@ -26,7 +26,7 @@ class DropWorseModels(tf.keras.callbacks.Callback):
         """
         super(DropWorseModels, self).__init__()
         self._model_dir = model_dir
-        self._filename = 'model-{:04d}' + SAVE_FORMAT_WITH_SEP
+        self._filename = "model-{:04d}" + SAVE_FORMAT_WITH_SEP
         self._log_dir = log_dir
         self._keep_best = keep_best
         self.monitor = monitor
@@ -36,41 +36,81 @@ class DropWorseModels(tf.keras.callbacks.Callback):
         if epoch < self._keep_best:
             return
 
-        model_files = frozenset(filter(lambda filename: path.splitext(filename)[1] == SAVE_FORMAT_WITH_SEP,
-                                       listdir(self._model_dir)))
+        model_files = frozenset(
+            filter(
+                lambda filename: path.splitext(filename)[1] == SAVE_FORMAT_WITH_SEP,
+                listdir(self._model_dir),
+            )
+        )
 
         if len(model_files) < self._keep_best:
             return
 
-        tf_events_logs = tuple(islice(log_parser(infile=None,
-                                                 top=min(self._keep_best, epoch),
-                                                 directory=self._log_dir,
-                                                 tag=self.monitor,
-                                                 stdout=False)[1],
-                                      # 0,
-                                      self._keep_best))
-        keep_models = frozenset(map(self._filename.format, map(itemgetter(0), tf_events_logs)))
+        tf_events_logs = tuple(
+            islice(
+                log_parser(
+                    infile=None,
+                    top=min(self._keep_best, epoch),
+                    directory=self._log_dir,
+                    tag=self.monitor,
+                    stdout=False,
+                )[1],
+                # 0,
+                self._keep_best,
+            )
+        )
+        keep_models = frozenset(
+            map(self._filename.format, map(itemgetter(0), tf_events_logs))
+        )
 
         if len(keep_models) < self._keep_best:
             return
 
         files_to_remove = model_files - keep_models
 
-        with open('/tmp/log.txt', 'a') as f:
-            f.write('\n\n_save_model::epoch:                  \t{}'.format(epoch).ljust(30))
-            f.write('\n_save_model::logs:                     \t{}'.format(logs).ljust(30))
-            f.write('\n_save_model::tf_events_logs:           \t{}'.format(tf_events_logs).ljust(30))
-            f.write('\n_save_model::keep_models:              \t{}'.format(keep_models).ljust(30))
-            f.write('\n_save_model::model_files:              \t{}'.format(model_files).ljust(30))
-            f.write('\n_save_model::model_files - keep_models:\t{}'.format(files_to_remove).ljust(30))
-            f.write('\n_save_model::keep_models - model_files:\t{}\n'.format(keep_models - model_files).ljust(30))
+        with open("/tmp/log.txt", "a") as f:
+            f.write(
+                "\n\n_save_model::epoch:                  \t{}".format(epoch).ljust(30)
+            )
+            f.write(
+                "\n_save_model::logs:                     \t{}".format(logs).ljust(30)
+            )
+            f.write(
+                "\n_save_model::tf_events_logs:           \t{}".format(
+                    tf_events_logs
+                ).ljust(30)
+            )
+            f.write(
+                "\n_save_model::keep_models:              \t{}".format(
+                    keep_models
+                ).ljust(30)
+            )
+            f.write(
+                "\n_save_model::model_files:              \t{}".format(
+                    model_files
+                ).ljust(30)
+            )
+            f.write(
+                "\n_save_model::model_files - keep_models:\t{}".format(
+                    files_to_remove
+                ).ljust(30)
+            )
+            f.write(
+                "\n_save_model::keep_models - model_files:\t{}\n".format(
+                    keep_models - model_files
+                ).ljust(30)
+            )
 
         it_consumes(
-            islice(map(lambda filename: remove(path.join(self._model_dir, filename)),
-                       files_to_remove),
-                   # 0,
-                   len(keep_models) - self._keep_best
-                   )
+            islice(
+                map(
+                    lambda filename: remove(path.join(self._model_dir, filename)),
+                    files_to_remove,
+                ),
+                # 0,
+                len(keep_models) - self._keep_best,
+            )
         )
 
-__all__ = ['DropWorseModels']
+
+__all__ = ["DropWorseModels"]

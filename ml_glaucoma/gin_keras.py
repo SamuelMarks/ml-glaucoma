@@ -21,13 +21,12 @@ tf.keras.losses.CategoricalCrossentropy.from_logits = True
 ```
 """
 
-from __future__ import division
-from __future__ import print_function
+from __future__ import division, print_function
 
 from os import environ
 
-if not environ['TF']:
-    raise NotImplementedError('This module is for tf.keras use only')
+if not environ["TF"]:
+    raise NotImplementedError("This module is for tf.keras use only")
 
 import tensorflow as tf
 from gin import config
@@ -41,15 +40,15 @@ def _register_callables(pkg, mod, excludes):
                 config.external_configurable(v, name=k, module=mod)
 
 
-blacklist = {'serialize', 'deserialize', 'get'}
+blacklist = {"serialize", "deserialize", "get"}
 # These may end up moving into gin-config proper
 for package, module in (
-    (tf.keras.activations, 'tf.keras.activations'),
-    (tf.keras.layers, 'tf.keras.layers'),
-    (tf.keras.losses, 'tf.keras.losses'),
-    (tf.keras.metrics, 'tf.keras.metrics'),
-    (tf.keras.optimizers, 'tf.keras.optimizers'),
-    (tf.keras.regularizers, 'tf.keras.regularizers'),
+    (tf.keras.activations, "tf.keras.activations"),
+    (tf.keras.layers, "tf.keras.layers"),
+    (tf.keras.losses, "tf.keras.losses"),
+    (tf.keras.metrics, "tf.keras.metrics"),
+    (tf.keras.optimizers, "tf.keras.optimizers"),
+    (tf.keras.regularizers, "tf.keras.regularizers"),
 ):
     _register_callables(package, module, blacklist)
 

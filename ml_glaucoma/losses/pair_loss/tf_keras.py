@@ -14,4 +14,4 @@ def PairLoss(y_true, y_pred):
     return K.mean(out)
 
 
-__all__ = ['PairLoss']
+__all__ = ["PairLoss"]

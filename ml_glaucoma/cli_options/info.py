@@ -8,7 +8,7 @@ from ml_glaucoma.models import valid_models
 
 
 class ConfigurableInfo(Configurable):
-    description = 'Info subcommand'
+    description = "Info subcommand"
 
     def __init__(self):
         super(ConfigurableInfo, self).__init__()
@@ -17,13 +17,20 @@ class ConfigurableInfo(Configurable):
         pass
 
     def build_self(self, rest):
-        info = {k: tuple(sorted(iterkeys(v))) for k, v in iteritems({
-            'models': valid_models,
-            'losses': valid_losses,
-            'optimizers': valid_optimizers
-        })}
-        print(dumps({k: sorted(v) for k, v in iteritems(info)}, sort_keys=True, indent=4))
+        info = {
+            k: tuple(sorted(iterkeys(v)))
+            for k, v in iteritems(
+                {
+                    "models": valid_models,
+                    "losses": valid_losses,
+                    "optimizers": valid_optimizers,
+                }
+            )
+        }
+        print(
+            dumps({k: sorted(v) for k, v in iteritems(info)}, sort_keys=True, indent=4)
+        )
         return info
 
 
-__all__ = ['ConfigurableInfo']
+__all__ = ["ConfigurableInfo"]

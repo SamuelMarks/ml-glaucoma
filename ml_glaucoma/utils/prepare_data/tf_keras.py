@@ -27,8 +27,8 @@ def prepare_data(data_obj, pixels):
         return filenames, labels
 
     def _create_dataset(data, dataset):
-        pos_ids = data.pickled_cache['oags1']
-        id_to_imgs = data.pickled_cache['id_to_imgs']
+        pos_ids = data.pickled_cache["oags1"]
+        id_to_imgs = data.pickled_cache["id_to_imgs"]
 
         img_names, data_labels = _get_filenames(dataset, pos_ids, id_to_imgs)
         dataset = tf.data.Dataset.from_tensor_slices((img_names, data_labels))
@@ -44,4 +44,4 @@ def prepare_data(data_obj, pixels):
 
 del tf
 
-__all__ = ['prepare_data']
+__all__ = ["prepare_data"]

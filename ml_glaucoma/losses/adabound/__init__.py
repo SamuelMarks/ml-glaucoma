@@ -1,10 +1,10 @@
 from os import environ
 
-if environ['TF']:
-    from ml_glaucoma.losses.adabound.tf_keras import AdaBound
-elif environ['TORCH']:
-    from ml_glaucoma.losses.adabound.torch import AdaBound
+if environ["TF"]:
+    pass
+elif environ["TORCH"]:
+    pass
 else:
-    from ml_glaucoma.losses.adabound.other import AdaBound
+    pass
 
 del environ

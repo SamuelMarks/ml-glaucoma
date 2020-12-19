@@ -9,7 +9,9 @@ def batch_steps(num_examples, batch_size):
     return steps
 
 
-def default_model_dir(base_dir=os.path.join(os.path.expanduser('~'), 'ml_glaucoma_models'), model_id=None):
+def default_model_dir(
+    base_dir=os.path.join(os.path.expanduser("~"), "ml_glaucoma_models"), model_id=None
+):
     """
     Get a new directory at `base_dir/model_id`.
 
@@ -18,13 +20,13 @@ def default_model_dir(base_dir=os.path.join(os.path.expanduser('~'), 'ml_glaucom
     """
     if model_id is None:
         i = 0
-        model_dir = os.path.join(base_dir, 'model{:03d}'.format(i))
+        model_dir = os.path.join(base_dir, "model{:03d}".format(i))
         while os.path.isdir(model_dir):
             i += 1
-            model_dir = os.path.join(base_dir, 'model{:03d}'.format(i))
+            model_dir = os.path.join(base_dir, "model{:03d}".format(i))
     else:
         model_dir = os.path.join(base_dir, model_id)
     return model_dir
 
 
-__all__ = ['batch_steps', 'default_model_dir']
+__all__ = ["batch_steps", "default_model_dir"]

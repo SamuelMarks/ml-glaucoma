@@ -2,11 +2,11 @@
 
 from os import environ
 
-if environ['TF']:
-    from ml_glaucoma.runners.tf_keras import *
-elif environ['TORCH']:
-    from ml_glaucoma.runners.torch import *
+if environ["TF"]:
+    pass
+elif environ["TORCH"]:
+    pass
 else:
-    from ml_glaucoma.runners.other import *
+    pass
 
 del environ

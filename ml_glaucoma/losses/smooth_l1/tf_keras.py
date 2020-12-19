@@ -3,7 +3,7 @@ import tensorflow.keras.backend as K
 
 # Originally from https://github.com/fizyr/keras-retinanet/blob/4d461b4/keras_retinanet/losses.py#L70-L117
 def smooth_l1(sigma=3.0):
-    """ Create a smooth L1 loss functor.
+    """Create a smooth L1 loss functor.
     Args
         sigma: This argument defines the point where the loss changes from L2 to L1.
     Returns
@@ -12,7 +12,7 @@ def smooth_l1(sigma=3.0):
     sigma_squared = sigma ** 2
 
     def _smooth_l1(y_true, y_pred):
-        """ Compute the smooth L1 loss of y_pred w.r.t. y_true.
+        """Compute the smooth L1 loss of y_pred w.r.t. y_true.
         Args
             y_true: Tensor from the generator of shape (B, N, 5). The last value for each box is the state of the anchor (ignore, negative, positive).
             y_pred: Tensor from the network of shape (B, N, 4).
@@ -37,7 +37,7 @@ def smooth_l1(sigma=3.0):
         regression_loss = K.where(
             K.less(regression_diff, 1.0 / sigma_squared),
             0.5 * sigma_squared * K.pow(regression_diff, 2),
-            regression_diff - 0.5 / sigma_squared
+            regression_diff - 0.5 / sigma_squared,
         )
 
         # compute the normalizer: the number of positive anchors
@@ -50,4 +50,4 @@ def smooth_l1(sigma=3.0):
 
 SmoothL1 = smooth_l1()
 
-__all__ = ['SmoothL1', 'smooth_l1']
+__all__ = ["SmoothL1", "smooth_l1"]

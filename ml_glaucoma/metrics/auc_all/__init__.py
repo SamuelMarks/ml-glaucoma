@@ -1,10 +1,10 @@
 from os import environ
 
-if environ['TF']:
-    from ml_glaucoma.metrics.auc_all.tf_keras import AUCall
-elif environ['TORCH']:
-    from ml_glaucoma.metrics.auc_all.torch import AUCall
+if environ["TF"]:
+    pass
+elif environ["TORCH"]:
+    pass
 else:
-    from ml_glaucoma.metrics.auc_all.other import AUCall
+    pass
 
 del environ

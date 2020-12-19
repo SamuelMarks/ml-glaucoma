@@ -1,10 +1,10 @@
 from os import environ
 
-if environ['TF']:
-    from ml_glaucoma.losses.binary_crossentropy_with_ranking.tf_keras import BinaryCrossentropyWithRanking
-elif environ['TORCH']:
-    from ml_glaucoma.losses.binary_crossentropy_with_ranking.torch import BinaryCrossentropyWithRanking
+if environ["TF"]:
+    pass
+elif environ["TORCH"]:
+    pass
 else:
-    from ml_glaucoma.losses.binary_crossentropy_with_ranking.other import BinaryCrossentropyWithRanking
+    pass
 
 del environ

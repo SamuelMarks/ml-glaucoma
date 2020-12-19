@@ -1,5 +1,5 @@
 import torch
-from torch import nn, optim, FloatTensor
+from torch import FloatTensor, nn, optim
 from torchvision import models
 
 from ml_glaucoma.utils import pp
@@ -7,23 +7,23 @@ from ml_glaucoma.utils import pp
 
 def train(epochs, *args, **kwargs):
     # TODO: Split this up into the Problem object, and the whole module structure!
-    device = torch.device(
-        'cuda' if torch.cuda.is_available() else 'cpu'
-    )
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = models.resnet50(pretrained=True)
     print(model)
-    print('train::kwargs')
+    print("train::kwargs")
     pp(kwargs)
 
     for param in model.parameters():
         param.requires_grad = False
 
-    model.fc = nn.Sequential(nn.Linear(2048, 512),
-                             nn.ReLU(),
-                             nn.Dropout(0.2),
-                             nn.Linear(512, 10),
-                             nn.LogSoftmax(dim=1))
+    model.fc = nn.Sequential(
+        nn.Linear(2048, 512),
+        nn.ReLU(),
+        nn.Dropout(0.2),
+        nn.Linear(512, 10),
+        nn.LogSoftmax(dim=1),
+    )
     criterion = nn.NLLLoss()
     optimizer = optim.Adam(model.fc.parameters(), lr=0.003)
     model.to(device)
@@ -61,21 +61,26 @@ def train(epochs, *args, **kwargs):
         train_losses.append(running_loss / len(trainloader))
         test_losses.append(test_loss / len(testloader))
 
-        print("Epoch {epoch}/{epochs}.. "
-              "Train loss: {train_loss:.3f}.. "
-              "Test loss: {test_loss:.3f}.. "
-              "Test accuracy: {test_accuracy:.3f}".format(epoch=epoch + 1, epochs=epochs,
-                                                          running_loss=running_loss,
-                                                          print_every=print_every,
-                                                          test_loss=test_loss / len(testloader),
-                                                          train_loss=running_loss / print_every,
-                                                          testloader=testloader,
-                                                          test_accuracy=accuracy / len(testloader),
-                                                          accuracy=accuracy))
+        print(
+            "Epoch {epoch}/{epochs}.. "
+            "Train loss: {train_loss:.3f}.. "
+            "Test loss: {test_loss:.3f}.. "
+            "Test accuracy: {test_accuracy:.3f}".format(
+                epoch=epoch + 1,
+                epochs=epochs,
+                running_loss=running_loss,
+                print_every=print_every,
+                test_loss=test_loss / len(testloader),
+                train_loss=running_loss / print_every,
+                testloader=testloader,
+                test_accuracy=accuracy / len(testloader),
+                accuracy=accuracy,
+            )
+        )
         running_loss = 0
         model.train()
 
-    torch.save(model, 'aerialmodel.pth')
+    torch.save(model, "aerialmodel.pth")
     raise NotImplementedError()
 
 
@@ -87,4 +92,4 @@ def vis(*args, **kwargs):
     raise NotImplementedError()
 
 
-__all__ = ['train', 'evaluate', 'vis']
+__all__ = ["train", "evaluate", "vis"]

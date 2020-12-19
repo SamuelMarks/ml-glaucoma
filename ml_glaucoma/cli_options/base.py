@@ -18,7 +18,8 @@ class Configurable(object):
     def build(self, **kwargs):
         children_values = {
             k: None if child is None else child.build(**kwargs)
-            for k, child in self._children.items()}
+            for k, child in self._children.items()
+        }
         kwargs.update(children_values)
         return self.build_self(**kwargs)
 
@@ -50,4 +51,4 @@ class MappedConfigurable(Configurable):
         return self.fn(base)
 
 
-__all__ = ['Configurable', 'MappedConfigurable']
+__all__ = ["Configurable", "MappedConfigurable"]

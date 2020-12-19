@@ -8,7 +8,7 @@ from tensorflow_datasets.core.download import DownloadConfig
 from ml_glaucoma import get_logger
 from ml_glaucoma.problems.shared import Problem, _examples_per_epoch
 
-logging = get_logger(__file__.partition('.')[0])
+logging = get_logger(__file__.partition(".")[0])
 
 
 def download_and_prepare(builder, download_config=None, download_dir=None):
@@ -16,21 +16,27 @@ def download_and_prepare(builder, download_config=None, download_dir=None):
         download_config = DownloadConfig()
 
     builder.download_and_prepare(
-        download_dir=download_dir,
-        download_config=download_config
+        download_dir=download_dir, download_config=download_config
     )
 
 
 def dataset_spec_to_input_spec(dataset, has_batch_dim=False):
     """Convert dataset output_shapes and output_types to `InputSpec`s."""
     if has_batch_dim:
+
         def f(shape, dtype):
             return InputSpec(shape=shape[1:], dtype=dtype)
+
     else:
+
         def f(shape, dtype):
             return InputSpec(shape=shape, dtype=dtype)
+
     return tf.nest.map_structure(
-        f, tf.compat.v1.data.get_output_shapes(dataset), tf.compat.v1.data.get_output_types(dataset))
+        f,
+        tf.compat.v1.data.get_output_shapes(dataset),
+        tf.compat.v1.data.get_output_types(dataset),
+    )
 
 
 class BaseProblem(Problem):
@@ -42,10 +48,17 @@ class BaseProblem(Problem):
         * examples_per_epoch
     """
 
-    def __init__(self, loss, metrics, shuffle_buffer=1024,
-                 map_fn=None, use_inverse_freq_weights=False,
-                 class_counts=None, output_spec=None,
-                 dataset_spec=None):
+    def __init__(
+        self,
+        loss,
+        metrics,
+        shuffle_buffer=1024,
+        map_fn=None,
+        use_inverse_freq_weights=False,
+        class_counts=None,
+        output_spec=None,
+        dataset_spec=None,
+    ):
         """
         Base implementation of `Problem`.
 
@@ -80,7 +93,7 @@ class BaseProblem(Problem):
         self._use_inverse_freq_weights = use_inverse_freq_weights
         self._class_counts = class_counts
         if shuffle_buffer is None:
-            shuffle_buffer = self.examples_per_epoch('train')
+            shuffle_buffer = self.examples_per_epoch("train")
         self._shuffle_buffer = shuffle_buffer
         self._loss = loss
         self._metrics = tuple(metrics)
@@ -95,7 +108,7 @@ class BaseProblem(Problem):
 
     def dataset_spec(self):
         if self._dataset_spec is None:
-            self._dataset_spec = dataset_spec_to_input_spec(self.get_dataset('train'))
+            self._dataset_spec = dataset_spec_to_input_spec(self.get_dataset("train"))
         return self._dataset_spec
 
     @property
@@ -113,21 +126,23 @@ class BaseProblem(Problem):
     def get_dataset(self, split, batch_size=None, repeat=False, prefetch=True):
         dataset = self._get_base_dataset(split)
         return self.data_pipeline(
-            dataset, split, batch_size, repeat=repeat, prefetch=prefetch)
+            dataset, split, batch_size, repeat=repeat, prefetch=prefetch
+        )
 
     def data_pipeline(
-        self, dataset, split, batch_size, repeat, shuffle=None,
-        prefetch=True):
+        self, dataset, split, batch_size, repeat, shuffle=None, prefetch=True
+    ):
         map_fn = self._map_fn
         if isinstance(map_fn, dict):
             map_fn = map_fn[split]
 
-        if shuffle or (shuffle is None and split == 'train'):
+        if shuffle or (shuffle is None and split == "train"):
             dataset = dataset.shuffle(self._shuffle_buffer)
 
         if map_fn is not None:
             dataset = dataset.map(
-                map_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+                map_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE
+            )
 
         if self._use_inverse_freq_weights:
             dataset = with_inverse_freq_weights(dataset, self.class_counts)
@@ -147,9 +162,9 @@ class BaseProblem(Problem):
             with tf.Graph().as_default():
                 u_temp = self._use_inverse_freq_weights
                 self._use_inverse_freq_weights = False
-                ds = self.get_dataset('train', batch_size=None)
+                ds = self.get_dataset("train", batch_size=None)
                 self._use_inverse_freq_weights = u_temp
-                logging.info('Computing class counts...')
+                logging.info("Computing class counts...")
 
                 def reduce_func(_counts, args):
                     false_counts, true_counts = _counts
@@ -157,41 +172,55 @@ class BaseProblem(Problem):
                     false_counts, true_counts = tf.cond(
                         pred=label,
                         true_fn=lambda: (false_counts, true_counts + 1),
-                        false_fn=lambda: (false_counts + 1, true_counts))
+                        false_fn=lambda: (false_counts + 1, true_counts),
+                    )
                     return false_counts, true_counts
 
-                counts = ds.reduce(
-                    (tf.constant(0, dtype=tf.int32),) * 2, reduce_func)
+                counts = ds.reduce((tf.constant(0, dtype=tf.int32),) * 2, reduce_func)
                 with tf.compat.v1.Session() as sess:
                     counts = sess.run(counts)
                 self._class_counts = counts
-                logging.info('Class counts computed')
+                logging.info("Class counts computed")
         return self._class_counts
 
 
 class TfdsProblem(BaseProblem):
     """`BaseProblem` implementation based on `tfds.core.DatasetBuilder`s."""
 
-    def __init__(self, builder, loss, metrics=None, as_supervised=True,
-                 output_spec=None, map_fn=None, shuffle_buffer=1024,
-                 use_inverse_freq_weights=False,
-                 class_counts=None):  # type: (tfds.core.DatasetBuilder, tf.keras.losses.Loss, [tf.keras.metrics.Metric] or None, bool, dict, None or (int) -> int, int, bool or None, int or None)
+    def __init__(
+        self,
+        builder,
+        loss,
+        metrics=None,
+        as_supervised=True,
+        output_spec=None,
+        map_fn=None,
+        shuffle_buffer=1024,
+        use_inverse_freq_weights=False,
+        class_counts=None,
+    ):  # type: (tfds.core.DatasetBuilder, tf.keras.losses.Loss, [tf.keras.metrics.Metric] or None, bool, dict, None or (int) -> int, int, bool or None, int or None)
         """
         Args:
             builder: `tfds.core.DatasetBuilder` instance.
             metrics: `tf.metrics.`
         """
         if map_fn is not None:
-            assert (callable(map_fn) or
-                    isinstance(map_fn, dict) and
-                    all(v is None or callable(v) for v in map_fn.values()))
+            assert (
+                callable(map_fn)
+                or isinstance(map_fn, dict)
+                and all(v is None or callable(v) for v in map_fn.values())
+            )
         self._builder = builder
         self._output_spec = output_spec
         self._as_supervised = as_supervised
         super(TfdsProblem, self).__init__(
-            map_fn=map_fn, use_inverse_freq_weights=use_inverse_freq_weights,
-            class_counts=class_counts, shuffle_buffer=shuffle_buffer,
-            loss=loss, metrics=metrics)
+            map_fn=map_fn,
+            use_inverse_freq_weights=use_inverse_freq_weights,
+            class_counts=class_counts,
+            shuffle_buffer=shuffle_buffer,
+            loss=loss,
+            metrics=metrics,
+        )
 
     def _supervised_feature(self, index):
         info = self.builder.info
@@ -207,15 +236,13 @@ class TfdsProblem(BaseProblem):
 
         # attempt to handle supervised problems by default
         feature = self._supervised_feature(1)
-        num_classes = getattr(feature, 'num_classes', None)
+        num_classes = getattr(feature, "num_classes", None)
         if num_classes is not None and num_classes != 2:
             # categorical classification
-            self._output_spec = InputSpec(
-                shape=(num_classes,), dtype=tf.float32)
+            self._output_spec = InputSpec(shape=(num_classes,), dtype=tf.float32)
         elif feature.dtype.is_bool or num_classes == 2:
             # binary classification
-            self._output_spec = InputSpec(
-                shape=(), dtype=tf.float32)
+            self._output_spec = InputSpec(shape=(), dtype=tf.float32)
         else:
             return super(TfdsProblem, self).output_spec()
         return self._output_spec
@@ -229,9 +256,10 @@ class TfdsProblem(BaseProblem):
             batch_size=None,
             split=self._split(split),
             as_supervised=self._as_supervised,
-            shuffle_files=True)
+            shuffle_files=True,
+        )
 
-    def examples_per_epoch(self, split='train'):
+    def examples_per_epoch(self, split="train"):
         return _examples_per_epoch(self.builder, self._split(split))
 
     def _split(self, split):
@@ -253,9 +281,9 @@ class TfdsProblem(BaseProblem):
             raise ValueError("Unrecognized split '{:s}'".format(split))
         ```
         """
-        if split == 'validation' and split not in self.builder.info.splits:
+        if split == "validation" and split not in self.builder.info.splits:
             # hacky fallback
-            split = 'test'
+            split = "test"
         return split
 
 
@@ -278,8 +306,7 @@ def with_inverse_freq_weights(dataset, counts):
         weights = class_weights[tf.cast(labels, tf.int32)]
         return inputs, labels, weights
 
-    return dataset.map(
-        map_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    return dataset.map(map_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
 
 class TfdsMultiProblem(BaseProblem):
@@ -297,15 +324,16 @@ class TfdsMultiProblem(BaseProblem):
     def _get_base_dataset(self, split):
         datasets = [
             b.as_dataset(split=split, batch_size=1, as_supervised=True)
-            for b in self._builders]
-        weights = [
-            _examples_per_epoch(b, split) for b in self._builders]
+            for b in self._builders
+        ]
+        weights = [_examples_per_epoch(b, split) for b in self._builders]
         total = sum(weights)
         weights = [w / total for w in weights]
-        if split == 'train':
+        if split == "train":
             datasets = [d.shuffle(self._shuffle_buffer) for d in datasets]
             dataset = tf.data.experimental.sample_from_datasets(
-                datasets, weights=weights)
+                datasets, weights=weights
+            )
         else:
             # No need to shuffle
             dataset = datasets[0]
@@ -316,13 +344,16 @@ class TfdsMultiProblem(BaseProblem):
     def get_dataset(self, split, batch_size=None, repeat=False, prefetch=True):
         dataset = self._get_base_dataset(split)
         return self.data_pipeline(
-            dataset, split, batch_size, repeat=repeat, prefetch=prefetch,
-            shuffle=False  # shuffling occurs in train each sampled dataset
+            dataset,
+            split,
+            batch_size,
+            repeat=repeat,
+            prefetch=prefetch,
+            shuffle=False,  # shuffling occurs in train each sampled dataset
         )
 
     def examples_per_epoch(self, split=tfds.Split.TRAIN):
-        return sum(_examples_per_epoch(b, split)
-                   for b in self._builders)
+        return sum(_examples_per_epoch(b, split) for b in self._builders)
 
     def input_spec(self):
         return self.dataset_spec()[0]
@@ -332,14 +363,17 @@ class TfdsMultiProblem(BaseProblem):
         return self.dataset_spec()[1]
 
 
-def preprocess_example(image, labels,
-                       pad_to_square=False,
-                       resolution=None,
-                       use_rgb=True,  # grayscale if False
-                       maybe_horizontal_flip=False,
-                       maybe_vertical_flip=False,
-                       per_image_standardization=True,
-                       labels_are_images=False):
+def preprocess_example(
+    image,
+    labels,
+    pad_to_square=False,
+    resolution=None,
+    use_rgb=True,  # grayscale if False
+    maybe_horizontal_flip=False,
+    maybe_vertical_flip=False,
+    per_image_standardization=True,
+    labels_are_images=False,
+):
     """Preprocessing function for optional flipping/standardization."""
 
     def maybe_apply(img, _labels, fn, apply_to_labels, prob=0.5):
@@ -348,16 +382,22 @@ def preprocess_example(image, labels,
             return tf.cond(
                 pred=apply,
                 true_fn=lambda: (fn(img), fn(_labels)),
-                false_fn=lambda: (img, _labels))
+                false_fn=lambda: (img, _labels),
+            )
         else:
-            return tf.cond(pred=apply, true_fn=lambda: fn(img), false_fn=lambda: img), _labels
+            return (
+                tf.cond(pred=apply, true_fn=lambda: fn(img), false_fn=lambda: img),
+                _labels,
+            )
 
     if maybe_horizontal_flip:
         image, labels = maybe_apply(
-            image, labels, tf.image.flip_left_right, labels_are_images)
+            image, labels, tf.image.flip_left_right, labels_are_images
+        )
     if maybe_vertical_flip:
         image, labels = maybe_apply(
-            image, labels, tf.image.flip_up_down, labels_are_images)
+            image, labels, tf.image.flip_up_down, labels_are_images
+        )
     if pad_to_square:
         input_res = tf.shape(input=image)[-3:-1]
         max_dim = tf.reduce_max(input_tensor=input_res)
@@ -372,6 +412,7 @@ def preprocess_example(image, labels,
         if labels_are_images:
             labels = tf.pad(tensor=labels, paddings=paddings)
     if resolution is not None:
+
         def resize(img):
             img = tf.expand_dims(img, axis=0)
             img = tf.image.resize(img, resolution, method=tf.image.ResizeMethod.AREA)
@@ -393,5 +434,12 @@ def preprocess_example(image, labels,
 
 del DownloadConfig, get_logger, Problem
 
-__all__ = ['download_and_prepare', 'dataset_spec_to_input_spec', 'preprocess_example',
-           'BaseProblem', 'TfdsProblem', 'with_inverse_freq_weights', 'TfdsMultiProblem']
+__all__ = [
+    "download_and_prepare",
+    "dataset_spec_to_input_spec",
+    "preprocess_example",
+    "BaseProblem",
+    "TfdsProblem",
+    "with_inverse_freq_weights",
+    "TfdsMultiProblem",
+]

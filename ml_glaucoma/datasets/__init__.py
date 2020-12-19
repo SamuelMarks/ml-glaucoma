@@ -1,10 +1,10 @@
 from os import environ
 
-if environ['TF']:
-    from ml_glaucoma.datasets.tfds_builders import *
-elif environ['TORCH']:
-    from ml_glaucoma.datasets.torch import *
+if environ["TF"]:
+    pass
+elif environ["TORCH"]:
+    pass
 else:
-    from ml_glaucoma.datasets.tfds_builders import *
+    pass
 
 del environ

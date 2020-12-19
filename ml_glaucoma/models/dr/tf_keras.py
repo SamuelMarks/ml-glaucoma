@@ -8,10 +8,15 @@ import ml_glaucoma.models.utils.tf_keras
 
 
 # Based off https://www.kaggle.com/nemethpeti/keras-implementation-for-0-829-0-916#Model:-EfficientNet
-@gin.configurable(blacklist=['inputs', 'output_spec'])
-def dr0(inputs, output_spec,
-        weights='imagenet', pooling='avg', final_activation='default',
-        kwargs=None):
+@gin.configurable(blacklist=["inputs", "output_spec"])
+def dr0(
+    inputs,
+    output_spec,
+    weights="imagenet",
+    pooling="avg",
+    final_activation="default",
+    kwargs=None,
+):
     if kwargs is None:
         kwargs = {}
 
@@ -22,17 +27,20 @@ def dr0(inputs, output_spec,
     # dropout_dense_layer = 0.3 # for B3
     dropout_dense_layer = 0.4  # for B5
 
-    features, = tf.keras.models.Sequential([
-        inputs,
-        base,
-        tf.keras.layers.Dropout(dropout_dense_layer),
-        tf.keras.layers.Dense(5, activation='softmax')
-    ]).outputs
+    (features,) = tf.keras.models.Sequential(
+        [
+            inputs,
+            base,
+            tf.keras.layers.Dropout(dropout_dense_layer),
+            tf.keras.layers.Dense(5, activation="softmax"),
+        ]
+    ).outputs
     probs = ml_glaucoma.models.utils.tf_keras.features_to_probs(
-        features, output_spec, activation=final_activation)
+        features, output_spec, activation=final_activation
+    )
     model = tf.keras.models.Model(inputs=inputs, outputs=probs)
     model._name = currentframe().f_code.co_name
     return model
 
 
-__all__ = ['dr0']
+__all__ = ["dr0"]

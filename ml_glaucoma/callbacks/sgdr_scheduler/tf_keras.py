@@ -30,7 +30,15 @@ class SGDRScheduler(Callback):
         Original paper: http://arxiv.org/abs/1608.03983
     """
 
-    def __init__(self, min_lr, max_lr, steps_per_epoch, lr_decay=1, cycle_length=10, mult_factor=1.1):
+    def __init__(
+        self,
+        min_lr,
+        max_lr,
+        steps_per_epoch,
+        lr_decay=1,
+        cycle_length=10,
+        mult_factor=1.1,
+    ):
         super(SGDRScheduler, self).__init__()
         self.min_lr = min_lr
         self.max_lr = max_lr
@@ -46,8 +54,12 @@ class SGDRScheduler(Callback):
 
     def clr(self):
         """Calculate the learning rate."""
-        fraction_to_restart = self.batch_since_restart / (self.steps_per_epoch * self.cycle_length)
-        lr = self.min_lr + 0.5 * (self.max_lr - self.min_lr) * (1 + tf.math.cos(fraction_to_restart * pi))
+        fraction_to_restart = self.batch_since_restart / (
+            self.steps_per_epoch * self.cycle_length
+        )
+        lr = self.min_lr + 0.5 * (self.max_lr - self.min_lr) * (
+            1 + tf.math.cos(fraction_to_restart * pi)
+        )
         # print(lr)
         return lr
 
@@ -70,4 +82,4 @@ class SGDRScheduler(Callback):
             self.max_lr *= self.lr_decay
 
 
-__all__ = ['SGDRScheduler']
+__all__ = ["SGDRScheduler"]

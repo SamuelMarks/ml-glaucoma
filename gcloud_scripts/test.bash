@@ -9,7 +9,7 @@ set -euo pipefail
 declare -r TPU_ADDR="$(gcloud compute tpus describe $TPU_NAME --format='value[separator=":"](networkEndpoints.ipAddress, networkEndpoints.port)')"
 
 gcloud compute ssh "$INSTANCE" \
-    --command='( dpkg -s python3-venv &> /dev/null || sudo apt-get install -y python3-venv ) &&
+    --command='( dpkg -s python3-venv &> /dev/null || sudo apt-get update -qq && sudo apt-get install -y python3-venv ) &&
                   ( [ -d venv ] || python3 -m venv venv ) &&
                   . ~/venv/bin/activate &&
                   ( python -c "import pkgutil; exit(int(pkgutil.find_loader(\"tensorflow\") is not None))" &&
@@ -17,7 +17,7 @@ gcloud compute ssh "$INSTANCE" \
                     pip3 install tensorflow tensorflow-datasets nbconvert ||
                     true ) &&
                   ( [ -f tpu-tester.py ] ||
-                    curl -sL https://raw.githubusercontent.com/tensorflow/docs/7931afd/site/en/guide/tpu.ipynb |
+                    curl -sL https://raw.githubusercontent.com/tensorflow/docs/945a448/site/en/guide/tpu.ipynb |
                     jupyter nbconvert --to script --stdin --output tpu-tester.py &&
                     sed "s/%/pass \#/g" tpu-tester.py.txt > tpu-tester.py ) &&
                   COLAB_TPU_ADDR="'"$TPU_ADDR"'" python tpu-tester.py'

@@ -1,6 +1,19 @@
 ml_glaucoma
 ===========
-A Glaucoma diagnosing CNN
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech)
+![Python implementation](https://img.shields.io/badge/implementation-cpython-blue.svg)
+[![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+
+Originally this repo started off as a custom CNN for glaucoma diagnoses, but has since expanded into something more.
+
+This repo is no longer maintained, but has been split into (at least):
+
+ - [ml-prepare](https://github.com/SamuelMarks/ml-prepare)
+ - [ml-params](https://github.com/SamuelMarks/ml-params)
+ - [ml-params-keras](https://github.com/SamuelMarks/ml-params-keras)
+ - [ml-params-tensorflow](https://github.com/SamuelMarks/ml-params-tensorflow)
 
 ## Install dependencies
 
@@ -444,3 +457,21 @@ If the test/train/validation split here is just a random split, this could be do
 * Only `dc0`, `applications` ([Keras applications](https://keras.io/applications)), `efficientnet` and `squeeze_excite_resnet` model verified to work. `dr0`, `dc1`, `dc2`, `dc3` and other squeeze excite networks implemented but untested.
 * Only `refuge` and `bmes` dataset implemented, and only tested the classification task.
 * BMES dataset: currently requires 2-stage preparation: `bmes_init` which is based on `ml_glaucoma.utils.bmes_data_prep.get_data` and the standard `tfds.DatasetBuilder.download_and_prepare`. The first stage will only be run if `--bmes_init` is used in `python -m ml_glaucoma download` arguments.
+
+
+---
+
+## License
+
+Licensed under either of
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
+
+at your option.
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.

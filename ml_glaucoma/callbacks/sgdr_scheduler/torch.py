@@ -2,4 +2,4 @@ def SGDRScheduler(*args, **kwargs):
     raise NotImplementedError()
 
 
-__all__ = ['SGDRScheduler']
+__all__ = ["SGDRScheduler"]

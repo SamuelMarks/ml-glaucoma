@@ -1,10 +1,10 @@
 from os import environ
 
-if environ['TF']:
-    from ml_glaucoma.models.applications.tf_keras import applications_model
-elif environ['TORCH']:
-    from ml_glaucoma.models.applications.torch import applications_model
+if environ["TF"]:
+    pass
+elif environ["TORCH"]:
+    pass
 else:
-    from ml_glaucoma.models.applications.other import applications_model
+    pass
 
 del environ

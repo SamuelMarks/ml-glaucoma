@@ -1,10 +1,10 @@
 from os import environ
 
-if environ['TF']:
-    from ml_glaucoma.losses.soft_auc.tf_keras import SoftAUC
-elif environ['TORCH']:
-    from ml_glaucoma.losses.soft_auc.torch import SoftAUC
+if environ["TF"]:
+    pass
+elif environ["TORCH"]:
+    pass
 else:
-    from ml_glaucoma.losses.soft_auc.other import SoftAUC
+    pass
 
 del environ

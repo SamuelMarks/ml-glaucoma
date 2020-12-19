@@ -6,17 +6,21 @@ from platform import python_version_tuple
 from pprint import PrettyPrinter
 
 redis_cursor = None
-if 'NO_REDIS' not in environ:
+if "NO_REDIS" not in environ:
     from redis import StrictRedis
 
-    redis_cursor = StrictRedis(host='localhost', port=6379, db=0)
+    redis_cursor = StrictRedis(host="localhost", port=6379, db=0)
 
-if python_version_tuple()[0] == '3':
+if python_version_tuple()[0] == "3":
     xrange = range
 
 pp = PrettyPrinter(indent=4).pprint
 
-it_consumes = lambda it, n=None: deque(it, maxlen=0) if n is None else next(islice(it, n, n), None)
+it_consumes = (
+    lambda it, n=None: deque(it, maxlen=0)
+    if n is None
+    else next(islice(it, n, n), None)
+)
 
 
 def run_once(f):
@@ -53,8 +57,11 @@ def sorted_enumerate(seq):
 
 
 def obj_to_d(obj):
-    return obj if type(obj) is dict else dict((k, getattr(obj, k))
-                                              for k in dir(obj) if not k.startswith('_'))
+    return (
+        obj
+        if type(obj) is dict
+        else dict((k, getattr(obj, k)) for k in dir(obj) if not k.startswith("_"))
+    )
 
 
 def update_d(d, arg=None, **kwargs):
@@ -81,7 +88,7 @@ def lcs(a, b):
                 lengths[i + 1][j + 1] = max(lengths[i + 1][j], lengths[i][j + 1])
 
     # read a substring from the matrix
-    result = ''
+    result = ""
     j = len(b)
     for i in range(1, len(a) + 1):
         if lengths[i][j] != lengths[i - 1][j]:
@@ -92,5 +99,14 @@ def lcs(a, b):
 
 del namedtuple, datetime, islice, environ, python_version_tuple, PrettyPrinter
 
-__all__ = ['pp', 'it_consumes', 'run_once', 'json_serial', 'find_nth',
-           'sorted_enumerate', 'obj_to_d', 'namedtuple2dict', 'lcs']
+__all__ = [
+    "pp",
+    "it_consumes",
+    "run_once",
+    "json_serial",
+    "find_nth",
+    "sorted_enumerate",
+    "obj_to_d",
+    "namedtuple2dict",
+    "lcs",
+]

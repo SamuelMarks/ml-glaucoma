@@ -7,26 +7,39 @@ set -euo pipefail
 "$DIR/preflight.bash"
 
 gcloud compute networks create "$NETWORK"
-gcloud compute firewall-rules create --network "$NETWORK" --allow='tcp:22,tcp:3389,tcp:443,tcp:80,icmp' \
-    "$FIREWALL"
-gcloud compute addresses create --global --purpose='VPC_PEERING' \
-    --addresses="$RANGE" --prefix-length="$CIDR" \
-    --network="$NETWORK" \
-    "$ADDRESSES"
+gcloud compute firewall-rules create --allow='tcp:22,tcp:3389,tcp:443,tcp:80,icmp' \
+                                     --network "$NETWORK" \
+                                     "$FIREWALL"
+gcloud compute addresses create --addresses="$RANGE" \
+                                --network="$NETWORK" \
+                                --purpose='VPC_PEERING' \
+                                --prefix-length="$CIDR" \
+                                --global \
+                                "$ADDRESSES"
 
 if [[ "$OS"=="Ubuntu" ]]; then
-    gcloud compute instances create --machine-type='n1-standard-32' --boot-disk-size='500GB' \
-        --image-project='ubuntu-os-cloud' --image-family='ubuntu-1804-lts' \
-        --scopes=cloud-platform --network="$NETWORK" \
-        "$INSTANCE"
+#                                   --boot-disk-size='500GB' \
+    gcloud compute instances create --image-project='ubuntu-os-cloud' \
+                                    --image-family='ubuntu-2004-lts' \
+                                    --machine-type='n1-standard-2' \
+                                    --network="$NETWORK" \
+                                    --scopes='cloud-platform' \
+                                    "$INSTANCE"
 else
-    gcloud compute instances create --machine-type='n1-standard-4' --boot-disk-size='500GB' \
-        --image-project='debian-cloud' --image-family='debian-10' \
-        --scopes=cloud-platform --network="$NETWORK" \
-        "$INSTANCE"
+#                                   --boot-disk-size='500GB' \
+    gcloud compute instances create --image-project='debian-cloud' \
+                                    --image-family='debian-10' \
+                                    --machine-type='n1-standard-2' \
+                                    --network="$NETWORK" \
+                                    --scopes='cloud-platform' \
+                                    "$INSTANCE"
 fi
 
-gcloud compute tpus create --zone="$ZONE" --description="$TPU_NAME" \
-    --accelerator-type="$ACCELERATOR" --version="$VERSION" \
-    --network="$NETWORK" --range="$RANGE" \
-    "$TPU_NAME"
+gcloud compute tpus create --accelerator-type="$ACCELERATOR" \
+                           --description="$TPU_NAME" \
+                           --network="$NETWORK" \
+                           --preemptible \
+                           --range="$RANGE" \
+                           --version="$VERSION" \
+                           --zone="$ZONE" \
+                           "$TPU_NAME"

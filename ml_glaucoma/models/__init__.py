@@ -13,27 +13,35 @@ from six import iteritems
 
 from ml_glaucoma.utils.helpers import get_upper_kv
 
-if environ['TF']:
-    import tensorflow as tf
-
+if environ["TF"]:
     import efficientnet.tfkeras as efficient_net
+    import tensorflow as tf
     from keras_squeeze_excite_network import se_resnet
 
     from ml_glaucoma.utils import update_d
 
     valid_models = {
-        attr: obj for attr, obj in iteritems(update_d({attr: getattr(tf.keras.applications, attr)
-                                                       for attr in get_upper_kv(tf.keras.applications)},
-                                                      {attr: getattr(efficient_net, attr)
-                                                       for attr in get_upper_kv(efficient_net)},
-                                                      **{attr: getattr(se_resnet, attr)
-                                                         for attr in get_upper_kv(se_resnet)}))
-        if attr not in frozenset(dir(tf.keras.layers) + ['Model']) and not attr.isupper()
+        attr: obj
+        for attr, obj in iteritems(
+            update_d(
+                {
+                    attr: getattr(tf.keras.applications, attr)
+                    for attr in get_upper_kv(tf.keras.applications)
+                },
+                {
+                    attr: getattr(efficient_net, attr)
+                    for attr in get_upper_kv(efficient_net)
+                },
+                **{attr: getattr(se_resnet, attr) for attr in get_upper_kv(se_resnet)}
+            )
+        )
+        if attr not in frozenset(dir(tf.keras.layers) + ["Model"])
+        and not attr.isupper()
     }
 
-elif environ['TORCH']:
+elif environ["TORCH"]:
     valid_models = {}
 else:
     valid_models = {}
 
-__all__ = ['valid_models']
+__all__ = ["valid_models"]

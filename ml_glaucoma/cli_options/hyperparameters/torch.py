@@ -4,7 +4,7 @@ from torch import optim as optimizer_module
 from torch.nn.modules import loss as losses_module
 
 from ml_glaucoma import problems as p
-from ml_glaucoma.aliases import torch2tf_losses, tf2torch_losses
+from ml_glaucoma.aliases import tf2torch_losses, torch2tf_losses
 from ml_glaucoma.cli_options.base import Configurable
 from ml_glaucoma.utils import pp
 from ml_glaucoma.utils.helpers import get_upper_kv
@@ -24,25 +24,40 @@ SUPPORTED_OPTIMIZERS = tuple(sorted(valid_optimizers.keys()))
 
 
 class ConfigurableProblemBase(Configurable, ABC):
-    def build_self(self, builders, map_fn, loss, metrics,
-                   precision_thresholds, recall_thresholds,
-                   shuffle_buffer, use_inverse_freq_weights,
-                   **kwargs):
+    def build_self(
+        self,
+        builders,
+        map_fn,
+        loss,
+        metrics,
+        precision_thresholds,
+        recall_thresholds,
+        shuffle_buffer,
+        use_inverse_freq_weights,
+        **kwargs
+    ):
         kwargs = dict(
-            loss=valid_losses.get(loss, valid_losses[torch2tf_losses.get(loss, tf2torch_losses[loss])]),
+            loss=valid_losses.get(
+                loss, valid_losses[torch2tf_losses.get(loss, tf2torch_losses[loss])]
+            ),
             metrics=metrics,
             map_fn=map_fn,
             shuffle_buffer=shuffle_buffer,
-            use_inverse_freq_weights=use_inverse_freq_weights)
+            use_inverse_freq_weights=use_inverse_freq_weights,
+        )
         if len(builders) == 1:
             return p.TfdsProblem(builder=builders[0], **kwargs)
-        print('---' * 10)
-        print('ConfigurableProblemBase::build_self::kwargs')
+        print("---" * 10)
+        print("ConfigurableProblemBase::build_self::kwargs")
         pp(kwargs)
         return p.TfdsMultiProblem(builders=builders, **kwargs)
 
 
 del Configurable, optimizer_module, losses_module, get_upper_kv
 
-__all__ = ['ConfigurableProblemBase', 'SUPPORTED_LOSSES',
-           'SUPPORTED_METRICS', 'SUPPORTED_OPTIMIZERS']
+__all__ = [
+    "ConfigurableProblemBase",
+    "SUPPORTED_LOSSES",
+    "SUPPORTED_METRICS",
+    "SUPPORTED_OPTIMIZERS",
+]

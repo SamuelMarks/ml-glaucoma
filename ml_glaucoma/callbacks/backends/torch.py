@@ -1,6 +1,6 @@
 def get_callbacks(
     batch_size,
-    checkpoint_freq='epoch',
+    checkpoint_freq="epoch",
     summary_freq=10,
     model_dir=None,
     train_steps_per_epoch=None,
@@ -12,4 +12,4 @@ def get_callbacks(
     raise NotImplementedError()
 
 
-__all__ = ['get_callbacks']
+__all__ = ["get_callbacks"]

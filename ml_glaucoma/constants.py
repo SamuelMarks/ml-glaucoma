@@ -1,6 +1,6 @@
 from os import path
 
-SAVE_FORMAT = 'h5'
+SAVE_FORMAT = "h5"
 # SAVE_FORMAT.__doc__ =
 """
 Either 'tf' or 'h5', indicating whether to save the model
@@ -8,7 +8,7 @@ Either 'tf' or 'h5', indicating whether to save the model
       ImportError: If save format is hdf5, and h5py is not available
 """
 
-SAVE_FORMAT_WITH_SEP = '{}{}'.format(path.extsep, SAVE_FORMAT)
+SAVE_FORMAT_WITH_SEP = "{}{}".format(path.extsep, SAVE_FORMAT)
 
 IMAGE_RESOLUTION = 224, 224
 

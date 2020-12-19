@@ -10,7 +10,7 @@ or model implementations. See `ml_glaucoma.problems` for model-specific adapters
 
 from os import environ
 
-if not environ['TF']:
-    raise NotImplementedError('tensorflow_datasets is [currently] TensorFlow only')
+if not environ["TF"]:
+    raise NotImplementedError("tensorflow_datasets is [currently] TensorFlow only")
 
 del environ

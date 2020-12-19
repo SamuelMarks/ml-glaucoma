@@ -2,28 +2,36 @@ from datetime import datetime
 from functools import partial
 from itertools import takewhile
 from json import dumps, loads
-from os import environ, path, listdir
+from os import environ, listdir, path
 from shutil import copyfile
-from sys import stderr, modules
+from sys import modules, stderr
 from tempfile import gettempdir, mkdtemp
 
 from six import iteritems
 
 import ml_glaucoma.cli_options.parser
 from ml_glaucoma import get_logger
-from ml_glaucoma.cli_options.hyperparameters import SUPPORTED_LOSSES, SUPPORTED_OPTIMIZERS
+from ml_glaucoma.cli_options.hyperparameters import (
+    SUPPORTED_LOSSES,
+    SUPPORTED_OPTIMIZERS,
+)
 from ml_glaucoma.cli_options.logparser.utils import ParsedLine
 from ml_glaucoma.models import valid_models
 from ml_glaucoma.utils import update_d
 
-logger = get_logger(modules[__name__].__name__.rpartition('.')[0])
+logger = get_logger(modules[__name__].__name__.rpartition(".")[0])
 
 
-def pipeline_runner(logfile, key, options, replacement_options, threshold, dry_run, rest):
+def pipeline_runner(
+    logfile, key, options, replacement_options, threshold, dry_run, rest
+):
     log = lambda obj: logfile.write(
-        '{}\n'.format(dumps(update_d({'_dt': datetime.utcnow().isoformat().__str__()}, obj))))
+        "{}\n".format(
+            dumps(update_d({"_dt": datetime.utcnow().isoformat().__str__()}, obj))
+        )
+    )
 
-    log({'options': options})
+    log({"options": options})
     actual_run, final_result = 0, None
     while actual_run < threshold:
         actual_run += 1
@@ -40,30 +48,39 @@ def pipeline_runner(logfile, key, options, replacement_options, threshold, dry_r
 
 def _new_prepare_options(log, logfile, options, rest, try_all=True):
     """
-        This is run for every experiment
-        From rest, we can use get_metrics to open 'tensorboard_log_dir' to get the result of all the previous experiments
-            (change the prefix to 'epoch_') (using the validation subdirectory)
-            if path is empty just return
-        Change what is returned and
-        Build some data structure to determine next best choice
-        Select set of options to run for next experiment
-        Call upsert_rest_arg() to set parameters for the next experiment
+    This is run for every experiment
+    From rest, we can use get_metrics to open 'tensorboard_log_dir' to get the result of all the previous experiments
+        (change the prefix to 'epoch_') (using the validation subdirectory)
+        if path is empty just return
+    Change what is returned and
+    Build some data structure to determine next best choice
+    Select set of options to run for next experiment
+    Call upsert_rest_arg() to set parameters for the next experiment
     """
-    rest_namespace = ml_glaucoma.cli_options.parser.cli_handler(cmd=rest, return_namespace=True)
+    rest_namespace = ml_glaucoma.cli_options.parser.cli_handler(
+        cmd=rest, return_namespace=True
+    )
     # if not path.isdir(rest_namespace.tensorboard_log_dir) or len(listdir(rest_namespace.tensorboard_log_dir)) == 0:
     #     return  # first run!
 
-    print('rest_namespace.tensorboard_log_dir:'.ljust(20), '{!r};'.format(rest_namespace.tensorboard_log_dir), sep='')
+    print(
+        "rest_namespace.tensorboard_log_dir:".ljust(20),
+        "{!r};".format(rest_namespace.tensorboard_log_dir),
+        sep="",
+    )
 
-    with open(logfile.name, 'rt') as f:
+    with open(logfile.name, "rt") as f:
         prev_logfile_lines = f.readlines()
 
     idx = len(prev_logfile_lines) - 1
     maybe_options_space = None
     while idx > 0:
         maybe_options_space = loads(prev_logfile_lines[idx])
-        if isinstance(maybe_options_space, dict) and 'type' in maybe_options_space and maybe_options_space[
-            'type'] == 'options_space':
+        if (
+            isinstance(maybe_options_space, dict)
+            and "type" in maybe_options_space
+            and maybe_options_space["type"] == "options_space"
+        ):
             break
         maybe_options_space = None
         idx -= 1
@@ -78,35 +95,39 @@ def _new_prepare_options(log, logfile, options, rest, try_all=True):
                 for loss in SUPPORTED_LOSSES:
                     for optimizer in SUPPORTED_OPTIMIZERS:
                         generated_space.append(
-                            ParsedLine(dataset=rest_namespace.dataset,
-                                       epoch=0,
-                                       value=None,
-                                       epochs=250,
-                                       transfer=model,
-                                       loss=loss,
-                                       optimizer=optimizer,
-                                       optimizer_params=rest_namespace.optimizer_params,
-                                       base='transfer')
+                            ParsedLine(
+                                dataset=rest_namespace.dataset,
+                                epoch=0,
+                                value=None,
+                                epochs=250,
+                                transfer=model,
+                                loss=loss,
+                                optimizer=optimizer,
+                                optimizer_params=rest_namespace.optimizer_params,
+                                base="transfer",
+                            )
                         )
         options_space = {
-            'type': 'options_space',
-            'last_idx': 0,
-            'space': generated_space
+            "type": "options_space",
+            "last_idx": 0,
+            "space": generated_space,
         }
     else:
 
         # Or if the `maybe_options_space` is not None, then it might look like:
         options_space = maybe_options_space
-        options_space['space'] = [ParsedLine(*ops) for ops in options_space['space']]
-        options_space['last_idx'] = options_space['last_idx'] + 1 % len(options_space['space'])
+        options_space["space"] = [ParsedLine(*ops) for ops in options_space["space"]]
+        options_space["last_idx"] = options_space["last_idx"] + 1 % len(
+            options_space["space"]
+        )
 
         # TODO: yet to implement progressive selection and generation of next experiment steps
         # prev_metrics = get_metrics((path.join(rest_namespace.tensorboard_log_dir, 'validation'),), prefix='epoch_')
         # prev_options = parse_line(rest_namespace.tensorboard_log_dir)
 
     log(options_space)
-    print('cur_experiment_index:'.ljust(20), options_space['last_idx'], sep='')
-    return options_space['space'][options_space['last_idx']]
+    print("cur_experiment_index:".ljust(20), options_space["last_idx"], sep="")
+    return options_space["space"][options_space["last_idx"]]
 
 
 def _new_modify_options(parsed_line, rest):
@@ -118,54 +139,74 @@ def _new_modify_options(parsed_line, rest):
 
 
 def _execute_command(key, log, next_key, options, dry_run, rest):
-    print('-------------------------------------------\n'
-          '|                {cmd}ing                 |\n'
-          '-------------------------------------------'.format(cmd=rest[0]), sep='')
+    print(
+        "-------------------------------------------\n"
+        "|                {cmd}ing                 |\n"
+        "-------------------------------------------".format(cmd=rest[0]),
+        sep="",
+    )
 
-    if rest[0] != 'train':
+    if rest[0] != "train":
         raise NotImplementedError
 
     if dry_run:
         just = 10
         print(  # 'key:'.ljust(just), key, ';\n',
-            'log:'.ljust(just), log, ';\n',
+            "log:".ljust(just),
+            log,
+            ";\n",
             # 'next_key:'.ljust(just), next_key, ';\n',
-            'options:'.ljust(just), dumps(options), ';\n',
-            'dry_run:'.ljust(just), dry_run, ';\n',
-            'rest:'.ljust(just), dumps(rest), ';', sep='')
+            "options:".ljust(just),
+            dumps(options),
+            ";\n",
+            "dry_run:".ljust(just),
+            dry_run,
+            ";\n",
+            "rest:".ljust(just),
+            dumps(rest),
+            ";",
+            sep="",
+        )
     else:
-        err, cli_resp = _handle_rest(key, locals().get('next_key'), rest)
+        err, cli_resp = _handle_rest(key, locals().get("next_key"), rest)
         if err is not None:
-            if environ.get('NO_EXCEPTIONS'):
+            if environ.get("NO_EXCEPTIONS"):
                 print(err, file=stderr)
             else:
                 raise err
-        print('cli_resp:', cli_resp, ';')
+        print("cli_resp:", cli_resp, ";")
 
-    print('-------------------------------------------\n'
-          '|            finished {cmd}ing.           |\n'
-          '-------------------------------------------'.format(cmd=rest[0]), sep='')
+    print(
+        "-------------------------------------------\n"
+        "|            finished {cmd}ing.           |\n"
+        "-------------------------------------------".format(cmd=rest[0]),
+        sep="",
+    )
 
-    if 'next_key' in locals():
+    if "next_key" in locals():
         if next_key in options[key][0]:
             options[key][0][next_key] += 0.5
         else:
             options[key][0][next_key] = 0
-        if '_next_key' in options:
-            del options['_next_key']
-        log({'options': options})
+        if "_next_key" in options:
+            del options["_next_key"]
+        log({"options": options})
 
 
 def _prepare_options(key, log, logfile, options, rest):
-    assert type(options) is dict, '--options value could not be parsed into a Python dictionary, got: {}'.format(
+    assert (
+        type(options) is dict
+    ), "--options value could not be parsed into a Python dictionary, got: {}".format(
         options
     )
-    with open(logfile.name, 'rt') as f:
+    with open(logfile.name, "rt") as f:
         prev_logfile_lines = f.readlines()
     get_shape = lambda obj: {
-        k: list(map(lambda o: next(iter(o.keys())), v)) if type(v) is list and type(v[0]) is dict else v
+        k: list(map(lambda o: next(iter(o.keys())), v))
+        if type(v) is list and type(v[0]) is dict
+        else v
         for k, v in iteritems(obj)
-        if not k.startswith('_')
+        if not k.startswith("_")
     }
     incoming_shape = get_shape(options)
     last_line = None
@@ -173,8 +214,12 @@ def _prepare_options(key, log, logfile, options, rest):
         last_options_line = last_line = loads(prev_logfile_lines[-1])
         last_shape = get_shape(last_line)
         i = -2
-        while (len(last_line) != len(last_shape) and last_shape != incoming_shape and i != -len(prev_logfile_lines)
-               and len(prev_logfile_lines) > 1):
+        while (
+            len(last_line) != len(last_shape)
+            and last_shape != incoming_shape
+            and i != -len(prev_logfile_lines)
+            and len(prev_logfile_lines) > 1
+        ):
             last_options_line = loads(prev_logfile_lines[i])
             last_shape = get_shape(last_options_line)
             i -= 1
@@ -184,22 +229,30 @@ def _prepare_options(key, log, logfile, options, rest):
             options.update(last_options_line)
 
     def get_sorted_options(options_dict):
-        return {name: list(map(dict, value))
-                for name, value in map(lambda kv: (kv[0], sorted(map(lambda e: tuple(e.items()), kv[1]),
-                                                                 key=lambda a: a[0][1])),
-                                       filter(lambda kv: not kv[0].startswith('_'), iteritems(options_dict)))}
+        return {
+            name: list(map(dict, value))
+            for name, value in map(
+                lambda kv: (
+                    kv[0],
+                    sorted(
+                        map(lambda e: tuple(e.items()), kv[1]), key=lambda a: a[0][1]
+                    ),
+                ),
+                filter(lambda kv: not kv[0].startswith("_"), iteritems(options_dict)),
+            )
+        }
 
     options = get_sorted_options(options)
     next_key = next(iter(options[key][0].keys()))
     options[key][0][next_key] += 0.5
-    options['_next_key'] = next_key
-    log({'options': options})
+    options["_next_key"] = next_key
+    log({"options": options})
     upsert_rest_arg = partial(_upsert_cli_arg, cli=rest)
     for k, v in options.items():
-        if not k.startswith('_'):
+        if not k.startswith("_"):
             value = next(iter(v[0].keys()))
 
-            if k == 'models':
+            if k == "models":
                 _handle_model_change(rest, upsert_rest_arg, value)
             else:
                 upsert_rest_arg(arg=k, value=value)
@@ -209,40 +262,48 @@ def _prepare_options(key, log, logfile, options, rest):
 def _handle_model_change(rest, upsert_rest_arg, model):
     namespace = ml_glaucoma.cli_options.parser.cli_handler(rest, return_namespace=True)
 
-    gin_file = path.join(mkdtemp(prefix='gin_', dir=gettempdir()), 'applications.gin')
-    copyfile(src=path.join(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))),
-                           'model_configs', 'applications.gin'),
-             dst=gin_file)
+    gin_file = path.join(mkdtemp(prefix="gin_", dir=gettempdir()), "applications.gin")
+    copyfile(
+        src=path.join(
+            path.dirname(path.dirname(path.dirname(path.abspath(__file__)))),
+            "model_configs",
+            "applications.gin",
+        ),
+        dst=gin_file,
+    )
 
-    upsert_rest_arg(
-        arg='--model_file',
-        value=gin_file
-    )
+    upsert_rest_arg(arg="--model_file", value=gin_file)
     model_dir = namespace.model_dir
-    _maybe_suffix = model_dir.rpartition('_')[2]
-    _maybe_suffix = _maybe_suffix if _maybe_suffix.startswith('again') else None
+    _maybe_suffix = model_dir.rpartition("_")[2]
+    _maybe_suffix = _maybe_suffix if _maybe_suffix.startswith("again") else None
     if _maybe_suffix:
-        _maybe_suffix = '{}{:03d}'.format(_maybe_suffix[:len('again')],
-                                          int(_maybe_suffix[len('again'):]) + 1)
-    _join_with = lambda: '_'.join(filter(None, (namespace.dataset[0].replace('refuge', 'gon'),
-                                                model,
-                                                namespace.optimizer, namespace.loss,
-                                                'epochs', '{:03d}'.format(namespace.epochs),
-                                                _maybe_suffix)))
-    model_dir = path.join(path.dirname(model_dir), _join_with())
-    upsert_rest_arg(
-        arg='--model_dir',
-        value=model_dir
+        _maybe_suffix = "{}{:03d}".format(
+            _maybe_suffix[: len("again")], int(_maybe_suffix[len("again") :]) + 1
+        )
+    _join_with = lambda: "_".join(
+        filter(
+            None,
+            (
+                namespace.dataset[0].replace("refuge", "gon"),
+                model,
+                namespace.optimizer,
+                namespace.loss,
+                "epochs",
+                "{:03d}".format(namespace.epochs),
+                _maybe_suffix,
+            ),
+        )
     )
+    model_dir = path.join(path.dirname(model_dir), _join_with())
+    upsert_rest_arg(arg="--model_dir", value=model_dir)
     upsert_rest_arg(
-        arg='--model_param',
-        value='application = "{model}"'.format(model=model)
+        arg="--model_param", value='application = "{model}"'.format(model=model)
     )
 
 
 def _upsert_cli_arg(arg, value, cli):  # type: (str, [str]) -> [str]
-    if not arg.startswith('-'):
-        arg = '--{arg}'.format(arg=arg)
+    if not arg.startswith("-"):
+        arg = "--{arg}".format(arg=arg)
     try:
         idx = cli.index(arg)
         cli[idx + 1] = value
@@ -252,8 +313,8 @@ def _upsert_cli_arg(arg, value, cli):  # type: (str, [str]) -> [str]
 
 
 def _del_cli_arg(arg, cli):  # type: (str, [str]) -> [str]
-    if not arg.startswith('-'):
-        arg = '--{arg}'.format(arg=arg)
+    if not arg.startswith("-"):
+        arg = "--{arg}".format(arg=arg)
     try:
         idx = cli.index(arg)
         del cli[idx]
@@ -264,9 +325,9 @@ def _del_cli_arg(arg, cli):  # type: (str, [str]) -> [str]
 
 
 def _handle_rest(key, next_key, rest):
-    if rest[0] != 'train':
+    if rest[0] != "train":
         raise NotImplementedError(rest[0])
-    for arg in 'value', 'transfer', 'base':
+    for arg in "value", "transfer", "base":
         _del_cli_arg(arg, rest)
 
     upsert_rest_arg = partial(_upsert_cli_arg, cli=rest)
@@ -276,7 +337,7 @@ def _handle_rest(key, next_key, rest):
     model_dir = namespace.model_dir
 
     if model_dir is None:
-        logger.warn('model_dir is None, so not incrementing it')
+        logger.warn("model_dir is None, so not incrementing it")
     else:
         _increment_directory_suffixes(model_dir, namespace, upsert_rest_arg)
 
@@ -286,9 +347,15 @@ def _handle_rest(key, next_key, rest):
 
     rest = ml_glaucoma.cli_options.parser._reparse_cli(rest)
 
-    print('Running command:'.ljust(16), '{} {}'.format(
-        rest[0], ' '.join(map(lambda r: r if r.startswith('-') else '\'{}\''.format(r),
-                              rest[1:]))))
+    print(
+        "Running command:".ljust(16),
+        "{} {}".format(
+            rest[0],
+            " ".join(
+                map(lambda r: r if r.startswith("-") else "'{}'".format(r), rest[1:])
+            ),
+        ),
+    )
 
     err, cli_resp = None, None
     try:
@@ -302,51 +369,60 @@ def _handle_rest(key, next_key, rest):
 def _increment_directory_suffixes(model_dir, namespace, upsert_rest_arg):
     tensorboard_log_dir = namespace.tensorboard_log_dir
     reversed_log_dir = model_dir[::-1]
-    suffix = int(''.join(takewhile(lambda s: s.isdigit(), reversed_log_dir))[::-1] or 0)
-    suffix_s = '{:03d}'.format(suffix)
-    if not reversed_log_dir.startswith(reversed_log_dir[:len(suffix_s)] + '_again'[::-1]):
+    suffix = int("".join(takewhile(lambda s: s.isdigit(), reversed_log_dir))[::-1] or 0)
+    suffix_s = "{:03d}".format(suffix)
+    if not reversed_log_dir.startswith(
+        reversed_log_dir[: len(suffix_s)] + "_again"[::-1]
+    ):
         suffix = 0
-        suffix_s = '{:03d}'.format(suffix)
+        suffix_s = "{:03d}".format(suffix)
     run = suffix + 1
-    print('------------------------\n'
-          '|        RUN {:3d}       |\n'
-          '------------------------'.format(run), sep='')
-    run_s = '{:03d}'.format(suffix)
+    print(
+        "------------------------\n"
+        "|        RUN {:3d}       |\n"
+        "------------------------".format(run),
+        sep="",
+    )
+    run_s = "{:03d}".format(suffix)
 
-    print('model_dir:'.ljust(25), model_dir)
-    print('tensorboard_log_dir:'.ljust(25), tensorboard_log_dir)
+    print("model_dir:".ljust(25), model_dir)
+    print("tensorboard_log_dir:".ljust(25), tensorboard_log_dir)
 
     if model_dir.endswith(suffix_s):
-        tensorboard_log_dir = ''.join((tensorboard_log_dir[:-len(suffix_s)], run_s))
-        model_dir = ''.join((model_dir[:-len(suffix_s)], run_s))
+        tensorboard_log_dir = "".join((tensorboard_log_dir[: -len(suffix_s)], run_s))
+        model_dir = "".join((model_dir[: -len(suffix_s)], run_s))
     else:
-        tensorboard_log_dir = '{}_again{}'.format(tensorboard_log_dir, suffix_s)
-        model_dir = '{}_again{}'.format(model_dir, suffix_s)
+        tensorboard_log_dir = "{}_again{}".format(tensorboard_log_dir, suffix_s)
+        model_dir = "{}_again{}".format(model_dir, suffix_s)
 
     suffix, model_dir = _get_next_avail_dir(model_dir)
     _, tensorboard_log_dir = _get_next_avail_dir(tensorboard_log_dir, suffix)
 
     # Replace with incremented dirs
-    for arg in 'model_dir', 'tensorboard_log_dir':
+    for arg in "model_dir", "tensorboard_log_dir":
         upsert_rest_arg(arg=arg, value=locals()[arg])
 
 
-def _get_next_avail_dir(directory, starting_suffix=None):  # type: (str, int) -> (int, str)
+def _get_next_avail_dir(
+    directory, starting_suffix=None
+):  # type: (str, int) -> (int, str)
     suffix = starting_suffix
 
     if starting_suffix is not None:
-        suffix_s = '{:03d}'.format(starting_suffix)
+        suffix_s = "{:03d}".format(starting_suffix)
         directory, _, fname = directory.rpartition(path.sep)
-        directory = path.join(directory, ''.join((fname[:-len(suffix_s)], suffix_s)))
+        directory = path.join(directory, "".join((fname[: -len(suffix_s)], suffix_s)))
 
     while path.isdir(directory) and len(listdir(directory)) > 0:
         directory, _, fname = directory.rpartition(path.sep)
-        suffix = int(''.join(takewhile(lambda s: s.isdigit(), fname[::-1]))[::-1] or 0) + 1
-        suffix_s = '{:03d}'.format(suffix)
+        suffix = (
+            int("".join(takewhile(lambda s: s.isdigit(), fname[::-1]))[::-1] or 0) + 1
+        )
+        suffix_s = "{:03d}".format(suffix)
         assert suffix < 999
-        directory = path.join(directory, ''.join((fname[:-len(suffix_s)], suffix_s)))
+        directory = path.join(directory, "".join((fname[: -len(suffix_s)], suffix_s)))
 
     return suffix, directory
 
 
-__all__ = ['pipeline_runner']
+__all__ = ["pipeline_runner"]

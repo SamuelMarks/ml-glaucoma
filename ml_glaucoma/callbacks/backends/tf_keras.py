@@ -1,13 +1,15 @@
 import tensorflow as tf
 
 from ml_glaucoma.callbacks.drop_worse_models.tf_keras import DropWorseModels
-from ml_glaucoma.callbacks.loading_model_checkpoint.tf_keras import LoadingModelCheckpoint
+from ml_glaucoma.callbacks.loading_model_checkpoint.tf_keras import (
+    LoadingModelCheckpoint,
+)
 from ml_glaucoma.tf_compat import is_tf_v1
 
 
 def get_callbacks(
     batch_size,
-    checkpoint_freq='epoch',
+    checkpoint_freq="epoch",
     summary_freq=10,
     model_dir=None,
     train_steps_per_epoch=None,
@@ -47,7 +49,8 @@ def get_callbacks(
     initial_epoch = 0
     if checkpoint_freq is not None:
         saver_callback = LoadingModelCheckpoint(
-            model_dir, save_freq=checkpoint_freq, save_best_only=False)
+            model_dir, save_freq=checkpoint_freq, save_best_only=False
+        )
         latest_checkpoint = saver_callback.latest_checkpoint
         if latest_checkpoint is not None:
             initial_epoch = LoadingModelCheckpoint.filename_epoch(latest_checkpoint)
@@ -58,13 +61,12 @@ def get_callbacks(
             write_graph=False,
             log_dir=tensorboard_log_dir or model_dir,
             update_freq=summary_freq,
-            write_images=write_images
+            write_images=write_images,
         )
 
         # These hacks involve private members - will probably break
         if train_steps_per_epoch is not None and initial_epoch > 0:
-            initial_train_steps = \
-                initial_epoch * train_steps_per_epoch
+            initial_train_steps = initial_epoch * train_steps_per_epoch
             tb_callback._total_batches_seen = initial_train_steps
             # v1 a sample is a batch, where as in v2 a sample is an element
             if is_tf_v1:
@@ -78,11 +80,13 @@ def get_callbacks(
         callbacks.append(tb_callback)
 
     if checkpoint_freq is not None:
-        callbacks.append(DropWorseModels(
-            monitor='epoch_auc',
-            model_dir=model_dir,
-            log_dir=tensorboard_log_dir or model_dir,
-        ))
+        callbacks.append(
+            DropWorseModels(
+                monitor="epoch_auc",
+                model_dir=model_dir,
+                log_dir=tensorboard_log_dir or model_dir,
+            )
+        )
 
     if lr_schedule is not None:
         callbacks.append(tf.keras.callbacks.LearningRateScheduler(lr_schedule))
@@ -90,4 +94,4 @@ def get_callbacks(
     return callbacks, initial_epoch
 
 
-__all__ = ['get_callbacks']
+__all__ = ["get_callbacks"]

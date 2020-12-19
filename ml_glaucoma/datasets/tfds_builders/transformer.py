@@ -1,5 +1,4 @@
-from __future__ import division
-from __future__ import print_function
+from __future__ import division, print_function
 
 import numpy as np
 import tensorflow as tf
@@ -16,20 +15,12 @@ class Transformer(object):
             pad_w = int(tw * ih / th) - iw
             pad_left = pad_w // 2
             delta = np.array([pad_left, 0], dtype=np.float32)
-            padding = [
-                [0, 0],
-                [pad_left, pad_w - pad_left],
-                [0, 0]
-            ]
+            padding = [[0, 0], [pad_left, pad_w - pad_left], [0, 0]]
             iw += pad_w
         elif ir > tr:
             pad_h = int(th * iw / tw) - ih
             pad_top = pad_h // 2
-            padding = [
-                [pad_top, pad_h - pad_top],
-                [0, 0],
-                [0, 0]
-            ]
+            padding = [[pad_top, pad_h - pad_top], [0, 0], [0, 0]]
             delta = np.array([0, pad_top], dtype=np.float32)
             ih += pad_h
         else:
@@ -45,7 +36,7 @@ class Transformer(object):
     def transform_image(self, image, interp=tf.image.ResizeMethod.BILINEAR):
         Image = tfds.core.lazy_imports.PIL_Image
         if self.padding is not None:
-            image = np.pad(image, self.padding, mode='constant')
+            image = np.pad(image, self.padding, mode="constant")
         if self.scale != 1:
             resample = {
                 tf.image.ResizeMethod.NEAREST_NEIGHBOR: Image.NEAREST,
@@ -73,31 +64,44 @@ class Transformer(object):
 
 class ImageTransformerConfig(tfds.core.BuilderConfig):
     def __init__(
-        self, description, name=None, resolution=None, rgb=True,
-        version=tfds.core.Version("0.0.1")):
-        color_suffix = 'rgb' if rgb else 'gray'
+        self,
+        description,
+        name=None,
+        resolution=None,
+        rgb=True,
+        version=tfds.core.Version("0.0.1"),
+    ):
+        color_suffix = "rgb" if rgb else "gray"
         if resolution is None:
             self.resolution = None
             if name is None:
-                name = 'raw-{:s}'.format(color_suffix)
-            desc_suffix = ' ({:s})'.format(color_suffix)
+                name = "raw-{:s}".format(color_suffix)
+            desc_suffix = " ({:s})".format(color_suffix)
         else:
             if isinstance(resolution, int):
                 resolution = (resolution,) * 2
             else:
                 resolution = tuple(resolution)
             if not all(isinstance(r, int) for r in resolution):
-                raise ValueError("`resolution`s must be `None` or all `int`s, got {!r}".format(resolution))
+                raise ValueError(
+                    "`resolution`s must be `None` or all `int`s, got {!r}".format(
+                        resolution
+                    )
+                )
             self.resolution = resolution
             if name is None:
-                name = 'r{:d}-{:d}-{:s}'.format(resolution[0], resolution[1], color_suffix)
-            desc_suffix = " ({:d} x {:d}, {:s})".format(resolution[0], resolution[1], color_suffix)
+                name = "r{:d}-{:d}-{:s}".format(
+                    resolution[0], resolution[1], color_suffix
+                )
+            desc_suffix = " ({:d} x {:d}, {:s})".format(
+                resolution[0], resolution[1], color_suffix
+            )
         self.rgb = rgb
 
         super(ImageTransformerConfig, self).__init__(
             name=name,
             version=version,
-            description="{:s}{:s}".format(description, desc_suffix)
+            description="{:s}{:s}".format(description, desc_suffix),
         )
 
     def transformer(self, image_resolution):
@@ -107,4 +111,4 @@ class ImageTransformerConfig(tfds.core.BuilderConfig):
             return Transformer(image_resolution, self.resolution, self.rgb)
 
 
-__all__ = ['Transformer', 'ImageTransformerConfig']
+__all__ = ["Transformer", "ImageTransformerConfig"]

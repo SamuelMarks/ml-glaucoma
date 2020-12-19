@@ -7,7 +7,10 @@ import numpy as np
 import pandas as pd
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-from ml_glaucoma.cli_options.hyperparameters import SUPPORTED_LOSSES, SUPPORTED_OPTIMIZERS
+from ml_glaucoma.cli_options.hyperparameters import (
+    SUPPORTED_LOSSES,
+    SUPPORTED_OPTIMIZERS,
+)
 from ml_glaucoma.datasets.tfds_builders.dr_spoc import dr_spoc_datasets
 from ml_glaucoma.models import valid_models
 from ml_glaucoma.utils import update_d
@@ -20,23 +23,23 @@ valid_losses_upper = frozenset((model.upper() for model in valid_losses))
 valid_optimizers = frozenset(SUPPORTED_OPTIMIZERS)
 valid_optimizers_upper = frozenset((model.upper() for model in valid_optimizers))
 
-valid_bases = frozenset(('dc0', 'dc1', 'dc2', 'dc3', 'dc4', 'dr0'))
+valid_bases = frozenset(("dc0", "dc1", "dc2", "dc3", "dc4", "dr0"))
 valid_bases_upper = frozenset((model.upper() for model in valid_bases))
 
 
 def parse_line(line):  # type: (str) -> ParsedLine
     line = path.basename(line)
     optimizer_params = {}
-    if line.count(' ') == 0:
+    if line.count(" ") == 0:
         name, epoch, value = line, 0, 0
     else:
         name, epoch, value = filter(None, line.rstrip().split())
         name, epoch, value = name.rstrip(), int(epoch[6:-3]), float(value)
 
-    split_name = name.split('_')
+    split_name = name.split("_")
     ds = split_name[0]
 
-    if split_name[-1].startswith('again') or split_name[-1].endswith('AUC'):
+    if split_name[-1].startswith("again") or split_name[-1].endswith("AUC"):
         del split_name[-1]
 
     def _get_name(st, it):
@@ -47,14 +50,12 @@ def parse_line(line):  # type: (str) -> ParsedLine
     # dataset #
     #         #
     ###########
-    if ds == 'dr':
-        ds = next(dataset
-                  for dataset in dr_spoc_datasets
-                  if line.startswith(dataset))
+    if ds == "dr":
+        ds = next(dataset for dataset in dr_spoc_datasets if line.startswith(dataset))
 
     for idx, word in enumerate(split_name, 2):
-        prev_prev_word = split_name[idx - 2] if len(split_name) > idx - 2 else ''
-        previous_word = split_name[idx - 1] if len(split_name) > idx - 1 else ''
+        prev_prev_word = split_name[idx - 2] if len(split_name) > idx - 2 else ""
+        previous_word = split_name[idx - 1] if len(split_name) > idx - 1 else ""
         prev_prev_word_upper = prev_prev_word.upper()
         previous_word_upper = previous_word.upper()
 
@@ -63,15 +64,23 @@ def parse_line(line):  # type: (str) -> ParsedLine
         upper1 = (previous_word + word).upper()
         upper0 = word.upper()
 
-        extra_loss = lambda: ''.join(split_name[(split_name.index(transfer)
-                                                 if 'transfer' in locals() and transfer in split_name else 0) + 1:-2]).upper()
+        extra_loss = lambda: "".join(
+            split_name[
+                (
+                    split_name.index(transfer)
+                    if "transfer" in locals() and transfer in split_name
+                    else 0
+                )
+                + 1 : -2
+            ]
+        ).upper()
 
         ##########
         #        #
         # epochs #
         #        #
         ##########
-        if prev_prev_word == 'epochs':
+        if prev_prev_word == "epochs":
             epochs = int(previous_word)
 
         ############
@@ -135,7 +144,7 @@ def parse_line(line):  # type: (str) -> ParsedLine
         # optimizer params #
         #                  #
         ####################
-        elif previous_word in frozenset(('lr', 'alpha')) and len(split_name) != idx:
+        elif previous_word in frozenset(("lr", "alpha")) and len(split_name) != idx:
             optimizer_params[previous_word] = float(split_name[idx])
 
         ########
@@ -155,7 +164,7 @@ def parse_line(line):  # type: (str) -> ParsedLine
         # else #
         #      #
         ########
-        '''
+        """
         else:
             print('------------------------------')
             print('prev_prev_word:'.ljust(14), prev_prev_word,
@@ -165,11 +174,11 @@ def parse_line(line):  # type: (str) -> ParsedLine
                   '\nidx:'.ljust(16), idx,
                   '\nlen(split_name):'.ljust(16), len(split_name),
                   '\n------------------------------')
-        '''
-        assert locals().get('loss') != 'loss', line
+        """
+        assert locals().get("loss") != "loss", line
 
         # print('split_name:'.ljust(16), split_name)
-    '''
+    """
     print(
         'best_epoch:'.ljust(14), epoch,
         '\nbest_auc:'.ljust(15), value,
@@ -179,47 +188,65 @@ def parse_line(line):  # type: (str) -> ParsedLine
         '\noptimizer:'.ljust(15), locals().get('optimizer', 'Adam'), '\n',
         sep=''
     )
-    '''
+    """
 
-    base, transfer = locals().get('base'), locals().get('transfer')
-    assert base is not None or transfer is not None, 'Unknown model'
+    base, transfer = locals().get("base"), locals().get("transfer")
+    assert base is not None or transfer is not None, "Unknown model"
 
-    return ParsedLine(dataset=ds,
-                      epoch=epoch,
-                      value=value,
-                      epochs=locals().get('epochs'),
-                      transfer=transfer,
-                      loss=locals().get('loss', 'BinaryCrossentropy'),
-                      optimizer=locals().get('optimizer', 'Adam'),
-                      optimizer_params=update_d({'lr': 1e-3}, optimizer_params),
-                      base=base or 'transfer')
+    return ParsedLine(
+        dataset=ds,
+        epoch=epoch,
+        value=value,
+        epochs=locals().get("epochs"),
+        transfer=transfer,
+        loss=locals().get("loss", "BinaryCrossentropy"),
+        optimizer=locals().get("optimizer", "Adam"),
+        optimizer_params=update_d({"lr": 1e-3}, optimizer_params),
+        base=base or "transfer",
+    )
 
 
-ParsedLine = namedtuple('ParsedLine', ('dataset', 'epoch', 'value', 'epochs', 'transfer',
-                                       'loss', 'optimizer', 'optimizer_params', 'base'))
+ParsedLine = namedtuple(
+    "ParsedLine",
+    (
+        "dataset",
+        "epoch",
+        "value",
+        "epochs",
+        "transfer",
+        "loss",
+        "optimizer",
+        "optimizer_params",
+        "base",
+    ),
+)
 
 options_space = {
-    'last_idx': 2,
-    'space': [
-        ParsedLine(dataset='refuge',
-                   epoch=64,
-                   value=None,
-                   epochs=250,
-                   transfer='Resnet50',
-                   loss='BinaryCrossentropy',
-                   optimizer='Adam',
-                   optimizer_params={'lr': 1e-3},
-                   base='transfer'),
-        ParsedLine(dataset='refuge',
-                   epoch=64,
-                   value=None,
-                   epochs=250,
-                   transfer='MobileNet',
-                   loss='CategoricalCrossentropy',
-                   optimizer='Nestrov',
-                   optimizer_params={'lr': 1e-5},
-                   base='transfer')
-    ]
+    "last_idx": 2,
+    "space": [
+        ParsedLine(
+            dataset="refuge",
+            epoch=64,
+            value=None,
+            epochs=250,
+            transfer="Resnet50",
+            loss="BinaryCrossentropy",
+            optimizer="Adam",
+            optimizer_params={"lr": 1e-3},
+            base="transfer",
+        ),
+        ParsedLine(
+            dataset="refuge",
+            epoch=64,
+            value=None,
+            epochs=250,
+            transfer="MobileNet",
+            loss="CategoricalCrossentropy",
+            optimizer="Nestrov",
+            optimizer_params={"lr": 1e-5},
+            base="transfer",
+        ),
+    ],
 }
 
 
@@ -252,8 +279,14 @@ def tflog2pandas(path: str) -> pd.DataFrame:
             event_list = event_acc.Scalars(tag)
             values = list(map(lambda x: x.value, event_list))
             step = list(map(lambda x: x.step, event_list))
-            runlog_data = pd.concat([runlog_data,
-                                     pd.DataFrame({"metric": [tag] * len(step), "value": values, "step": step})])
+            runlog_data = pd.concat(
+                [
+                    runlog_data,
+                    pd.DataFrame(
+                        {"metric": [tag] * len(step), "value": values, "step": step}
+                    ),
+                ]
+            )
     # Dirty catch of DataLossError
     except:
         print("Event file possibly corrupt: {}".format(path))
@@ -274,46 +307,71 @@ def many_logs2pandas(event_paths):
     return all_logs
 
 
-def get_metrics(logs, prefix='epoch_val_', tag='auc', total_epochs=250,
-                metrics=('loss', 'auc', 'tp50', 'fp50', 'tn50', 'fn50', 'f150')):
+def get_metrics(
+    logs,
+    prefix="epoch_val_",
+    tag="auc",
+    total_epochs=250,
+    metrics=("loss", "auc", "tp50", "fp50", "tn50", "fn50", "f150"),
+):
     def get_metrics_from_one_logfile(log):
         df = many_logs2pandas((log,))
-        df.rename_axis('epoch', inplace=True)
-        df['epoch'] = df.index
+        df.rename_axis("epoch", inplace=True)
+        df["epoch"] = df.index
         df.reset_index(drop=True, inplace=True)
 
         # metric_with_epoch_greater_than_threshold = df[df['epoch'] > total_epochs]['metric'].unique()
-        df = df[df['epoch'] < total_epochs + 1]
+        df = df[df["epoch"] < total_epochs + 1]
 
-        max_metrics = df.loc[df.groupby('metric')['value'].idxmax()]
+        max_metrics = df.loc[df.groupby("metric")["value"].idxmax()]
 
         # epochs = max_metrics['epoch'].unique()
 
         best_epoch = max_metrics.loc[
-            max_metrics['metric'] == '{}{}'.format(prefix, tag)]['epoch'].iloc[0]
-        metrics_of_best_epoch = df[df['epoch'] == best_epoch]
+            max_metrics["metric"] == "{}{}".format(prefix, tag)
+        ]["epoch"].iloc[0]
+        metrics_of_best_epoch = df[df["epoch"] == best_epoch]
 
         current_metrics = {
             attr: metrics_of_best_epoch[
-                metrics_of_best_epoch['metric'] == '{}{}'.format(prefix, attr)]['value'].iloc[0]
+                metrics_of_best_epoch["metric"] == "{}{}".format(prefix, attr)
+            ]["value"].iloc[0]
             for attr in metrics
         }
 
-        if len(frozenset(('tp50', 'fp50', 'tn50', 'fn50')) - frozenset(metrics)) == 0:
+        if len(frozenset(("tp50", "fp50", "tn50", "fn50")) - frozenset(metrics)) == 0:
             loss, auc, tp, fp, tn, fn, f1 = (
                 current_metrics[attr]
-                for attr in ('loss', 'auc', 'tp50', 'fp50', 'tn50', 'fn50', 'f150')
+                for attr in ("loss", "auc", "tp50", "fp50", "tn50", "fn50", "f150")
             )
 
-            current_metrics.update({
-                'acc': np.divide(np.add(tp, tn), np.sum((tp, tn, fp, fn))),
-                'sensitivity': np.divide(tp, np.add(tp, fn)),
-                'specificity': np.divide(tn, np.add(tn, fp))
-            })
+            current_metrics.update(
+                {
+                    "acc": np.divide(np.add(tp, tn), np.sum((tp, tn, fp, fn))),
+                    "sensitivity": np.divide(tp, np.add(tp, fn)),
+                    "specificity": np.divide(tn, np.add(tn, fp)),
+                }
+            )
 
-        return log, namedtuple('Metrics', sorted(current_metrics.keys()))(**current_metrics)
+        return (
+            log,
+            namedtuple("Metrics", sorted(current_metrics.keys()))(**current_metrics),
+        )
 
-    return reduce(lambda p, c: update_d(p, {c[0]: c[1]}), map(get_metrics_from_one_logfile, logs), {})
+    return reduce(
+        lambda p, c: update_d(p, {c[0]: c[1]}),
+        map(get_metrics_from_one_logfile, logs),
+        {},
+    )
 
 
-del traceback, namedtuple, reduce, np, pd, EventAccumulator, SUPPORTED_LOSSES, SUPPORTED_OPTIMIZERS
+del (
+    traceback,
+    namedtuple,
+    reduce,
+    np,
+    pd,
+    EventAccumulator,
+    SUPPORTED_LOSSES,
+    SUPPORTED_OPTIMIZERS,
+)

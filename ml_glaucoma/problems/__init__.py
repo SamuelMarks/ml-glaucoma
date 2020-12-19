@@ -12,13 +12,12 @@ basic implementation that leverages `tensorflow_datasets.DatasetBuilder`s.
 
 from os import environ
 
-if environ['TF']:
-    from ml_glaucoma.problems.tf_keras import *
-elif environ['TORCH']:
-    from ml_glaucoma.problems.torch import *
+if environ["TF"]:
+    pass
+elif environ["TORCH"]:
+    pass
 else:
-    from ml_glaucoma.problems.other import *
+    pass
 
-from ml_glaucoma.problems.shared import *
 
 del environ

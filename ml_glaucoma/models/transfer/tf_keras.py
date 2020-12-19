@@ -7,23 +7,35 @@ import ml_glaucoma.models.utils.tf_keras
 from ml_glaucoma.models import valid_models
 
 
-@gin.configurable(blacklist=['inputs', 'output_spec'])
-def transfer_model(inputs, output_spec, transfer='ResNet50', weights='imagenet',
-                   pooling='avg', final_activation='default',
-                   kwargs=None):
+@gin.configurable(blacklist=["inputs", "output_spec"])
+def transfer_model(
+    inputs,
+    output_spec,
+    transfer="ResNet50",
+    weights="imagenet",
+    pooling="avg",
+    final_activation="default",
+    kwargs=None,
+):
     if kwargs is None:
         kwargs = {}
 
-    assert transfer in valid_models, '{transfer} not found in {valid_models}'.format(transfer=transfer,
-                                                                                     valid_models=valid_models)
-    features, = valid_models[transfer](
-        include_top=False, weights=weights, pooling=pooling,
-        input_tensor=inputs, **kwargs).outputs
+    assert transfer in valid_models, "{transfer} not found in {valid_models}".format(
+        transfer=transfer, valid_models=valid_models
+    )
+    (features,) = valid_models[transfer](
+        include_top=False,
+        weights=weights,
+        pooling=pooling,
+        input_tensor=inputs,
+        **kwargs
+    ).outputs
     probs = ml_glaucoma.models.utils.tf_keras.features_to_probs(
-        features, output_spec, activation=final_activation)
+        features, output_spec, activation=final_activation
+    )
     model = tf.keras.models.Model(inputs=inputs, outputs=probs)
-    model._name = '_'.join((currentframe().f_code.co_name, transfer))
+    model._name = "_".join((currentframe().f_code.co_name, transfer))
     return model
 
 
-__all__ = ['transfer_model']
+__all__ = ["transfer_model"]

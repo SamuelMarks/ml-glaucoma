@@ -1,4 +1,4 @@
-from os import path, listdir
+from os import listdir, path
 
 import numpy as np
 import tensorflow as tf
@@ -26,9 +26,10 @@ class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
                 All keys valid except `filepath`.
         """
         self._model_dir = model_dir
-        self._filename = 'model-{epoch:04d}' + SAVE_FORMAT_WITH_SEP
+        self._filename = "model-{epoch:04d}" + SAVE_FORMAT_WITH_SEP
         super(LoadingModelCheckpoint, self).__init__(
-            filepath=path.join(self._model_dir, self._filename), **kwargs)
+            filepath=path.join(self._model_dir, self._filename), **kwargs
+        )
         self._restored = False
 
     def restore(self, save_path=None, force_restore=False):
@@ -48,8 +49,9 @@ class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
     @property
     def latest_checkpoint(self):
         """Get the full path to the latest weights file."""
-        filenames = tuple(fn for fn in listdir(self._model_dir)
-                          if fn.startswith('model'))
+        filenames = tuple(
+            fn for fn in listdir(self._model_dir) if fn.startswith("model")
+        )
         if len(filenames) == 0:
             return None
         latest = max(filenames, key=LoadingModelCheckpoint.filename_epoch)
@@ -75,16 +77,22 @@ class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
 
     def _save_model(self, epoch, logs):
         # Save for subsequent restoration
-        monitor_op, save_best_only, best = self.monitor_op, self.save_best_only, self.best
+        monitor_op, save_best_only, best = (
+            self.monitor_op,
+            self.save_best_only,
+            self.best,
+        )
         # if save_best_only is True: self.save_best_only = False
 
         filepath = self._get_file_path(epoch, logs)
 
         def monitor_op(current, _best):
             if self._save_model.t > 0:
-                print('current:\t', current,
-                      'self.best:\t', _best, sep='')
-                print('log_parser:\t', log_parser(path.dirname(filepath), top=epoch, tag='epoch_auc'))
+                print("current:\t", current, "self.best:\t", _best, sep="")
+                print(
+                    "log_parser:\t",
+                    log_parser(path.dirname(filepath), top=epoch, tag="epoch_auc"),
+                )
             return np.less
 
         self.monitor_op = monitor_op
@@ -95,10 +103,13 @@ class LoadingModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
         # remove(filepath)
 
         # Restore
-        self.monitor_op, self.save_best_only, self.best = monitor_op, save_best_only, best
-        pass
+        self.monitor_op, self.save_best_only, self.best = (
+            monitor_op,
+            save_best_only,
+            best,
+        )
 
     _save_model.t = 3
 
 
-__all__ = ['LoadingModelCheckpoint']
+__all__ = ["LoadingModelCheckpoint"]

@@ -15,7 +15,7 @@ def BinaryCrossentropyWithRanking(y_true, y_pred):
     y_pred_score = K.log(y_pred_clipped / (1 - y_pred_clipped))
 
     # determine what the maximum score for a zero outcome is
-    y_pred_score_zerooutcome_max = K.max(y_pred_score * K.cast(y_true < 1, 'float32'))
+    y_pred_score_zerooutcome_max = K.max(y_pred_score * K.cast(y_true < 1, "float32"))
 
     # determine how much each score is above or below it
     rankloss = y_pred_score - y_pred_score_zerooutcome_max
@@ -27,7 +27,7 @@ def BinaryCrossentropyWithRanking(y_true, y_pred):
     rankloss = K.square(K.clip(rankloss, -100, 0))
 
     # average the loss for just the positive outcomes
-    rankloss = K.sum(rankloss, axis=-1) / (K.sum(K.cast(y_true > 0, 'float32')) + 1)
+    rankloss = K.sum(rankloss, axis=-1) / (K.sum(K.cast(y_true > 0, "float32")) + 1)
 
     # return (rankloss + 1) * logloss - an alternative to try
     return rankloss + logloss

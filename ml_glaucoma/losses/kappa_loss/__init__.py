@@ -1,10 +1,10 @@
 from os import environ
 
-if environ['TF']:
-    from ml_glaucoma.losses.kappa_loss.tf_keras import Kappa
-elif environ['TORCH']:
-    from ml_glaucoma.losses.kappa_loss.torch import Kappa
+if environ["TF"]:
+    pass
+elif environ["TORCH"]:
+    pass
 else:
-    from ml_glaucoma.losses.kappa_loss.other import Kappa
+    pass
 
 del environ

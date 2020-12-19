@@ -13,10 +13,10 @@ def dataset_spec_to_input_spec(*args, **kwargs):
 
 
 def preprocess_example(*args, **kwargs):
-    if 'image' not in kwargs:
-        logger.warn('Image not in kwargs; skipping preprocess_example')
+    if "image" not in kwargs:
+        logger.warn("Image not in kwargs; skipping preprocess_example")
         return
-    print('preprocess_example')
+    print("preprocess_example")
     pp(kwargs)
     raise NotImplementedError()
 
@@ -30,10 +30,17 @@ class BaseProblem(Problem):
         * examples_per_epoch
     """
 
-    def __init__(self, loss, metrics, shuffle_buffer=1024,
-                 map_fn=None, use_inverse_freq_weights=False,
-                 class_counts=None, output_spec=None,
-                 dataset_spec=None):
+    def __init__(
+        self,
+        loss,
+        metrics,
+        shuffle_buffer=1024,
+        map_fn=None,
+        use_inverse_freq_weights=False,
+        class_counts=None,
+        output_spec=None,
+        dataset_spec=None,
+    ):
         """
         Base implementation of `Problem`.
 
@@ -68,7 +75,7 @@ class BaseProblem(Problem):
         self._use_inverse_freq_weights = use_inverse_freq_weights
         self._class_counts = class_counts
         if shuffle_buffer is None:
-            shuffle_buffer = self.examples_per_epoch('train')
+            shuffle_buffer = self.examples_per_epoch("train")
         self._shuffle_buffer = shuffle_buffer
         self._loss = loss
         self._metrics = tuple(metrics)
@@ -98,8 +105,8 @@ class BaseProblem(Problem):
         raise NotImplementedError()
 
     def data_pipeline(
-        self, dataset, split, batch_size, repeat, shuffle=None,
-        prefetch=True):
+        self, dataset, split, batch_size, repeat, shuffle=None, prefetch=True
+    ):
         raise NotImplementedError()
 
     @property
@@ -138,17 +145,17 @@ class TfdsMultiProblem(BaseProblem):
 
 
 def OLD____TfdsMultiProblem(*args, **kwargs):
-    print('---' * 10)
-    print('TfdsMultiProblem')
+    print("---" * 10)
+    print("TfdsMultiProblem")
     pp(args)
     pp(kwargs)
 
-    print('---' * 10)
-    print('map_fn')
-    pp(kwargs['map_fn']['test']())
-    print('---' * 10)
+    print("---" * 10)
+    print("map_fn")
+    pp(kwargs["map_fn"]["test"]())
+    print("---" * 10)
 
-    '''train_data = torchvision.datasets.ImageFolder(root=TRAIN_DATA_PATH, transform=TRANSFORM_IMG)
+    """train_data = torchvision.datasets.ImageFolder(root=TRAIN_DATA_PATH, transform=TRANSFORM_IMG)
     train_data_loader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
     test_data = torchvision.datasets.ImageFolder(root=TEST_DATA_PATH, transform=TRANSFORM_IMG)
     test_data_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
@@ -163,7 +170,7 @@ def OLD____TfdsMultiProblem(*args, **kwargs):
         print("Number of test samples: ", len(test_data))
         print("Detected Classes are: ", train_data.class_to_idx)  # classes are detected by folder structure
 
-        model = CNN()'''
+        model = CNN()"""
 
     # raise NotImplementedError()
 
@@ -174,5 +181,11 @@ def with_inverse_freq_weights(*args, **kwargs):
 
 del abstractmethod, modules, get_logger, Problem, pp
 
-__all__ = ['dataset_spec_to_input_spec', 'preprocess_example', 'BaseProblem',
-           'TfdsProblem', 'TfdsMultiProblem', 'with_inverse_freq_weights']
+__all__ = [
+    "dataset_spec_to_input_spec",
+    "preprocess_example",
+    "BaseProblem",
+    "TfdsProblem",
+    "TfdsMultiProblem",
+    "with_inverse_freq_weights",
+]

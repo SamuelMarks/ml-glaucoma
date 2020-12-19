@@ -2,29 +2,47 @@ from inspect import currentframe
 
 import gin
 import tensorflow as tf
-from tensorflow.keras.layers import (Conv2D, MaxPooling2D, Dense,
-                                     Dropout, GlobalAveragePooling2D,
-                                     GlobalMaxPooling2D, Flatten, Activation)
+from tensorflow.keras.layers import (
+    Activation,
+    Conv2D,
+    Dense,
+    Dropout,
+    Flatten,
+    GlobalAveragePooling2D,
+    GlobalMaxPooling2D,
+    MaxPooling2D,
+)
 
 import ml_glaucoma.models.utils.tf_keras
 from ml_glaucoma.models import utils
 
 _poolers = {
-    'avg': GlobalAveragePooling2D,
-    'max': GlobalMaxPooling2D,
-    'flatten': Flatten,
+    "avg": GlobalAveragePooling2D,
+    "max": GlobalMaxPooling2D,
+    "flatten": Flatten,
 }
 
 
-@gin.configurable(blacklist=['inputs', 'output_spec'])
-def dc0(inputs, output_spec, training=None, filters=(32, 32, 64),
-        dense_units=(64,), dropout_rate=0.5, conv_activation='relu',
-        dense_activation='relu', kernel_regularizer=None,
-        final_activation='default', pooling='flatten'):
+@gin.configurable(blacklist=["inputs", "output_spec"])
+def dc0(
+    inputs,
+    output_spec,
+    training=None,
+    filters=(32, 32, 64),
+    dense_units=(64,),
+    dropout_rate=0.5,
+    conv_activation="relu",
+    dense_activation="relu",
+    kernel_regularizer=None,
+    final_activation="default",
+    pooling="flatten",
+):
     conv_kwargs = dict(
-        kernel_regularizer=kernel_regularizer, activation=conv_activation)
+        kernel_regularizer=kernel_regularizer, activation=conv_activation
+    )
     dense_kwargs = dict(
-        kernel_regularizer=kernel_regularizer, activation=dense_activation)
+        kernel_regularizer=kernel_regularizer, activation=dense_activation
+    )
 
     x = inputs
     for f in filters:
@@ -37,20 +55,33 @@ def dc0(inputs, output_spec, training=None, filters=(32, 32, 64),
         x = Dense(u, **dense_kwargs)(x)
         x = Dropout(dropout_rate)(x, training=training)
     probs = ml_glaucoma.models.utils.tf_keras.features_to_probs(
-        x, output_spec, kernel_regularizer=kernel_regularizer,
-        activation=final_activation)
+        x,
+        output_spec,
+        kernel_regularizer=kernel_regularizer,
+        activation=final_activation,
+    )
     model = tf.keras.models.Model(inputs=inputs, outputs=probs)
     model._name = currentframe().f_code.co_name
     return model
 
 
-@gin.configurable(blacklist=['inputs', 'output_spec'])
-def dc1(inputs, output_spec, training=None, dropout_rate=0.5,
-        num_dropout_layers=4, kernel_regularizer=None,
-        conv_activation='relu', final_activation='default', pooling='avg'):
+@gin.configurable(blacklist=["inputs", "output_spec"])
+def dc1(
+    inputs,
+    output_spec,
+    training=None,
+    dropout_rate=0.5,
+    num_dropout_layers=4,
+    kernel_regularizer=None,
+    conv_activation="relu",
+    final_activation="default",
+    pooling="avg",
+):
     conv_kwargs = dict(
-        kernel_regularizer=kernel_regularizer, activation=conv_activation,
-        padding='same')
+        kernel_regularizer=kernel_regularizer,
+        activation=conv_activation,
+        padding="same",
+    )
     x = inputs
     x = Conv2D(32, (7, 7), **conv_kwargs)(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
@@ -65,29 +96,43 @@ def dc1(inputs, output_spec, training=None, dropout_rate=0.5,
         x = Dropout(dropout_rate)(x, training=training)
     # x = Flatten(data_format=tf.keras.backends.image_data_format())(x)
     x = _poolers[pooling]()(x)
-    x = Dense(
-        128, kernel_regularizer=kernel_regularizer,
-        activation=conv_activation)(x)
+    x = Dense(128, kernel_regularizer=kernel_regularizer, activation=conv_activation)(x)
     if num_dropout_layers > 0:
         x = Dropout(dropout_rate)(x, training=training)(x)
     probs = ml_glaucoma.models.utils.tf_keras.features_to_probs(
-        x, output_spec, kernel_regularizer=kernel_regularizer,
-        activation=final_activation)
+        x,
+        output_spec,
+        kernel_regularizer=kernel_regularizer,
+        activation=final_activation,
+    )
     model = tf.keras.models.Model(inputs=inputs, outputs=probs)
     model._name = currentframe().f_code.co_name
     return model
 
 
-@gin.configurable(blacklist=['inputs', 'output_spec'])
-def dc2(inputs, output_spec, training=None, filters=(32, 32, 64),
-        dense_units=(32,), dropout_rate=0.5, conv_activation='relu',
-        dense_activation='relu', kernel_regularizer=None,
-        final_activation='default', pooling='flatten'):
+@gin.configurable(blacklist=["inputs", "output_spec"])
+def dc2(
+    inputs,
+    output_spec,
+    training=None,
+    filters=(32, 32, 64),
+    dense_units=(32,),
+    dropout_rate=0.5,
+    conv_activation="relu",
+    dense_activation="relu",
+    kernel_regularizer=None,
+    final_activation="default",
+    pooling="flatten",
+):
     conv_kwargs = dict(
-        strides=(2, 1), kernel_initializer='he_normal',
-        kernel_regularizer=kernel_regularizer, activation=conv_activation)
+        strides=(2, 1),
+        kernel_initializer="he_normal",
+        kernel_regularizer=kernel_regularizer,
+        activation=conv_activation,
+    )
     dense_kwargs = dict(
-        kernel_regularizer=kernel_regularizer, activation=dense_activation)
+        kernel_regularizer=kernel_regularizer, activation=dense_activation
+    )
 
     x = inputs
     for f in filters:
@@ -100,8 +145,11 @@ def dc2(inputs, output_spec, training=None, filters=(32, 32, 64),
         x = Dense(u, **dense_kwargs)(x)
         x = Dropout(dropout_rate)(x, training=training)
     probs = ml_glaucoma.models.utils.tf_keras.features_to_probs(
-        x, output_spec, kernel_regularizer=kernel_regularizer,
-        activation=final_activation)
+        x,
+        output_spec,
+        kernel_regularizer=kernel_regularizer,
+        activation=final_activation,
+    )
     model = tf.keras.models.Model(inputs=inputs, outputs=probs)
     model._name = currentframe().f_code.co_name
     return model
@@ -109,45 +157,43 @@ def dc2(inputs, output_spec, training=None, filters=(32, 32, 64),
 
 # This was called `dc0` in bmes_cnn
 # SamuelMarks/ml-glaucoma/blob/3f0d3805c35180c48d47050b38606538eca2305a/ml_glaucoma/CNN/bmes_cnn.py#L335-L353
-@gin.configurable(blacklist=['inputs', 'output_spec'])
-def dc3(inputs, output_spec, final_activation='default', class_mode='binary'):
+@gin.configurable(blacklist=["inputs", "output_spec"])
+def dc3(inputs, output_spec, final_activation="default", class_mode="binary"):
     import tensorflow.keras.backend as K
 
-    if class_mode == 'binary':
+    if class_mode == "binary":
         num_classes = 1
         channels = 3
-        activation = 'softmax'
+        activation = "softmax"
     else:
         num_classes = 2
         channels = 3
-        activation = 'softmax'
+        activation = "softmax"
 
-    features, = tf.keras.models.Sequential([
-        inputs,
-        Conv2D(32, (3, 3)),
-        Activation('relu'),
-        MaxPooling2D(pool_size=(2, 2)),
-
-        Conv2D(32, (3, 3)),
-        Activation('relu'),
-        MaxPooling2D(pool_size=(2, 2)),
-
-        Conv2D(64, (3, 3)),
-        Activation('relu'),
-        MaxPooling2D(pool_size=(2, 2)),
-
-        # this converts our 3D feature maps to 1D feature vectors
-        Flatten(data_format=K.image_data_format()),
-
-        Dense(64),  # we now have numbers not 'images'
-        Activation('relu'),
-        Dropout(0.5),
-
-        Dense(num_classes),
-        Activation(activation)
-    ]).outputs
+    (features,) = tf.keras.models.Sequential(
+        [
+            inputs,
+            Conv2D(32, (3, 3)),
+            Activation("relu"),
+            MaxPooling2D(pool_size=(2, 2)),
+            Conv2D(32, (3, 3)),
+            Activation("relu"),
+            MaxPooling2D(pool_size=(2, 2)),
+            Conv2D(64, (3, 3)),
+            Activation("relu"),
+            MaxPooling2D(pool_size=(2, 2)),
+            # this converts our 3D feature maps to 1D feature vectors
+            Flatten(data_format=K.image_data_format()),
+            Dense(64),  # we now have numbers not 'images'
+            Activation("relu"),
+            Dropout(0.5),
+            Dense(num_classes),
+            Activation(activation),
+        ]
+    ).outputs
     probs = ml_glaucoma.models.utils.tf_keras.features_to_probs(
-        features, output_spec, activation=final_activation)
+        features, output_spec, activation=final_activation
+    )
     model = tf.keras.models.Model(inputs=inputs, outputs=probs)
     model._name = currentframe().f_code.co_name
     return model
@@ -155,61 +201,71 @@ def dc3(inputs, output_spec, final_activation='default', class_mode='binary'):
 
 # else block from bmes_cnn
 # SamuelMarks/ml-glaucoma/blob/3f0d3805c35180c48d47050b38606538eca2305a/ml_glaucoma/CNN/bmes_cnn.py#L355-L374
-@gin.configurable(blacklist=['inputs', 'output_spec'])
-def dc4(inputs, output_spec, final_activation='default', class_mode='binary', dropout=4):
-    if class_mode == 'binary':
+@gin.configurable(blacklist=["inputs", "output_spec"])
+def dc4(
+    inputs, output_spec, final_activation="default", class_mode="binary", dropout=4
+):
+    if class_mode == "binary":
         num_classes = 1
         channels = 3
-        activation = 'softmax'
+        activation = "softmax"
     else:
         num_classes = 2
         channels = 3
-        activation = 'softmax'
+        activation = "softmax"
 
-    model = tf.keras.models.Sequential([
-        inputs,
-        Conv2D(32,
-               kernel_size=(7, 7),
-               activation='relu',
-               padding='same'),
-        MaxPooling2D(pool_size=(2, 2))
-    ])
+    model = tf.keras.models.Sequential(
+        [
+            inputs,
+            Conv2D(32, kernel_size=(7, 7), activation="relu", padding="same"),
+            MaxPooling2D(pool_size=(2, 2)),
+        ]
+    )
 
     if dropout > 3:
-        model.add(Dropout(.5))
+        model.add(Dropout(0.5))
 
-    model.add(Conv2D(64, (5, 5), activation='relu', padding='same'))
+    model.add(Conv2D(64, (5, 5), activation="relu", padding="same"))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
     if dropout > 2:
-        model.add(Dropout(.5))
+        model.add(Dropout(0.5))
 
-    model.add(Conv2D(32, 3, activation='relu', padding='same'))
+    model.add(Conv2D(32, 3, activation="relu", padding="same"))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
     if dropout > 1:
-        model.add(Dropout(.5))
+        model.add(Dropout(0.5))
 
     model.add(Flatten())
-    model.add(Dense(128, activation='relu'))
+    model.add(Dense(128, activation="relu"))
 
     if dropout > 0:
-        model.add(Dropout(.5))
+        model.add(Dropout(0.5))
 
     model.add(Dense(num_classes))
     model.add(Activation(activation))
 
-    features, = model.outputs
+    (features,) = model.outputs
 
     probs = ml_glaucoma.models.utils.tf_keras.features_to_probs(
-        features, output_spec, activation=final_activation)
+        features, output_spec, activation=final_activation
+    )
     model = tf.keras.models.Model(inputs=inputs, outputs=probs)
     model._name = currentframe().f_code.co_name
     return model
 
 
-del (Dropout, GlobalAveragePooling2D,
-     GlobalMaxPooling2D, Flatten, Activation,
-     tf, currentframe, gin, utils)
+del (
+    Dropout,
+    GlobalAveragePooling2D,
+    GlobalMaxPooling2D,
+    Flatten,
+    Activation,
+    tf,
+    currentframe,
+    gin,
+    utils,
+)
 
-__all__ = ['dc0', 'dc1', 'dc2', 'dc3', 'dc4']
+__all__ = ["dc0", "dc1", "dc2", "dc3", "dc4"]
